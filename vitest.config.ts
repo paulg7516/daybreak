@@ -8,6 +8,7 @@ export default defineConfig({
   // tsconfig.renderer.json, which vitest's esbuild transform does not read).
   plugins: [react()],
   test: {
+    globals: true,
     environmentMatchGlobs: [['tests/renderer/**', 'jsdom']],
     setupFiles: ['./tests/renderer/setup.ts'],
   },
