@@ -7,7 +7,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "score": "tsx src/cli.ts"
+    "score": "tsx src/cli.ts",
+    "ingest": "tsx src/cli-ingest.ts"
+  },
+  "dependencies": {
+    "@azure/msal-node": "^2.16.0",
+    "keytar": "^7.9.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
