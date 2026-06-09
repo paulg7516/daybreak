@@ -33,7 +33,7 @@ export function scoreEmail(item: ReentryItem, ctx: ScoringContext): EmailSignal 
   else if (ccOnly) { rank -= 20; reasons.push("you are only cc'd"); }
 
   const body = (item.bodyText ?? '').toLowerCase();
-  const hasAsk = ASK_PHRASES.some((p) => body.includes(p));
+  const hasAsk = ASK_PHRASES.some((p) => new RegExp(`\\b${p}\\b`).test(body));
   const hasQuestion = body.includes('?');
   if (hasAsk || (hasQuestion && directTo)) { rank += 20; reasons.push('contains a direct request'); }
 

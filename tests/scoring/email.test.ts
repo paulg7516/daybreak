@@ -51,4 +51,14 @@ describe('scoreEmail', () => {
     }), ctx);
     expect(s.lane).toBe('this_week');
   });
+
+  it('does not trigger ask-phrase when word is only a substring (preview/reviewer)', () => {
+    // "preview" contains "review" and "reviewer" contains "review" - neither is a whole word match
+    const s = scoreEmail(email({
+      from: 'peer@company.com',
+      toRecipients: ['me@company.com'],
+      bodyText: 'here is a preview of the reviewer feedback',
+    }), ctx);
+    expect(s.reasons).not.toContain('contains a direct request');
+  });
 });
