@@ -1,0 +1,39 @@
+{
+  "context": {
+    "me": "me@company.com",
+    "managers": ["boss@company.com"],
+    "reports": ["report@company.com"],
+    "frequentContacts": ["peer@company.com"],
+    "awaySince": "2026-05-25T00:00:00.000Z",
+    "now": "2026-06-08T08:00:00.000Z"
+  },
+  "items": [
+    {
+      "id": "JSM-101", "source": "jsm", "subject": "Prod API 500s", "from": "jira@company.com",
+      "receivedAt": "2026-05-29T03:00:00.000Z",
+      "jsm": { "assignee": "me@company.com", "priority": "P1", "slaStatus": "at_risk", "state": "open" }
+    },
+    {
+      "id": "MAIL-1", "source": "email_internal", "subject": "Sign-off needed", "from": "boss@company.com",
+      "receivedAt": "2026-05-30T09:00:00.000Z", "toRecipients": ["me@company.com"],
+      "bodyText": "Can you approve the budget by EOD?",
+      "internetHeaders": { "X-PTO-Triage": "action;by=2026-06-08" }
+    },
+    {
+      "id": "MAIL-2", "source": "email_internal", "subject": "Re: deploy question", "from": "peer@company.com",
+      "receivedAt": "2026-05-26T11:00:00.000Z", "toRecipients": ["me@company.com"],
+      "bodyText": "Quick q about the pipeline",
+      "threadMessages": [
+        { "from": "peer@company.com", "sentAt": "2026-05-27T08:00:00.000Z", "bodyText": "nvm, sorted it, thanks!" }
+      ]
+    },
+    {
+      "id": "VEND-1", "source": "email_vendor", "subject": "Critical security advisory CVE-2026-9", "from": "security@vendor.com",
+      "receivedAt": "2026-05-31T12:00:00.000Z", "bodyText": "Patch now."
+    },
+    {
+      "id": "VEND-2", "source": "email_vendor", "subject": "Spring sale!", "from": "marketing@vendor.com",
+      "receivedAt": "2026-05-31T12:00:00.000Z", "bodyText": "Big discounts inside."
+    }
+  ]
+}
