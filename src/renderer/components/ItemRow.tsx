@@ -20,13 +20,6 @@ export function ItemRow({
   onClear: (id: string) => void;
   onRerank: (id: string, lane: ScoredItemView['lane']) => void;
 }) {
-  // When a senderTag badge is shown, filter out reasons that duplicate the
-  // same signal (e.g. "Blocked tag" is redundant when the "Blocked" badge is visible).
-  const tagLabel = row.senderTag ? TAG_LABEL[row.senderTag].toLowerCase() : '';
-  const visibleReasons = row.senderTag
-    ? row.reasons.filter((r) => !r.toLowerCase().startsWith(tagLabel))
-    : row.reasons;
-
   return (
     <div className={`flex items-start gap-3 px-4 py-3 border-b border-slate-100 dark:border-slate-800 ${row.resolved ? 'opacity-60' : ''}`}>
       <div className="min-w-0 flex-1">
@@ -41,8 +34,8 @@ export function ItemRow({
         <div className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
           <span>{row.from}</span> <span className="tabular-nums">{relTime(row.receivedAt)}</span>
         </div>
-        {visibleReasons.length > 0 && (
-          <div className="mt-1 text-xs text-slate-400">{visibleReasons.join(' · ')}</div>
+        {row.reasons.length > 0 && (
+          <div className="mt-1 text-xs text-slate-400">{row.reasons.join(' · ')}</div>
         )}
       </div>
       <div className="flex shrink-0 items-center gap-1">

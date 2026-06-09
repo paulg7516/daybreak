@@ -16,8 +16,10 @@ describe('ItemRow', () => {
     render(<ItemRow row={row} onOpen={() => {}} onClear={() => {}} onRerank={() => {}} />);
     expect(screen.getByText('Budget sign-off')).toBeInTheDocument();
     expect(screen.getByText('boss@co.com')).toBeInTheDocument();
-    expect(screen.getByText(/Direct ask/)).toBeInTheDocument();
-    expect(screen.getByText(/blocked/i)).toBeInTheDocument();
+    // The reasons render joined in one element: "Direct ask · Blocked tag".
+    expect(screen.getByText(/Direct ask . Blocked tag/)).toBeInTheDocument();
+    // Exact match targets the sender-tag badge only, not the "Blocked tag" reason text.
+    expect(screen.getByText('Blocked')).toBeInTheDocument();
   });
 
   it('invokes onOpen with the webLink when Open is clicked', async () => {
