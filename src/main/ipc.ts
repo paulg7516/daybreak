@@ -1,7 +1,7 @@
 // src/main/ipc.ts
 import { ipcMain, shell, BrowserWindow } from 'electron';
 import { getOverlay, setAwayWindow, clearItem, unclearItem, rerankItem } from './store';
-import { buildView } from './ingest-runner';
+import { buildView, isDemoMode } from './ingest-runner';
 import { validateAwayWindow } from '../app/away-window';
 import type { ViewResult } from '../app/ipc-types';
 import type { Lane } from '../model/item';
@@ -10,15 +10,22 @@ function emit(channel: string, payload: unknown): void {
   for (const w of BrowserWindow.getAllWindows()) w.webContents.send(channel, payload);
 }
 
+// A default 14-day away window for demo mode, so launching with DAYBREAK_DEMO drops
+// straight into populated lanes without the away-window modal.
+function demoSince(): string {
+  return new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+}
+
 // Resolves the current view as a value (never rejects): the renderer gets a
 // TriageView, needsAwayWindow, or a typed error. buildView can throw on a Graph
 // or auth failure, so it is caught here and surfaced as { error } rather than an
 // untyped IPC rejection.
 async function viewForCurrentWindow(): Promise<ViewResult> {
   const overlay = getOverlay();
-  if (!overlay.awayWindow) return { needsAwayWindow: true };
+  const since = overlay.awayWindow?.since ?? (isDemoMode() ? demoSince() : null);
+  if (!since) return { needsAwayWindow: true };
   try {
-    return await buildView(overlay.awayWindow.since, {
+    return await buildView(since, {
       onPhase: (phase, message) => emit('daybreak:ingest', { phase, message }),
     });
   } catch (err) {
