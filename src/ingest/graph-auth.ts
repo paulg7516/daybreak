@@ -30,7 +30,9 @@ function app(): PublicClientApplication {
   return pca;
 }
 
-export async function getAccessToken(): Promise<string> {
+export async function getAccessToken(
+  onDeviceCode?: (info: { verificationUri: string; userCode: string; message: string }) => void,
+): Promise<string> {
   const pcaApp = app();
 
   const accounts = await pcaApp.getTokenCache().getAllAccounts();
@@ -54,6 +56,11 @@ export async function getAccessToken(): Promise<string> {
     deviceCodeCallback: (info) => {
       // info.message instructs the user to visit a URL and enter the code.
       console.log(info.message);
+      onDeviceCode?.({
+        verificationUri: info.verificationUri,
+        userCode: info.userCode,
+        message: info.message,
+      });
     },
   });
   if (!result?.accessToken) {

@@ -18,7 +18,9 @@ export async function buildView(sinceISO: string, events: IngestEvents): Promise
   try {
     events.onPhase('fetching');
     const now = new Date().toISOString();
-    const { me, items } = await ingestBacklog(sinceISO);
+    const { me, items } = await ingestBacklog(sinceISO, (info) =>
+      events.onPhase('auth', JSON.stringify({ verificationUri: info.verificationUri, userCode: info.userCode })),
+    );
 
     events.onPhase('scoring');
     const scored = scoreAll(items, { me, awaySince: sinceISO, now });

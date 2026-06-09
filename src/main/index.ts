@@ -1,7 +1,8 @@
 // src/main/index.ts
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import { initUpdater } from './updater';
+import { registerIpc } from './ipc';
 
 // Bundled to CommonJS (dist/main/index.cjs), so __dirname is available natively.
 const isDev = !app.isPackaged;
@@ -27,10 +28,8 @@ function createWindow(): void {
   }
 }
 
-// Temporary handler proving the bridge; replaced by the real IPC surface in Task 10.
-ipcMain.handle('daybreak:ping', () => 'pong');
-
 void app.whenReady().then(() => {
+  registerIpc();
   initUpdater();
   createWindow();
   app.on('activate', () => {
