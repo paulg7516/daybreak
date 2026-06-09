@@ -7,8 +7,11 @@ import { buildSummary } from './summary/summary';
 // else default to 14 days before now.
 function resolveSince(now: Date): string {
   const argIndex = process.argv.indexOf('--since');
-  if (argIndex >= 0 && process.argv[argIndex + 1]) {
-    return process.argv[argIndex + 1];
+  const candidate = process.argv[argIndex + 1];
+  // Guard against `--since --otherflag` swallowing a flag as the date, which would
+  // surface only as an opaque Graph 400 about the filter expression.
+  if (argIndex >= 0 && candidate && !candidate.startsWith('-')) {
+    return candidate;
   }
   if (process.env.DAYBREAK_AWAY_SINCE) {
     return process.env.DAYBREAK_AWAY_SINCE;

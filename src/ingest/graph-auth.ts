@@ -36,10 +36,16 @@ export async function getAccessToken(): Promise<string> {
   const accounts = await pcaApp.getTokenCache().getAllAccounts();
   if (accounts.length > 0) {
     try {
+      // Use the first cached account. v1 is single-tenant, single-account.
       const silent = await pcaApp.acquireTokenSilent({ account: accounts[0], scopes: SCOPES });
       if (silent?.accessToken) return silent.accessToken;
-    } catch {
-      // fall through to interactive device-code flow
+    } catch (err) {
+      // An expired token here is expected and falls through to the device-code
+      // flow. Surface other failures (bad client/tenant, network) under a debug
+      // flag so a first-run config problem is not masked by the device prompt.
+      if (process.env.DAYBREAK_DEBUG) {
+        console.error('[debug] silent token acquisition failed:', err instanceof Error ? err.message : err);
+      }
     }
   }
 

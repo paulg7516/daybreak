@@ -11,7 +11,13 @@ export const keychainCachePlugin: ICachePlugin = {
   async beforeCacheAccess(context: TokenCacheContext): Promise<void> {
     const cached = await keytar.getPassword(SERVICE, ACCOUNT);
     if (cached) {
-      context.tokenCache.deserialize(cached);
+      try {
+        context.tokenCache.deserialize(cached);
+      } catch {
+        // A corrupt or truncated entry would otherwise crash every run. Clear it
+        // and proceed to a fresh interactive sign-in.
+        await keytar.deletePassword(SERVICE, ACCOUNT);
+      }
     }
   },
   async afterCacheAccess(context: TokenCacheContext): Promise<void> {
