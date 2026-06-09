@@ -30,6 +30,10 @@ export interface DaybreakItem {
   internetHeaders?: Record<string, string>; // includes X-PTO-Triage when present
   // ticketing fields
   jsm?: JsmFields;
+  // ingestion metadata (populated by the Graph ingestion layer)
+  webLink?: string;   // deep link to open the item in Outlook/JSM
+  threadId?: string;  // conversation/thread identifier for grouping
+  isRead?: boolean;
 }
 
 export interface ScoringContext {
