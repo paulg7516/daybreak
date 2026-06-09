@@ -39,7 +39,7 @@ describe('scoreItem', () => {
     const item: ReentryItem = {
       id: 'e3', source: 'email_internal', subject: 'note', from: 'peer@company.com',
       receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com', 'x@company.com'],
-      bodyText: 'sharing notes, but I need your reply by EOD',
+      bodyText: 'sharing the meeting notes; the figures are due by EOD',
     };
     const s = scoreItem(item, ctx);
     expect(s.lane).toBe('today');

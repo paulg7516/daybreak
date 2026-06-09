@@ -65,7 +65,7 @@ export function scoreItem(item: ReentryItem, ctx: ScoringContext): ScoredItem {
     const dl = extractDeadline(item.bodyText ?? '', now);
     if (dl) {
       const promoted = laneForDeadline(dl, now);
-      if (laneRankOrder(promoted) >= laneRankOrder(lane)) {
+      if (laneRankOrder(promoted) > laneRankOrder(lane)) {
         lane = promoted;
         rank = Math.max(rank, promoted === 'today' ? 85 : 50);
         reasons = [...reasons, `deadline ${dl.toISOString().slice(0, 10)}`];
