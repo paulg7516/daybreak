@@ -1,9 +1,9 @@
 // tests/scoring/vendor.test.ts
 import { describe, it, expect } from 'vitest';
 import { scoreVendor } from '../../src/scoring/vendor';
-import type { ReentryItem } from '../../src/model/item';
+import type { DaybreakItem } from '../../src/model/item';
 
-function vendor(subject: string, body = ''): ReentryItem {
+function vendor(subject: string, body = ''): DaybreakItem {
   return {
     id: 'v1', source: 'email_vendor', subject, from: 'noreply@vendor.com',
     receivedAt: '2026-05-30T10:00:00.000Z', bodyText: body,

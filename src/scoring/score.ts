@@ -1,5 +1,5 @@
 // src/scoring/score.ts
-import type { ReentryItem, ScoringContext, ScoredItem, Lane } from '../model/item';
+import type { DaybreakItem, ScoringContext, ScoredItem, Lane } from '../model/item';
 import { scoreJsm } from './jsm';
 import { scoreEmail } from './email';
 import { scoreVendor } from './vendor';
@@ -41,7 +41,7 @@ function applyTag(tag: ParsedTag, now: Date): { lane: Lane; rank: number; reason
   }
 }
 
-export function scoreItem(item: ReentryItem, ctx: ScoringContext): ScoredItem {
+export function scoreItem(item: DaybreakItem, ctx: ScoringContext): ScoredItem {
   const now = new Date(ctx.now);
   let lane: Lane;
   let rank: number;
@@ -82,7 +82,7 @@ export function scoreItem(item: ReentryItem, ctx: ScoringContext): ScoredItem {
   return { item, lane, rank, reasons, resolved };
 }
 
-export function scoreAll(items: ReentryItem[], ctx: ScoringContext): ScoredItem[] {
+export function scoreAll(items: DaybreakItem[], ctx: ScoringContext): ScoredItem[] {
   return items
     .map((i) => scoreItem(i, ctx))
     .sort((a, b) => laneRankOrder(b.lane) - laneRankOrder(a.lane) || b.rank - a.rank);

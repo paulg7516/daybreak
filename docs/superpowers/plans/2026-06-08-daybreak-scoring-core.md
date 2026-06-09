@@ -1,10 +1,10 @@
-# Reentry Scoring Core Implementation Plan
+# Daybreak Scoring Core Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a pure, fully-tested TypeScript library (plus a CLI) that takes normalized email and JSM items and assigns each to an urgency lane (today / this_week / fyi) with a rank, reasons, and a resolved-while-away flag, then produces a "while you were out" summary.
 
-**Architecture:** No Electron, no network, no auth. Pure functions: `scoreItem` / `scoreAll` take a `ReentryItem` plus a `ScoringContext` (who "me" is, the away window, and an injected `now` for deterministic tests) and return `ScoredItem`s. Priority is derived per source: JSM from its structured payload, internal email from a sender tag header when present else from addressing/ask/relationship heuristics, vendor mail from keyword patterns. A deadline found in body text can promote an email upward. Resolved-while-away detection overrides everything to fyi. This package locks the data contracts (`ReentryItem`, `Lane`, etc.) that later plans (Graph ingestion, JSM ingestion, UI) conform to.
+**Architecture:** No Electron, no network, no auth. Pure functions: `scoreItem` / `scoreAll` take a `DaybreakItem` plus a `ScoringContext` (who "me" is, the away window, and an injected `now` for deterministic tests) and return `ScoredItem`s. Priority is derived per source: JSM from its structured payload, internal email from a sender tag header when present else from addressing/ask/relationship heuristics, vendor mail from keyword patterns. A deadline found in body text can promote an email upward. Resolved-while-away detection overrides everything to fyi. This package locks the data contracts (`DaybreakItem`, `Lane`, etc.) that later plans (Graph ingestion, JSM ingestion, UI) conform to.
 
 **Tech Stack:** TypeScript (strict), Node ESM, Vitest for tests, tsx for the CLI. No runtime dependencies.
 
@@ -40,7 +40,7 @@
 
 ```json
 {
-  "name": "reentry-scoring",
+  "name": "daybreak-scoring",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -91,7 +91,7 @@ Expected: exits cleanly reporting "No test files found" (this is fine at this st
 
 ```bash
 git add package.json tsconfig.json package-lock.json
-git commit -m "chore: scaffold reentry-scoring package"
+git commit -m "chore: scaffold daybreak-scoring package"
 ```
 
 ---
@@ -107,11 +107,11 @@ git commit -m "chore: scaffold reentry-scoring package"
 ```typescript
 // tests/model/item.test.ts
 import { describe, it, expect } from 'vitest';
-import type { ReentryItem, ScoringContext, ScoredItem } from '../../src/model/item';
+import type { DaybreakItem, ScoringContext, ScoredItem } from '../../src/model/item';
 
 describe('data model', () => {
   it('constructs a minimal JSM item and a scored item', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'JSM-1',
       source: 'jsm',
       subject: 'Server down',
@@ -164,7 +164,7 @@ export interface JsmFields {
   state?: string; // open, in progress, resolved, closed, done
 }
 
-export interface ReentryItem {
+export interface DaybreakItem {
   id: string;
   source: Source;
   subject: string;
@@ -190,7 +190,7 @@ export interface ScoringContext {
 }
 
 export interface ScoredItem {
-  item: ReentryItem;
+  item: DaybreakItem;
   lane: Lane;
   rank: number;    // 0-100, higher is more urgent, used to sort within a lane
   reasons: string[];
@@ -207,7 +207,7 @@ Expected: PASS.
 
 ```bash
 git add src/model/item.ts tests/model/item.test.ts
-git commit -m "feat: add reentry scoring data model"
+git commit -m "feat: add daybreak scoring data model"
 ```
 
 ---
@@ -575,7 +575,7 @@ Scores internal email from metadata only (no sender tag - that is handled in the
 // tests/scoring/email.test.ts
 import { describe, it, expect } from 'vitest';
 import { scoreEmail } from '../../src/scoring/email';
-import type { ReentryItem, ScoringContext } from '../../src/model/item';
+import type { DaybreakItem, ScoringContext } from '../../src/model/item';
 
 const ctx: ScoringContext = {
   me: 'me@company.com',
@@ -586,7 +586,7 @@ const ctx: ScoringContext = {
   now: '2026-06-08T08:00:00.000Z',
 };
 
-function email(over: Partial<ReentryItem>): ReentryItem {
+function email(over: Partial<DaybreakItem>): DaybreakItem {
   return {
     id: 'e1', source: 'email_internal', subject: 's', from: 'peer@company.com',
     receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com'], ...over,
@@ -637,7 +637,7 @@ Expected: FAIL - cannot find module `email`.
 
 ```typescript
 // src/scoring/email.ts
-import type { ReentryItem, ScoringContext, Lane } from '../model/item';
+import type { DaybreakItem, ScoringContext, Lane } from '../model/item';
 
 export interface EmailSignal {
   lane: Lane;
@@ -655,7 +655,7 @@ function clamp(n: number): number {
   return Math.max(0, Math.min(100, n));
 }
 
-export function scoreEmail(item: ReentryItem, ctx: ScoringContext): EmailSignal {
+export function scoreEmail(item: DaybreakItem, ctx: ScoringContext): EmailSignal {
   const me = ctx.me.toLowerCase();
   const to = (item.toRecipients ?? []).map((s) => s.toLowerCase());
   const cc = (item.ccRecipients ?? []).map((s) => s.toLowerCase());
@@ -717,9 +717,9 @@ git commit -m "feat: score internal email from addressing, ask, and relationship
 // tests/scoring/vendor.test.ts
 import { describe, it, expect } from 'vitest';
 import { scoreVendor } from '../../src/scoring/vendor';
-import type { ReentryItem } from '../../src/model/item';
+import type { DaybreakItem } from '../../src/model/item';
 
-function vendor(subject: string, body = ''): ReentryItem {
+function vendor(subject: string, body = ''): DaybreakItem {
   return {
     id: 'v1', source: 'email_vendor', subject, from: 'noreply@vendor.com',
     receivedAt: '2026-05-30T10:00:00.000Z', bodyText: body,
@@ -758,7 +758,7 @@ Expected: FAIL - cannot find module `vendor`.
 
 ```typescript
 // src/scoring/vendor.ts
-import type { ReentryItem, Lane } from '../model/item';
+import type { DaybreakItem, Lane } from '../model/item';
 
 export interface VendorSignal {
   lane: Lane;
@@ -770,7 +770,7 @@ const SECURITY = ['security advisory', 'vulnerability', 'cve-', 'breach', 'patch
 const EXPIRY = ['expires', 'expiring', 'renewal', 'renew by', 'contract end', 'will lapse', 'suspension', 'license expires'];
 const INVOICE = ['invoice', 'payment due', 'past due', 'overdue'];
 
-export function scoreVendor(item: ReentryItem): VendorSignal {
+export function scoreVendor(item: DaybreakItem): VendorSignal {
   const text = `${item.subject} ${item.bodyText ?? ''}`.toLowerCase();
   if (SECURITY.some((k) => text.includes(k))) {
     return { lane: 'today', rank: 80, reasons: ['vendor security advisory'] };
@@ -810,7 +810,7 @@ Detects whether a thread was resolved after the user left, by scanning thread me
 // tests/scoring/resolved.test.ts
 import { describe, it, expect } from 'vitest';
 import { isResolvedWhileAway } from '../../src/scoring/resolved';
-import type { ReentryItem, ScoringContext } from '../../src/model/item';
+import type { DaybreakItem, ScoringContext } from '../../src/model/item';
 
 const ctx: ScoringContext = {
   me: 'me@company.com',
@@ -818,7 +818,7 @@ const ctx: ScoringContext = {
   now: '2026-06-08T08:00:00.000Z',
 };
 
-function withThread(messages: ReentryItem['threadMessages']): ReentryItem {
+function withThread(messages: DaybreakItem['threadMessages']): DaybreakItem {
   return {
     id: 'e1', source: 'email_internal', subject: 's', from: 'peer@company.com',
     receivedAt: '2026-05-24T10:00:00.000Z', threadMessages: messages,
@@ -863,14 +863,14 @@ Expected: FAIL - cannot find module `resolved`.
 
 ```typescript
 // src/scoring/resolved.ts
-import type { ReentryItem, ScoringContext } from '../model/item';
+import type { DaybreakItem, ScoringContext } from '../model/item';
 
 const RESOLVED_PHRASES = [
   'resolved', 'sorted', 'nvm', 'never mind', 'no longer needed', 'all set',
   'disregard', 'please ignore', 'already handled', 'this is done', 'closing this out',
 ];
 
-export function isResolvedWhileAway(item: ReentryItem, ctx: ScoringContext): boolean {
+export function isResolvedWhileAway(item: DaybreakItem, ctx: ScoringContext): boolean {
   const msgs = item.threadMessages ?? [];
   const awaySince = new Date(ctx.awaySince).getTime();
   for (const m of msgs) {
@@ -910,7 +910,7 @@ Combines all signals. Source routing: JSM uses `scoreJsm`; vendor uses `scoreVen
 // tests/scoring/score.test.ts
 import { describe, it, expect } from 'vitest';
 import { scoreItem, scoreAll } from '../../src/scoring/score';
-import type { ReentryItem, ScoringContext } from '../../src/model/item';
+import type { DaybreakItem, ScoringContext } from '../../src/model/item';
 
 const ctx: ScoringContext = {
   me: 'me@company.com',
@@ -921,7 +921,7 @@ const ctx: ScoringContext = {
 
 describe('scoreItem', () => {
   it('a "blocked" sender tag lands today', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'e1', source: 'email_internal', subject: 'help', from: 'peer@company.com',
       receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com'],
       bodyText: 'whenever', internetHeaders: { 'X-PTO-Triage': 'blocked' },
@@ -932,7 +932,7 @@ describe('scoreItem', () => {
   });
 
   it('resolved-while-away overrides a blocked tag to fyi', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'e2', source: 'email_internal', subject: 'help', from: 'peer@company.com',
       receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com'],
       internetHeaders: { 'X-PTO-Triage': 'blocked' },
@@ -945,7 +945,7 @@ describe('scoreItem', () => {
   });
 
   it('a body deadline of today promotes an otherwise-weekly email to today', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'e3', source: 'email_internal', subject: 'note', from: 'peer@company.com',
       receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com', 'x@company.com'],
       bodyText: 'sharing the meeting notes; the figures are due by EOD',
@@ -956,7 +956,7 @@ describe('scoreItem', () => {
   });
 
   it('JSM P1 assigned to me lands today', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'J1', source: 'jsm', subject: 'down', from: 'jira@company.com',
       receivedAt: '2026-05-30T10:00:00.000Z',
       jsm: { assignee: 'me@company.com', priority: 'P1', slaStatus: 'ok', state: 'open' },
@@ -967,7 +967,7 @@ describe('scoreItem', () => {
 
 describe('scoreAll', () => {
   it('sorts today items before this_week before fyi', () => {
-    const items: ReentryItem[] = [
+    const items: DaybreakItem[] = [
       { id: 'fyi', source: 'email_vendor', subject: 'newsletter', from: 'n@v.com', receivedAt: '2026-05-30T10:00:00.000Z', bodyText: 'news' },
       { id: 'today', source: 'jsm', subject: 'down', from: 'jira@company.com', receivedAt: '2026-05-30T10:00:00.000Z', jsm: { assignee: 'me@company.com', priority: 'P1', state: 'open' } },
     ];
@@ -987,7 +987,7 @@ Expected: FAIL - cannot find module `score`.
 
 ```typescript
 // src/scoring/score.ts
-import type { ReentryItem, ScoringContext, ScoredItem, Lane } from '../model/item';
+import type { DaybreakItem, ScoringContext, ScoredItem, Lane } from '../model/item';
 import { scoreJsm } from './jsm';
 import { scoreEmail } from './email';
 import { scoreVendor } from './vendor';
@@ -1028,7 +1028,7 @@ function applyTag(tag: ParsedTag, now: Date): { lane: Lane; rank: number; reason
   }
 }
 
-export function scoreItem(item: ReentryItem, ctx: ScoringContext): ScoredItem {
+export function scoreItem(item: DaybreakItem, ctx: ScoringContext): ScoredItem {
   const now = new Date(ctx.now);
   let lane: Lane;
   let rank: number;
@@ -1069,7 +1069,7 @@ export function scoreItem(item: ReentryItem, ctx: ScoringContext): ScoredItem {
   return { item, lane, rank, reasons, resolved };
 }
 
-export function scoreAll(items: ReentryItem[], ctx: ScoringContext): ScoredItem[] {
+export function scoreAll(items: DaybreakItem[], ctx: ScoringContext): ScoredItem[] {
   return items
     .map((i) => scoreItem(i, ctx))
     .sort((a, b) => laneRankOrder(b.lane) - laneRankOrder(a.lane) || b.rank - a.rank);
@@ -1235,11 +1235,11 @@ Reads a JSON file of `{ context, items }`, scores everything, and prints `{ summ
 import { readFileSync } from 'node:fs';
 import { scoreAll } from './scoring/score';
 import { buildSummary } from './summary/summary';
-import type { ReentryItem, ScoringContext } from './model/item';
+import type { DaybreakItem, ScoringContext } from './model/item';
 
 interface Input {
   context: ScoringContext;
-  items: ReentryItem[];
+  items: DaybreakItem[];
 }
 
 function run(path: string): { summary: ReturnType<typeof buildSummary>; scored: ReturnType<typeof scoreAll> } {
@@ -1327,7 +1327,7 @@ git commit -m "feat: add scoring CLI and end-to-end fixture test"
 
 **Placeholder scan:** none - every code and test step contains complete content.
 
-**Type consistency:** `ReentryItem`, `ScoringContext`, `ScoredItem`, `Lane`, `JsmFields`, `ParsedTag` are defined once (Tasks 1, 2) and used consistently; signal interfaces (`JsmSignal`, `EmailSignal`, `VendorSignal`) feed the orchestrator's destructuring in Task 8.
+**Type consistency:** `DaybreakItem`, `ScoringContext`, `ScoredItem`, `Lane`, `JsmFields`, `ParsedTag` are defined once (Tasks 1, 2) and used consistently; signal interfaces (`JsmSignal`, `EmailSignal`, `VendorSignal`) feed the orchestrator's destructuring in Task 8.
 
 ## Known v1 limitations (intentional, documented)
 - Deadline parser covers ISO dates, today/EOD/COB, tomorrow, and weekday names - not "by June 20" month-name phrasing. The sender `action;by=YYYY-MM-DD` tag covers explicit dates, so free-text parsing is a bonus.

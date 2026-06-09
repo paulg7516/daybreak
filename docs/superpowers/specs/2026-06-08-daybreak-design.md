@@ -1,8 +1,8 @@
-# Reentry - Design Spec
+# Daybreak - Design Spec
 
 **Date:** 2026-06-08
 **Status:** Approved design, pending spec review before implementation planning
-**Working name:** Reentry
+**Working name:** Daybreak
 
 ## Problem
 
@@ -32,7 +32,7 @@ Primary user: the author and his IT ops team first; possible wider release if th
 
 ## Core Architecture: Local-First Desktop
 
-Reentry is a local-first desktop application (Electron, following the existing Nowtify
+Daybreak is a local-first desktop application (Electron, following the existing Nowtify
 pattern). This is both the lower-friction and the security-correct choice:
 
 - Runs entirely on the user's machine. Email is pulled directly from Microsoft Graph to the
@@ -47,16 +47,16 @@ pattern). This is both the lower-friction and the security-correct choice:
 
 ### Two artifacts
 
-1. **Reentry desktop app** (recipient side): ingests Outlook + JSM, scores locally, renders the
+1. **Daybreak desktop app** (recipient side): ingests Outlook + JSM, scores locally, renders the
    triage surface.
-2. **Reentry Outlook compose add-in** (sender side): a compose-window button that writes a
+2. **Daybreak Outlook compose add-in** (sender side): a compose-window button that writes a
    priority tag as a custom internet header on the outgoing message. Centrally deployable to
    the team via M365 admin.
 
 ## The Triage Surface
 
 When the user launches the app and confirms they are back (manual "I'm back - I was out since
-[date]" trigger in v1), Reentry shows:
+[date]" trigger in v1), Daybreak shows:
 
 ### "While you were out" summary (top)
 

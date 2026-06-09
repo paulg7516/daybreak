@@ -1,7 +1,7 @@
 // tests/scoring/score.test.ts
 import { describe, it, expect } from 'vitest';
 import { scoreItem, scoreAll } from '../../src/scoring/score';
-import type { ReentryItem, ScoringContext } from '../../src/model/item';
+import type { DaybreakItem, ScoringContext } from '../../src/model/item';
 
 const ctx: ScoringContext = {
   me: 'me@company.com',
@@ -12,7 +12,7 @@ const ctx: ScoringContext = {
 
 describe('scoreItem', () => {
   it('a "blocked" sender tag lands today', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'e1', source: 'email_internal', subject: 'help', from: 'peer@company.com',
       receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com'],
       bodyText: 'whenever', internetHeaders: { 'X-PTO-Triage': 'blocked' },
@@ -23,7 +23,7 @@ describe('scoreItem', () => {
   });
 
   it('resolved-while-away overrides a blocked tag to fyi', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'e2', source: 'email_internal', subject: 'help', from: 'peer@company.com',
       receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com'],
       internetHeaders: { 'X-PTO-Triage': 'blocked' },
@@ -36,7 +36,7 @@ describe('scoreItem', () => {
   });
 
   it('a body deadline of today promotes an otherwise-weekly email to today', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'e3', source: 'email_internal', subject: 'note', from: 'peer@company.com',
       receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com', 'x@company.com'],
       bodyText: 'sharing the meeting notes; the figures are due by EOD',
@@ -47,7 +47,7 @@ describe('scoreItem', () => {
   });
 
   it('a subject-line deadline promotes an otherwise-weekly email to today', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'e5', source: 'email_internal', subject: 'Need this by EOD', from: 'peer@company.com',
       receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com', 'x@company.com'],
       bodyText: 'Sharing notes from the meeting.',
@@ -58,7 +58,7 @@ describe('scoreItem', () => {
   });
 
   it('action tag with far-future by date floors to this_week, never fyi', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'e4', source: 'email_internal', subject: 'future task', from: 'peer@company.com',
       receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com'],
       internetHeaders: { 'X-PTO-Triage': 'action;by=2026-12-01' },
@@ -68,7 +68,7 @@ describe('scoreItem', () => {
   });
 
   it('JSM P1 assigned to me lands today', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'J1', source: 'jsm', subject: 'down', from: 'jira@company.com',
       receivedAt: '2026-05-30T10:00:00.000Z',
       jsm: { assignee: 'me@company.com', priority: 'P1', slaStatus: 'ok', state: 'open' },
@@ -79,7 +79,7 @@ describe('scoreItem', () => {
 
 describe('scoreAll', () => {
   it('sorts today items before this_week before fyi', () => {
-    const items: ReentryItem[] = [
+    const items: DaybreakItem[] = [
       { id: 'fyi', source: 'email_vendor', subject: 'newsletter', from: 'n@v.com', receivedAt: '2026-05-30T10:00:00.000Z', bodyText: 'news' },
       { id: 'today', source: 'jsm', subject: 'down', from: 'jira@company.com', receivedAt: '2026-05-30T10:00:00.000Z', jsm: { assignee: 'me@company.com', priority: 'P1', state: 'open' } },
     ];

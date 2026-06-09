@@ -1,5 +1,5 @@
 // src/scoring/email.ts
-import type { ReentryItem, ScoringContext, Lane } from '../model/item';
+import type { DaybreakItem, ScoringContext, Lane } from '../model/item';
 
 export interface EmailSignal {
   lane: Lane;
@@ -17,7 +17,7 @@ function clamp(n: number): number {
   return Math.max(0, Math.min(100, n));
 }
 
-export function scoreEmail(item: ReentryItem, ctx: ScoringContext): EmailSignal {
+export function scoreEmail(item: DaybreakItem, ctx: ScoringContext): EmailSignal {
   const me = ctx.me.toLowerCase();
   const to = (item.toRecipients ?? []).map((s) => s.toLowerCase());
   const cc = (item.ccRecipients ?? []).map((s) => s.toLowerCase());

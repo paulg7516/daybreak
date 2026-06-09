@@ -1,10 +1,10 @@
 // tests/model/item.test.ts
 import { describe, it, expect } from 'vitest';
-import type { ReentryItem, ScoringContext, ScoredItem } from '../../src/model/item';
+import type { DaybreakItem, ScoringContext, ScoredItem } from '../../src/model/item';
 
 describe('data model', () => {
   it('constructs a minimal JSM item and a scored item', () => {
-    const item: ReentryItem = {
+    const item: DaybreakItem = {
       id: 'JSM-1',
       source: 'jsm',
       subject: 'Server down',

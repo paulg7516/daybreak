@@ -1,7 +1,7 @@
 // tests/scoring/email.test.ts
 import { describe, it, expect } from 'vitest';
 import { scoreEmail } from '../../src/scoring/email';
-import type { ReentryItem, ScoringContext } from '../../src/model/item';
+import type { DaybreakItem, ScoringContext } from '../../src/model/item';
 
 const ctx: ScoringContext = {
   me: 'me@company.com',
@@ -12,7 +12,7 @@ const ctx: ScoringContext = {
   now: '2026-06-08T08:00:00.000Z',
 };
 
-function email(over: Partial<ReentryItem>): ReentryItem {
+function email(over: Partial<DaybreakItem>): DaybreakItem {
   return {
     id: 'e1', source: 'email_internal', subject: 's', from: 'peer@company.com',
     receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com'], ...over,

@@ -16,7 +16,7 @@ export interface JsmFields {
   state?: string; // open, in progress, resolved, closed, done
 }
 
-export interface ReentryItem {
+export interface DaybreakItem {
   id: string;
   source: Source;
   subject: string;
@@ -42,7 +42,7 @@ export interface ScoringContext {
 }
 
 export interface ScoredItem {
-  item: ReentryItem;
+  item: DaybreakItem;
   lane: Lane;
   rank: number;    // 0-100, higher is more urgent, used to sort within a lane
   reasons: string[];

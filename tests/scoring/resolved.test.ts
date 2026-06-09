@@ -1,7 +1,7 @@
 // tests/scoring/resolved.test.ts
 import { describe, it, expect } from 'vitest';
 import { isResolvedWhileAway } from '../../src/scoring/resolved';
-import type { ReentryItem, ScoringContext } from '../../src/model/item';
+import type { DaybreakItem, ScoringContext } from '../../src/model/item';
 
 const ctx: ScoringContext = {
   me: 'me@company.com',
@@ -9,7 +9,7 @@ const ctx: ScoringContext = {
   now: '2026-06-08T08:00:00.000Z',
 };
 
-function withThread(messages: ReentryItem['threadMessages']): ReentryItem {
+function withThread(messages: DaybreakItem['threadMessages']): DaybreakItem {
   return {
     id: 'e1', source: 'email_internal', subject: 's', from: 'peer@company.com',
     receivedAt: '2026-05-24T10:00:00.000Z', threadMessages: messages,

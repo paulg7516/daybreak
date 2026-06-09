@@ -2,11 +2,11 @@
 import { readFileSync } from 'node:fs';
 import { scoreAll } from './scoring/score';
 import { buildSummary } from './summary/summary';
-import type { ReentryItem, ScoringContext } from './model/item';
+import type { DaybreakItem, ScoringContext } from './model/item';
 
 interface Input {
   context: ScoringContext;
-  items: ReentryItem[];
+  items: DaybreakItem[];
 }
 
 function run(path: string): { summary: ReturnType<typeof buildSummary>; scored: ReturnType<typeof scoreAll> } {
