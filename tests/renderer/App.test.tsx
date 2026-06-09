@@ -1,8 +1,8 @@
+// tests/renderer/App.test.tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import App from '../../src/renderer/App';
 
-// Smoke test: App mounts without crashing when bridge is available.
 beforeEach(() => {
   (window as unknown as { daybreak: unknown }).daybreak = {
     getView: vi.fn().mockResolvedValue({ needsAwayWindow: true }),
@@ -17,9 +17,8 @@ beforeEach(() => {
 });
 
 describe('App', () => {
-  it('mounts and shows a loading or routing state', () => {
+  it('shows the away-window modal when no window is set', async () => {
     render(<App />);
-    // Before getView resolves, the app shows a fetching status.
-    expect(screen.getByText(/fetching your mail/i)).toBeInTheDocument();
+    expect(await screen.findByText(/welcome back/i)).toBeInTheDocument();
   });
 });
