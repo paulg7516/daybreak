@@ -11,8 +11,11 @@ export interface IngestResult {
   items: DaybreakItem[];
 }
 
-export async function ingestBacklog(sinceISO: string): Promise<IngestResult> {
-  const token = await getAccessToken();
+export async function ingestBacklog(
+  sinceISO: string,
+  onDeviceCode?: (info: { verificationUri: string; userCode: string; message: string }) => void,
+): Promise<IngestResult> {
+  const token = await getAccessToken(onDeviceCode);
   const { address } = await getSignedInUser(token);
   const me = address.toLowerCase();
   const at = me.lastIndexOf('@');

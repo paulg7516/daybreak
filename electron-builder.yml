@@ -1,0 +1,16 @@
+# electron-builder.yml
+appId: com.paulgerios.daybreak
+productName: Daybreak
+directories:
+  output: release
+files:
+  - dist/**/*
+  - package.json
+mac:
+  category: public.app-category.productivity
+  target:
+    - target: dmg
+      arch: [universal]
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  notarize: false

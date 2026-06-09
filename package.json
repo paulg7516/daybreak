@@ -3,21 +3,46 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "dist/main/index.cjs",
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.renderer.json --noEmit",
     "score": "tsx src/cli.ts",
-    "ingest": "tsx src/cli-ingest.ts"
+    "ingest": "tsx src/cli-ingest.ts",
+    "build:main": "node scripts/build-main.mjs",
+    "build:renderer": "vite build",
+    "app:dev": "node scripts/build-main.mjs && concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
+    "app:build": "npm run build:main && npm run build:renderer",
+    "app:dist": "npm run app:build && electron-builder --mac --universal"
   },
   "dependencies": {
     "@azure/msal-node": "^2.16.0",
+    "electron-store": "^8.2.0",
+    "electron-updater": "^6.3.9",
     "keytar": "^7.9.0"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@testing-library/jest-dom": "^6.6.0",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "concurrently": "^9.1.0",
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8",
+    "esbuild": "^0.24.0",
+    "jsdom": "^25.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwindcss": "^4.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
-    "vitest": "^2.1.0"
+    "vite": "^6.0.0",
+    "vitest": "^2.1.0",
+    "wait-on": "^7.2.0"
   }
 }
