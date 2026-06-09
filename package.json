@@ -2,6 +2,8 @@
   "name": "daybreak-scoring",
   "version": "0.1.0",
   "private": true,
+  "description": "Daybreak - return-from-PTO triage for email and tickets",
+  "author": "Paul Gerios",
   "type": "module",
   "main": "dist/main/index.cjs",
   "scripts": {
@@ -15,7 +17,7 @@
     "app:dev": "node scripts/build-main.mjs && concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
     "app:demo": "DAYBREAK_DEMO=1 npm run app:dev",
     "app:build": "npm run build:main && npm run build:renderer",
-    "app:dist": "npm run app:build && electron-builder --mac --universal",
+    "app:dist": "npm run app:build && electron-builder --mac --universal --publish never",
     "app:dist:demo": "DAYBREAK_DEMO=1 npm run app:dist"
   },
   "dependencies": {
