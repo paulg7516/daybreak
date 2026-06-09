@@ -11,7 +11,9 @@ describe('AwayWindowModal', () => {
     await userEvent.type(screen.getByLabelText(/out since/i), '2026-05-25');
     await userEvent.click(screen.getByRole('button', { name: /show my backlog/i }));
     expect(onSubmit).toHaveBeenCalledTimes(1);
-    expect(onSubmit.mock.calls[0][0]).toMatch(/^2026-05-25/);
+    // Local midnight of the chosen date, expressed in UTC. Recomputed the same way
+    // so the assertion holds in any timezone (not hardcoded to a UTC date prefix).
+    expect(onSubmit).toHaveBeenCalledWith(new Date('2026-05-25T00:00:00').toISOString());
   });
 
   it('shows a validation error when provided', () => {

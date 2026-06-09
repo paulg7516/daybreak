@@ -1,8 +1,7 @@
 // src/renderer/App.tsx
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { daybreak } from './bridge';
 import type { ViewResult } from '../app/ipc-types';
-import type { ScoredItemView } from '../app/view-model';
 import type { Lane } from '../model/item';
 import { SummaryHeader } from './components/SummaryHeader';
 import { Lane as LaneComponent } from './components/Lane';
@@ -23,6 +22,7 @@ export default function App() {
   const [auth, setAuth] = useState<{ verificationUri: string; userCode: string } | null>(null);
   const [awayError, setAwayError] = useState<string | null>(null);
   const [undo, setUndo] = useState<string | null>(null);
+  const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const off = daybreak.onIngest(({ phase: p, message }) => {
@@ -42,13 +42,22 @@ export default function App() {
     return off;
   }, []);
 
+  // Clear the undo-toast timer on unmount so it cannot fire after teardown.
+  useEffect(() => () => { if (undoTimer.current) clearTimeout(undoTimer.current); }, []);
+
+  const showUndo = useCallback((id: string) => {
+    setUndo(id);
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    undoTimer.current = setTimeout(() => setUndo(null), 5000);
+  }, []);
+
   const submitAwayWindow = useCallback(async (sinceISO: string) => {
     setAwayError(null);
     setPhase('fetching');
     const result = await daybreak.setAwayWindow(sinceISO);
+    setPhase('idle');
     if ('error' in result) {
       setAwayError(result.error);
-      setPhase('idle');
     } else {
       setView(result);
     }
@@ -56,7 +65,9 @@ export default function App() {
 
   const refresh = useCallback(async () => {
     setPhase('fetching');
-    setView(await daybreak.refresh());
+    const result = await daybreak.refresh();
+    setPhase('idle');
+    setView(result);
   }, []);
 
   const onOpen = useCallback((webLink: string) => { void daybreak.openItem(webLink); }, []);
@@ -66,11 +77,12 @@ export default function App() {
   }, []);
   const onClear = useCallback(async (id: string) => {
     await daybreak.clearItem(id);
-    setUndo(id);
+    showUndo(id);
     setView(await daybreak.refresh());
-  }, []);
+  }, [showUndo]);
   const onUndo = useCallback(async () => {
     if (!undo) return;
+    if (undoTimer.current) clearTimeout(undoTimer.current);
     await daybreak.unclearItem(undo);
     setUndo(null);
     setView(await daybreak.refresh());
@@ -114,7 +126,7 @@ export default function App() {
               title={LANE_TITLES[lane]}
               onOpen={onOpen}
               onClear={onClear}
-              onRerank={onRerank as (id: string, lane: ScoredItemView['lane']) => void}
+              onRerank={onRerank}
             />
           ))}
         </div>

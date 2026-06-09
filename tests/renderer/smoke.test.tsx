@@ -17,9 +17,12 @@ beforeEach(() => {
 });
 
 describe('App', () => {
-  it('mounts and shows a loading or routing state', () => {
+  it('mounts with a loading state, then routes once the view resolves', async () => {
     render(<App />);
     // Before getView resolves, the app shows a fetching status.
     expect(screen.getByText(/fetching your mail/i)).toBeInTheDocument();
+    // Await the resolved view so the pending getView promise settles inside act()
+    // (no unmounted-update warning at teardown).
+    expect(await screen.findByText(/welcome back/i)).toBeInTheDocument();
   });
 });

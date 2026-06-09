@@ -30,7 +30,7 @@ export function AwayWindowModal({
         <button
           type="button"
           disabled={!date}
-          onClick={() => onSubmit(new Date(`${date}T00:00:00.000Z`).toISOString())}
+          onClick={() => onSubmit(new Date(`${date}T00:00:00`).toISOString())}
           className="mt-4 w-full rounded bg-blue-600 px-4 py-2 font-medium text-white disabled:opacity-40"
         >
           Show my backlog
