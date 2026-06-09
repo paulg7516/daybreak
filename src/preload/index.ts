@@ -1,19 +1,9 @@
 // src/preload/index.ts
 import { contextBridge, ipcRenderer } from 'electron';
-import type { Lane } from '../model/item';
-import type { TriageView } from '../app/view-model';
+import type { DaybreakBridge } from '../app/ipc-types';
 
-export interface DaybreakBridge {
-  getView(): Promise<TriageView | { needsAwayWindow: true }>;
-  setAwayWindow(sinceISO: string): Promise<TriageView | { needsAwayWindow: true }>;
-  refresh(): Promise<TriageView | { needsAwayWindow: true }>;
-  clearItem(id: string): Promise<void>;
-  unclearItem(id: string): Promise<void>;
-  rerankItem(id: string, lane: Lane): Promise<void>;
-  openItem(webLink: string): Promise<void>;
-  onIngest(cb: (p: { phase: string; message?: string }) => void): () => void;
-}
-
+// DaybreakBridge is defined in the pure src/app/ipc-types module so the renderer
+// can import the same type without pulling electron into its build.
 const api: DaybreakBridge = {
   getView: () => ipcRenderer.invoke('daybreak:getView'),
   setAwayWindow: (s) => ipcRenderer.invoke('daybreak:setAwayWindow', s),
