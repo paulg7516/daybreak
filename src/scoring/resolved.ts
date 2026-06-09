@@ -12,7 +12,7 @@ export function isResolvedWhileAway(item: ReentryItem, ctx: ScoringContext): boo
   for (const m of msgs) {
     if (new Date(m.sentAt).getTime() < awaySince) continue;
     const body = (m.bodyText ?? '').toLowerCase();
-    if (RESOLVED_PHRASES.some((p) => body.includes(p))) return true;
+    if (RESOLVED_PHRASES.some((p) => new RegExp(`\\b${p}\\b`).test(body))) return true;
   }
   return false;
 }

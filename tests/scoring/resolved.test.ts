@@ -42,4 +42,11 @@ describe('isResolvedWhileAway', () => {
     ]);
     expect(isResolvedWhileAway(item, ctx)).toBe(false);
   });
+
+  it('does not match "resolved" inside "unresolved"', () => {
+    const item = withThread([
+      { from: 'peer@company.com', sentAt: '2026-05-28T09:00:00.000Z', bodyText: 'this is still unresolved and a disaster' },
+    ]);
+    expect(isResolvedWhileAway(item, ctx)).toBe(false);
+  });
 });
