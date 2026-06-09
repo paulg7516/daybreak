@@ -27,7 +27,8 @@ function applyTag(tag: ParsedTag, now: Date): { lane: Lane; rank: number; reason
       if (tag.by) {
         const by = new Date(`${tag.by}T17:00:00`);
         if (!Number.isNaN(by.getTime())) {
-          const lane = laneForDeadline(by, now);
+          const dlLane = laneForDeadline(by, now);
+          const lane = dlLane === 'today' ? 'today' : 'this_week';
           return { lane, rank: lane === 'today' ? 80 : 55, reasons: [`sender: action by ${tag.by}`] };
         }
       }
@@ -62,7 +63,7 @@ export function scoreItem(item: ReentryItem, ctx: ScoringContext): ScoredItem {
       const s = scoreEmail(item, ctx);
       ({ lane, rank, reasons } = s);
     }
-    const dl = extractDeadline(item.bodyText ?? '', now);
+    const dl = extractDeadline(`${item.subject} ${item.bodyText ?? ''}`, now);
     if (dl) {
       const promoted = laneForDeadline(dl, now);
       if (laneRankOrder(promoted) > laneRankOrder(lane)) {

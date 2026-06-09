@@ -46,6 +46,27 @@ describe('scoreItem', () => {
     expect(s.reasons.some((r) => r.startsWith('deadline'))).toBe(true);
   });
 
+  it('a subject-line deadline promotes an otherwise-weekly email to today', () => {
+    const item: ReentryItem = {
+      id: 'e5', source: 'email_internal', subject: 'Need this by EOD', from: 'peer@company.com',
+      receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com', 'x@company.com'],
+      bodyText: 'Sharing notes from the meeting.',
+    };
+    const s = scoreItem(item, ctx);
+    expect(s.lane).toBe('today');
+    expect(s.reasons.some((r) => r.startsWith('deadline'))).toBe(true);
+  });
+
+  it('action tag with far-future by date floors to this_week, never fyi', () => {
+    const item: ReentryItem = {
+      id: 'e4', source: 'email_internal', subject: 'future task', from: 'peer@company.com',
+      receivedAt: '2026-05-30T10:00:00.000Z', toRecipients: ['me@company.com'],
+      internetHeaders: { 'X-PTO-Triage': 'action;by=2026-12-01' },
+    };
+    const s = scoreItem(item, ctx);
+    expect(s.lane).toBe('this_week');
+  });
+
   it('JSM P1 assigned to me lands today', () => {
     const item: ReentryItem = {
       id: 'J1', source: 'jsm', subject: 'down', from: 'jira@company.com',
