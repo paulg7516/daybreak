@@ -61,7 +61,7 @@ export function extractDeadline(text: string, now: Date): Date | null {
 
   const floor = startOfDay(now).getTime();
   const future = candidates.filter((d) => d.getTime() >= floor);
-  const pool = future.length ? future : candidates;
-  pool.sort((a, b) => a.getTime() - b.getTime());
-  return pool[0];
+  if (future.length === 0) return null;
+  future.sort((a, b) => a.getTime() - b.getTime());
+  return future[0];
 }

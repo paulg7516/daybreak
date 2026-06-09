@@ -40,4 +40,9 @@ describe('extractDeadline', () => {
     const d = extractDeadline('ideally by Friday but hard stop 2026-06-09', now);
     expect(d!.getDate()).toBe(9);
   });
+
+  it('returns null when all candidate dates are in the past', () => {
+    // now is 2026-06-08; 2026-05-01 is entirely in the past
+    expect(extractDeadline('this was due 2026-05-01', now)).toBeNull();
+  });
 });
