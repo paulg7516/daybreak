@@ -1,1 +1,70 @@
 @import 'tailwindcss';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* ---------------------------------------------------------------------------
+   Daybreak design tokens (ui-ux-pro-max direction: navy + status colors, Inter,
+   data-dense desktop). Semantic vars adapt to light/dark via prefers-color-scheme,
+   so component utilities like bg-surface / text-ink / text-today auto-theme
+   without needing dark: variants on the tokenized colors.
+--------------------------------------------------------------------------- */
+@layer base {
+  :root {
+    --bg: #f6f8fb;
+    --surface: #ffffff;
+    --surface-2: #fbfcfe;
+    --line: #e6eaf0;
+    --line-strong: #d6dce6;
+    --ink: #0f1729;
+    --ink-2: #5a6678;
+    --ink-3: #8b96a8;
+    --brand: #2f5bea;
+    --today: #e5484d;
+    --today-tint: #fdeced;
+    --week: #f0a020;
+    --week-tint: #fdf3e2;
+    --fyi: #6b7686;
+    --fyi-tint: #eef1f5;
+    --good: #15a06b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #080b12;
+      --surface: #0f141d;
+      --surface-2: #121825;
+      --line: #1d2533;
+      --line-strong: #2a3344;
+      --ink: #e8edf5;
+      --ink-2: #9aa6b8;
+      --ink-3: #687385;
+      --brand: #5b82ff;
+      --today: #ff6166;
+      --today-tint: #2a1416;
+      --week: #ffb648;
+      --week-tint: #2a2113;
+      --fyi: #8893a4;
+      --fyi-tint: #161c27;
+      --good: #2bd49a;
+    }
+  }
+  html, body { background: var(--bg); color: var(--ink); }
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 13px; }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-brand: var(--brand);
+  --color-today: var(--today);
+  --color-today-tint: var(--today-tint);
+  --color-week: var(--week);
+  --color-week-tint: var(--week-tint);
+  --color-fyi: var(--fyi);
+  --color-fyi-tint: var(--fyi-tint);
+  --color-good: var(--good);
+}

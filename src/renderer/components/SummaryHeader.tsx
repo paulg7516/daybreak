@@ -7,18 +7,17 @@ function sinceLabel(iso: string): string {
 }
 
 export function SummaryHeader({ summary, awaySince }: { summary: Summary; awaySince: string }) {
-  const parts = [
-    `${summary.needsTodayCount} need you today`,
-    `${summary.slaAtRiskCount} SLAs at risk`,
-    `${summary.thisWeekCount} this week`,
-    `${summary.resolvedWhileAwayCount} resolved while you were out`,
-  ];
   return (
-    <header className="px-6 py-5 border-b border-slate-200 dark:border-slate-700">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
+    <header className="px-5 pt-[18px] pb-2">
+      <p className="text-[11px] font-semibold uppercase tracking-[.04em] text-ink-3">
         While you were out since {sinceLabel(awaySince)}
       </p>
-      <p className="mt-1 text-lg font-semibold tabular-nums">{parts.join(' · ')}</p>
+      <div className="mt-1.5 flex flex-wrap gap-x-[18px] gap-y-1.5 leading-tight">
+        <span className="tabular-nums text-[18px] font-bold text-today">{summary.needsTodayCount} need you today</span>
+        <span className="tabular-nums text-[18px] font-bold text-week">{summary.slaAtRiskCount} SLAs at risk</span>
+        <span className="tabular-nums text-[18px] font-semibold text-ink">{summary.thisWeekCount} this week</span>
+        <span className="tabular-nums text-[18px] font-bold text-good">{summary.resolvedWhileAwayCount} resolved while you were out</span>
+      </div>
     </header>
   );
 }

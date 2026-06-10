@@ -123,7 +123,7 @@ export default function App() {
   // first sign-in, when the view is still the away-window modal.
   if (auth) {
     return (
-      <div className="min-h-dvh grid place-items-center bg-slate-50 dark:bg-slate-900 px-6">
+      <div className="min-h-dvh grid place-items-center bg-bg px-6">
         <div className="w-full max-w-md"><AuthPanel {...auth} /></div>
       </div>
     );
@@ -143,7 +143,13 @@ export default function App() {
   }
 
   if (view === null) {
-    return <IngestStatus phase={phase === 'error' ? 'error' : 'fetching'} message={errorMsg} onRetry={refresh} />;
+    return (
+      <div className="min-h-dvh grid place-items-center bg-bg px-6">
+        <div className="w-full max-w-md">
+          <IngestStatus phase={phase === 'error' ? 'error' : 'fetching'} message={errorMsg} onRetry={refresh} />
+        </div>
+      </div>
+    );
   }
 
   if ('needsAwayWindow' in view) {
@@ -151,23 +157,46 @@ export default function App() {
   }
 
   if ('error' in view) {
-    return <IngestStatus phase="error" message={view.error} onRetry={refresh} />;
+    return (
+      <div className="min-h-dvh grid place-items-center bg-bg px-6">
+        <div className="w-full max-w-md">
+          <IngestStatus phase="error" message={view.error} onRetry={refresh} />
+        </div>
+      </div>
+    );
   }
 
   // view is a TriageView
   return (
-    <div className="min-h-dvh bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
-      <div className="flex items-start justify-between">
-        <SummaryHeader summary={view.summary} awaySince={view.awaySince} />
-        <button type="button" onClick={openSettings} className="m-4 shrink-0 rounded border border-slate-200 dark:border-slate-700 px-3 py-1 text-sm">
-          Rules
-        </button>
-      </div>
-      <div className="p-4">
+    <div className="min-h-dvh bg-bg text-ink">
+      {/* top bar */}
+      <header className="sticky top-0 z-10 flex items-center justify-between px-5 py-[10px] border-b border-line bg-surface">
+        <div className="flex items-center gap-[10px] text-[14px] font-bold tracking-[-0.01em] text-ink">
+          <span
+            className="inline-block w-[18px] h-[18px] rounded-[5px]"
+            style={{ background: 'linear-gradient(135deg, var(--brand), #7a4dff)' }}
+            aria-hidden="true"
+          />
+          Daybreak
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={openSettings}
+            className="rounded-md border border-line-strong bg-surface text-[12px] font-medium text-ink px-[11px] py-[5px] transition-colors hover:bg-surface-2 hover:border-ink-3"
+          >
+            Rules
+          </button>
+        </div>
+      </header>
+
+      <SummaryHeader summary={view.summary} awaySince={view.awaySince} />
+
+      <div className="px-5 pb-5">
         {(phase === 'fetching' || phase === 'scoring' || phase === 'error') && (
-          <div className="mb-4"><IngestStatus phase={phase} message={errorMsg} onRetry={refresh} /></div>
+          <div className="mb-[14px]"><IngestStatus phase={phase} message={errorMsg} onRetry={refresh} /></div>
         )}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-[14px] md:grid-cols-3 items-start">
           {(['today', 'this_week', 'fyi'] as Lane[]).map((lane) => (
             <LaneComponent
               key={lane}
@@ -179,11 +208,14 @@ export default function App() {
             />
           ))}
         </div>
-        <SetAsideBin view={view.setAside} onPromote={onPromote} />
+        <div className="mt-[14px]">
+          <SetAsideBin view={view.setAside} onPromote={onPromote} />
+        </div>
       </div>
+
       {undo && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded bg-slate-900 text-white px-4 py-2 text-sm" role="status" aria-live="polite">
-          Cleared <button type="button" className="ml-3 underline" onClick={onUndo}>Undo</button>
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-md bg-ink text-surface px-4 py-2 text-[13px] shadow-sm" role="status" aria-live="polite">
+          Cleared <button type="button" className="ml-3 underline font-medium" onClick={onUndo}>Undo</button>
         </div>
       )}
     </div>

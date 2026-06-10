@@ -10,6 +10,12 @@ const SOURCE_LABEL: Record<Source, string> = {
   email_vendor: 'Vendor',
 };
 
+const DOT_COLOR: Record<Source, string> = {
+  jsm: 'bg-brand',
+  email_internal: 'bg-good',
+  email_vendor: 'bg-week',
+};
+
 export function SourceGroup({
   group,
   onOpen,
@@ -22,16 +28,18 @@ export function SourceGroup({
   onRerank: (id: string, lane: ScoredItemView['lane']) => void;
 }) {
   const [open, setOpen] = useState(true);
+  const dotColor = DOT_COLOR[group.source];
   return (
     <section>
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-500"
+        className="flex w-full items-center gap-[7px] px-3 py-[7px] pl-[14px] pb-[5px] text-[10.5px] font-semibold uppercase tracking-[.06em] text-ink-3 transition-colors hover:text-ink-2"
       >
+        <span className={`inline-block w-[5px] h-[5px] rounded-full shrink-0 ${dotColor}`} aria-hidden="true" />
         <span>{SOURCE_LABEL[group.source]}</span>
-        <span className="tabular-nums">{group.items.length}</span>
+        <span className="tabular-nums ml-auto">{group.items.length}</span>
       </button>
       {open && group.items.map((row) => (
         <ItemRow key={row.id} row={row} onOpen={onOpen} onClear={onClear} onRerank={onRerank} />

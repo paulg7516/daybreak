@@ -38,51 +38,51 @@ export function RulesSettings({
   }
 
   return (
-    <div className="min-h-dvh bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 p-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Rules</h1>
-        <button type="button" onClick={onClose} className="text-sm underline">Done</button>
+    <div className="min-h-dvh bg-bg text-ink p-6">
+      <div className="mb-5 flex items-center justify-between">
+        <h1 className="text-[18px] font-semibold tracking-[-0.01em]">Rules</h1>
+        <button type="button" onClick={onClose} className="text-[13px] font-medium text-ink-2 underline transition-colors hover:text-ink">Done</button>
       </div>
 
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" checked={bulkExcludeEnabled} onChange={(e) => onToggleBulk(e.target.checked)} />
+      <label className="flex items-center gap-2 text-[13px] text-ink cursor-pointer">
+        <input type="checkbox" checked={bulkExcludeEnabled} onChange={(e) => onToggleBulk(e.target.checked)} className="rounded" />
         Set aside automated and bulk mail (newsletters, notifications)
       </label>
 
-      <ul className="mt-4 space-y-1">
+      <ul className="mt-4 space-y-1.5">
         {rules.map((r) => (
-          <li key={r.id} className="flex items-center gap-3 text-sm">
-            <span className="flex-1">
-              <strong>{r.action}</strong> {r.field === 'from' ? 'from' : 'domain'} {r.value}
+          <li key={r.id} className="flex items-center gap-3 text-[13px] bg-surface border border-line rounded-md px-3 py-2">
+            <span className="flex-1 text-ink">
+              <strong className="font-semibold">{r.action}</strong> {r.field === 'from' ? 'from' : 'domain'} {r.value}
               {r.action === 'include' && r.lane ? ` (${r.lane.replace('_', ' ')})` : ''}
             </span>
-            <button type="button" onClick={() => onRemove(r.id)} className="text-red-600 underline">Remove</button>
+            <button type="button" onClick={() => onRemove(r.id)} className="text-[12px] font-medium text-today underline transition-colors hover:text-today">Remove</button>
           </li>
         ))}
       </ul>
 
-      <form className="mt-4 flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); submit(); }}>
-        <label className="text-sm">
-          <span className="block">Sender or domain</span>
+      <form className="mt-5 flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); submit(); }}>
+        <label className="text-[13px] text-ink">
+          <span className="block font-medium mb-1">Sender or domain</span>
           <input
             value={value}
             onChange={(e) => setValue(e.target.value)}
             placeholder="boss@company.com or company.com"
-            className="mt-1 rounded border border-slate-300 dark:border-slate-600 bg-transparent px-2 py-1"
+            className="rounded-md border border-line-strong bg-surface text-ink px-3 py-[6px] text-[13px] transition-colors focus:border-brand outline-none"
           />
         </label>
-        <select aria-label="Action" value={action} onChange={(e) => setAction(e.target.value as 'include' | 'exclude')} className="rounded border border-slate-300 dark:border-slate-600 bg-transparent px-2 py-1 text-sm">
+        <select aria-label="Action" value={action} onChange={(e) => setAction(e.target.value as 'include' | 'exclude')} className="rounded-md border border-line-strong bg-surface text-ink-2 px-2 py-[6px] text-[13px] transition-colors hover:border-ink-3">
           <option value="include">Include</option>
           <option value="exclude">Exclude</option>
         </select>
         {action === 'include' && (
-          <select aria-label="Lane" value={lane} onChange={(e) => setLane(e.target.value as Lane)} className="rounded border border-slate-300 dark:border-slate-600 bg-transparent px-2 py-1 text-sm">
+          <select aria-label="Lane" value={lane} onChange={(e) => setLane(e.target.value as Lane)} className="rounded-md border border-line-strong bg-surface text-ink-2 px-2 py-[6px] text-[13px] transition-colors hover:border-ink-3">
             <option value="today">Today</option>
             <option value="this_week">This week</option>
             <option value="fyi">FYI</option>
           </select>
         )}
-        <button type="submit" className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white">Add rule</button>
+        <button type="submit" className="rounded-md bg-brand px-3 py-[6px] text-[13px] font-medium text-white transition-colors hover:opacity-90">Add rule</button>
       </form>
     </div>
   );
