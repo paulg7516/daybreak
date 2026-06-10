@@ -12,7 +12,8 @@ import { addRule as addRuleR, removeRule as removeRuleR, setBulkExclude as setBu
 import type { Lane } from '../model/item';
 
 // electron-store persists a single "overlay" key. Email content is never stored;
-// only the away window, cleared ids, and re-rank overrides live here.
+// only the away window, cleared ids, re-rank overrides, rules, and forced-include
+// entries live here.
 const store = new ElectronStore<{ overlay: Overlay }>({
   name: 'daybreak-overlay',
   defaults: { overlay: emptyOverlay() },

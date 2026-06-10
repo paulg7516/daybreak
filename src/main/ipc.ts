@@ -11,6 +11,10 @@ function emit(channel: string, payload: unknown): void {
   for (const w of BrowserWindow.getAllWindows()) w.webContents.send(channel, payload);
 }
 
+// Guard the lane coming over IPC: a bogus value would persist into forcedInclude
+// and make the item vanish from every lane (lanes are keyed by the Lane union).
+const VALID_LANES = new Set<string>(['today', 'this_week', 'fyi']);
+
 // A default 14-day away window for demo mode, so launching with DAYBREAK_DEMO drops
 // straight into populated lanes without the away-window modal.
 function demoSince(): string {
@@ -59,7 +63,10 @@ export function registerIpc(): void {
   ipcMain.handle('daybreak:addRule', (_e, rule: Rule) => { addRule(rule); return viewForCurrentWindow(); });
   ipcMain.handle('daybreak:removeRule', (_e, id: string) => { removeRule(id); return viewForCurrentWindow(); });
   ipcMain.handle('daybreak:setBulkExclude', (_e, enabled: boolean) => { setBulkExclude(enabled); return viewForCurrentWindow(); });
-  ipcMain.handle('daybreak:promoteSetAside', (_e, id: string, lane: Lane) => { promoteSetAside(id, lane); return viewForCurrentWindow(); });
+  ipcMain.handle('daybreak:promoteSetAside', (_e, id: string, lane: Lane) => {
+    if (id && VALID_LANES.has(lane)) promoteSetAside(id, lane);
+    return viewForCurrentWindow();
+  });
 
   ipcMain.handle('daybreak:openItem', async (_e, webLink: string) => {
     if (!webLink) return;
