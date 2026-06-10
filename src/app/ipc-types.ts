@@ -4,6 +4,7 @@
 // import it without pulling in process-specific globals.
 import type { Lane } from '../model/item';
 import type { TriageView } from './view-model';
+import type { Rule } from './rules';
 
 // The result of asking main for the current view. A discriminated union so the
 // renderer can pattern-match instead of try/catch around the IPC call:
@@ -29,5 +30,10 @@ export interface DaybreakBridge {
   unclearItem(id: string): Promise<void>;
   rerankItem(id: string, lane: Lane): Promise<void>;
   openItem(webLink: string): Promise<void>;
+  getRules(): Promise<{ rules: Rule[]; bulkExcludeEnabled: boolean }>;
+  addRule(rule: Rule): Promise<ViewResult>;
+  removeRule(id: string): Promise<ViewResult>;
+  setBulkExclude(enabled: boolean): Promise<ViewResult>;
+  promoteSetAside(id: string, lane: Lane): Promise<ViewResult>;
   onIngest(cb: (p: IngestEventPayload) => void): () => void;
 }

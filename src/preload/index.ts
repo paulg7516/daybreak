@@ -12,6 +12,11 @@ const api: DaybreakBridge = {
   unclearItem: (id) => ipcRenderer.invoke('daybreak:unclearItem', id),
   rerankItem: (id, lane) => ipcRenderer.invoke('daybreak:rerankItem', id, lane),
   openItem: (webLink) => ipcRenderer.invoke('daybreak:openItem', webLink),
+  getRules: () => ipcRenderer.invoke('daybreak:getRules'),
+  addRule: (rule) => ipcRenderer.invoke('daybreak:addRule', rule),
+  removeRule: (id) => ipcRenderer.invoke('daybreak:removeRule', id),
+  setBulkExclude: (enabled) => ipcRenderer.invoke('daybreak:setBulkExclude', enabled),
+  promoteSetAside: (id, lane) => ipcRenderer.invoke('daybreak:promoteSetAside', id, lane),
   onIngest: (cb) => {
     const handler = (_e: unknown, p: { phase: string; message?: string }) => cb(p);
     ipcRenderer.on('daybreak:ingest', handler);

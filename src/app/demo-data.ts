@@ -3,8 +3,18 @@
 // the real scorer so the triage UI can be seen and clicked without Microsoft Graph
 // or any credentials. Nothing here touches the network or the keychain.
 import type { DaybreakItem } from '../model/item';
+import type { Rule } from './rules';
 
 export const DEMO_ME = 'you@company.com';
+
+// Demo include rule so the un-flagged company.com items (CFO, legal, design-lead,
+// peer) land in lanes, while the vendor newsletter + invoice fall to Set-aside -
+// showing both halves of the curated queue without any real rules configured.
+export function demoRules(): Rule[] {
+  return [
+    { id: 'demo-include-company', field: 'from-domain', value: 'company.com', action: 'include', lane: null },
+  ];
+}
 
 function daysAgo(nowISO: string, n: number): string {
   return new Date(Date.parse(nowISO) - n * 24 * 60 * 60 * 1000).toISOString();
