@@ -9,10 +9,15 @@ export interface Overlay {
   rules: Rule[];
   bulkExcludeEnabled: boolean;
   forcedInclude: Record<string, Lane>; // one-off promotes out of Set-aside, keyed by item id
+  jira: { baseUrl: string; email: string } | null;
 }
 
 export function emptyOverlay(): Overlay {
-  return { awayWindow: null, cleared: {}, rerank: {}, rules: [], bulkExcludeEnabled: true, forcedInclude: {} };
+  return { awayWindow: null, cleared: {}, rerank: {}, rules: [], bulkExcludeEnabled: true, forcedInclude: {}, jira: null };
+}
+
+export function setJiraConfig(o: Overlay, baseUrl: string, email: string): Overlay {
+  return { ...o, jira: { baseUrl: baseUrl.trim().replace(/\/$/, ''), email: email.trim() } };
 }
 
 export function setAwayWindow(o: Overlay, sinceISO: string, nowISO: string): Overlay {

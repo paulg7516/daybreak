@@ -1,6 +1,6 @@
 // src/renderer/App.tsx
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Sunrise, LayoutList, SlidersHorizontal, RefreshCw, CalendarDays } from 'lucide-react';
+import { Sunrise, LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays } from 'lucide-react';
 import { daybreak } from './bridge';
 import type { ViewResult } from '../app/ipc-types';
 import type { Lane } from '../model/item';
@@ -10,7 +10,8 @@ import { AwayWindowModal } from './components/AwayWindowModal';
 import { AuthPanel } from './components/AuthPanel';
 import { IngestStatus } from './components/IngestStatus';
 import { SetAsideBin } from './components/SetAsideBin';
-import { RulesSettings } from './components/RulesSettings';
+import { Settings } from './components/Settings';
+import type { JiraConfigView, JiraTestResult } from './components/JiraSettings';
 import type { Rule } from '../app/rules';
 
 const LANE_TITLES: Record<Lane, string> = {
@@ -34,6 +35,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [rules, setRules] = useState<Rule[]>([]);
   const [bulkExclude, setBulkExclude] = useState(true);
+  const [jiraConfig, setJiraConfig] = useState<JiraConfigView>({ baseUrl: '', email: '', hasToken: false });
 
   useEffect(() => {
     const off = daybreak.onIngest(({ phase: p, message }) => {
@@ -81,9 +83,10 @@ export default function App() {
     setView(await daybreak.promoteSetAside(id, lane));
   }, []);
   const openSettings = useCallback(async () => {
-    const r = await daybreak.getRules();
+    const [r, j] = await Promise.all([daybreak.getRules(), daybreak.getJiraConfig()]);
     setRules(r.rules);
     setBulkExclude(r.bulkExcludeEnabled);
+    setJiraConfig(j);
     setShowSettings(true);
   }, []);
   const addRuleAction = useCallback(async (rule: Rule) => {
@@ -100,6 +103,18 @@ export default function App() {
     setBulkExclude(enabled);
     const v = await daybreak.setBulkExclude(enabled);
     if (!('error' in v) && !('needsAwayWindow' in v)) setView(v);
+  }, []);
+
+  const onSaveJira = useCallback(async (input: { baseUrl: string; email: string; token?: string }) => {
+    await daybreak.setJiraConfig(input);
+    setJiraConfig(await daybreak.getJiraConfig());
+  }, []);
+  const onTestJira = useCallback((input: { baseUrl: string; email: string; token?: string }): Promise<JiraTestResult> => {
+    return daybreak.testJiraConnection(input);
+  }, []);
+  const onClearJiraToken = useCallback(async () => {
+    await daybreak.clearJiraToken();
+    setJiraConfig(await daybreak.getJiraConfig());
   }, []);
 
   const onOpen = useCallback((webLink: string) => { void daybreak.openItem(webLink); }, []);
@@ -130,12 +145,16 @@ export default function App() {
   }
   if (showSettings) {
     return (
-      <RulesSettings
+      <Settings
         rules={rules}
         bulkExcludeEnabled={bulkExclude}
-        onAdd={addRuleAction}
-        onRemove={removeRuleAction}
+        onAddRule={addRuleAction}
+        onRemoveRule={removeRuleAction}
         onToggleBulk={toggleBulk}
+        jiraConfig={jiraConfig}
+        onSaveJira={onSaveJira}
+        onTestJira={onTestJira}
+        onClearJiraToken={onClearJiraToken}
         onClose={() => setShowSettings(false)}
       />
     );
@@ -174,9 +193,9 @@ export default function App() {
           className="grid h-10 w-10 place-items-center rounded-xl bg-accent/15 text-accent">
           <LayoutList size={19} strokeWidth={2} />
         </button>
-        <button type="button" aria-label="Rules" onClick={openSettings}
+        <button type="button" aria-label="Settings" onClick={openSettings}
           className="grid h-10 w-10 place-items-center rounded-xl text-ink-3 transition-colors hover:bg-panel-2 hover:text-ink">
-          <SlidersHorizontal size={19} strokeWidth={2} />
+          <SettingsIcon size={19} strokeWidth={2} />
         </button>
       </nav>
 

@@ -35,5 +35,9 @@ export interface DaybreakBridge {
   removeRule(id: string): Promise<ViewResult>;
   setBulkExclude(enabled: boolean): Promise<ViewResult>;
   promoteSetAside(id: string, lane: Lane): Promise<ViewResult>;
+  getJiraConfig(): Promise<{ baseUrl: string; email: string; hasToken: boolean }>;
+  setJiraConfig(input: { baseUrl: string; email: string; token?: string }): Promise<void>;
+  testJiraConnection(input: { baseUrl: string; email: string; token?: string }): Promise<{ ok: true; displayName: string } | { ok: false; error: string }>;
+  clearJiraToken(): Promise<void>;
   onIngest(cb: (p: IngestEventPayload) => void): () => void;
 }

@@ -17,6 +17,10 @@ const api: DaybreakBridge = {
   removeRule: (id) => ipcRenderer.invoke('daybreak:removeRule', id),
   setBulkExclude: (enabled) => ipcRenderer.invoke('daybreak:setBulkExclude', enabled),
   promoteSetAside: (id, lane) => ipcRenderer.invoke('daybreak:promoteSetAside', id, lane),
+  getJiraConfig: () => ipcRenderer.invoke('daybreak:getJiraConfig'),
+  setJiraConfig: (input) => ipcRenderer.invoke('daybreak:setJiraConfig', input),
+  testJiraConnection: (input) => ipcRenderer.invoke('daybreak:testJiraConnection', input),
+  clearJiraToken: () => ipcRenderer.invoke('daybreak:clearJiraToken'),
   onIngest: (cb) => {
     const handler = (_e: unknown, p: { phase: string; message?: string }) => cb(p);
     ipcRenderer.on('daybreak:ingest', handler);
