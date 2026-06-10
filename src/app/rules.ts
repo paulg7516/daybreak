@@ -14,6 +14,9 @@ export interface Rule {
 }
 
 export function addRule(o: Overlay, rule: Rule): Overlay {
+  // Dedupe at the source of truth: re-adding a rule with the same id is a no-op,
+  // so the persisted store cannot grow duplicate entries.
+  if (o.rules.some((r) => r.id === rule.id)) return o;
   return { ...o, rules: [...o.rules, rule] };
 }
 

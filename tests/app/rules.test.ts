@@ -13,6 +13,11 @@ describe('rule reducers', () => {
     expect(base.rules).toEqual([]);
   });
 
+  it('addRule is a no-op when a rule with the same id already exists', () => {
+    const o = addRule(emptyOverlay(), rule);
+    expect(addRule(o, rule).rules).toEqual([rule]); // not duplicated
+  });
+
   it('removeRule drops by id', () => {
     const o = addRule(emptyOverlay(), rule);
     expect(removeRule(o, 'r1').rules).toEqual([]);

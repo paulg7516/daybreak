@@ -26,7 +26,7 @@ describe('SetAsideBin', () => {
     const onPromote = vi.fn();
     render(<SetAsideBin view={view} onPromote={onPromote} />);
     await userEvent.click(screen.getByRole('button', { name: /set aside.*2/i }));
-    const rowSelect = screen.getAllByLabelText(/move to/i)[0];
+    const rowSelect = screen.getAllByLabelText(/^move .* to lane$/i)[0];
     await userEvent.selectOptions(rowSelect, 'today');
     expect(onPromote).toHaveBeenCalledWith('a', 'today');
   });

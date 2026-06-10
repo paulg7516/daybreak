@@ -54,14 +54,14 @@ export function RulesSettings({
           <li key={r.id} className="flex items-center gap-3 text-sm">
             <span className="flex-1">
               <strong>{r.action}</strong> {r.field === 'from' ? 'from' : 'domain'} {r.value}
-              {r.action === 'include' && r.lane ? ` -> ${r.lane}` : ''}
+              {r.action === 'include' && r.lane ? ` (${r.lane.replace('_', ' ')})` : ''}
             </span>
             <button type="button" onClick={() => onRemove(r.id)} className="text-red-600 underline">Remove</button>
           </li>
         ))}
       </ul>
 
-      <div className="mt-4 flex flex-wrap items-end gap-2">
+      <form className="mt-4 flex flex-wrap items-end gap-2" onSubmit={(e) => { e.preventDefault(); submit(); }}>
         <label className="text-sm">
           <span className="block">Sender or domain</span>
           <input
@@ -82,8 +82,8 @@ export function RulesSettings({
             <option value="fyi">FYI</option>
           </select>
         )}
-        <button type="button" onClick={submit} className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white">Add rule</button>
-      </div>
+        <button type="submit" className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white">Add rule</button>
+      </form>
     </div>
   );
 }

@@ -26,7 +26,7 @@ export function SetAsideBin({ view, onPromote }: { view: SetAsideView; onPromote
           <span className="min-w-0 flex-1 truncate">{row.subject} <span className="text-slate-400">{row.from}</span></span>
           <span className="shrink-0 rounded px-1.5 py-0.5 text-xs bg-slate-100 dark:bg-slate-800">{REASON_LABEL[row.reason]}</span>
           <select
-            aria-label={`Move to lane`}
+            aria-label={`Move ${row.subject} to lane`}
             defaultValue=""
             className="shrink-0 rounded border border-slate-200 dark:border-slate-700 bg-transparent px-1 py-1 text-xs"
             onChange={(e) => { if (e.target.value) onPromote(row.id, e.target.value as Lane); }}
