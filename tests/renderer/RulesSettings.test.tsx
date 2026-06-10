@@ -12,7 +12,7 @@ const rules: Rule[] = [
 describe('RulesSettings', () => {
   it('lists existing rules and removes one', async () => {
     const onRemove = vi.fn();
-    render(<RulesSettings rules={rules} bulkExcludeEnabled onAdd={() => {}} onRemove={onRemove} onToggleBulk={() => {}} onClose={() => {}} />);
+    render(<RulesSettings rules={rules} bulkExcludeEnabled onAdd={() => {}} onRemove={onRemove} onToggleBulk={() => {}} />);
     expect(screen.getByText(/company\.com/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /remove/i }));
     expect(onRemove).toHaveBeenCalledWith('r1');
@@ -20,7 +20,7 @@ describe('RulesSettings', () => {
 
   it('adds an include rule from the form', async () => {
     const onAdd = vi.fn();
-    render(<RulesSettings rules={[]} bulkExcludeEnabled onAdd={onAdd} onRemove={() => {}} onToggleBulk={() => {}} onClose={() => {}} />);
+    render(<RulesSettings rules={[]} bulkExcludeEnabled onAdd={onAdd} onRemove={() => {}} onToggleBulk={() => {}} />);
     await userEvent.type(screen.getByLabelText(/sender or domain/i), 'boss@company.com');
     await userEvent.click(screen.getByRole('button', { name: /add rule/i }));
     expect(onAdd).toHaveBeenCalledTimes(1);
@@ -31,7 +31,7 @@ describe('RulesSettings', () => {
 
   it('toggles the bulk-exclude switch', async () => {
     const onToggleBulk = vi.fn();
-    render(<RulesSettings rules={[]} bulkExcludeEnabled onAdd={() => {}} onRemove={() => {}} onToggleBulk={onToggleBulk} onClose={() => {}} />);
+    render(<RulesSettings rules={[]} bulkExcludeEnabled onAdd={() => {}} onRemove={() => {}} onToggleBulk={onToggleBulk} />);
     await userEvent.click(screen.getByLabelText(/set aside automated/i));
     expect(onToggleBulk).toHaveBeenCalledWith(false);
   });
