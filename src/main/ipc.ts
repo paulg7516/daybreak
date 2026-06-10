@@ -1,6 +1,8 @@
 // src/main/ipc.ts
 import { ipcMain, shell, BrowserWindow } from 'electron';
-import { getOverlay, setAwayWindow, clearItem, unclearItem, rerankItem, addRule, removeRule, setBulkExclude, promoteSetAside } from './store';
+import { getOverlay, setAwayWindow, clearItem, unclearItem, rerankItem, addRule, removeRule, setBulkExclude, promoteSetAside, getJiraConfig, setJiraConfig } from './store';
+import { storeJiraToken, clearJiraToken, getStoredJiraToken } from '../ingest/jsm-auth';
+import { testJiraConnection } from './jira-test';
 import type { Rule } from '../app/rules';
 import { buildView, isDemoMode } from './ingest-runner';
 import { validateAwayWindow } from '../app/away-window';
@@ -67,6 +69,20 @@ export function registerIpc(): void {
     if (id && VALID_LANES.has(lane)) promoteSetAside(id, lane);
     return viewForCurrentWindow();
   });
+
+  ipcMain.handle('daybreak:getJiraConfig', async () => {
+    const j = getJiraConfig();
+    const token = await getStoredJiraToken();
+    return { baseUrl: j?.baseUrl ?? '', email: j?.email ?? '', hasToken: !!token };
+  });
+  ipcMain.handle('daybreak:setJiraConfig', async (_e, input: { baseUrl: string; email: string; token?: string }) => {
+    setJiraConfig(input.baseUrl, input.email);
+    if (input.token) await storeJiraToken(input.token);
+  });
+  ipcMain.handle('daybreak:testJiraConnection', (_e, input: { baseUrl: string; email: string; token?: string }) =>
+    testJiraConnection(input),
+  );
+  ipcMain.handle('daybreak:clearJiraToken', () => clearJiraToken());
 
   ipcMain.handle('daybreak:openItem', async (_e, webLink: string) => {
     if (!webLink) return;
