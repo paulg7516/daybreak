@@ -8,6 +8,7 @@ import {
   rerankItem as rerankItemR,
   type Overlay,
 } from '../app/overlay';
+import { addRule as addRuleR, removeRule as removeRuleR, setBulkExclude as setBulkExcludeR, forceInclude as forceIncludeR, type Rule } from '../app/rules';
 import type { Lane } from '../model/item';
 
 // electron-store persists a single "overlay" key. Email content is never stored;
@@ -18,7 +19,7 @@ const store = new ElectronStore<{ overlay: Overlay }>({
 });
 
 export function getOverlay(): Overlay {
-  return store.get('overlay');
+  return { ...emptyOverlay(), ...store.get('overlay') };
 }
 
 function update(next: Overlay): Overlay {
@@ -40,4 +41,20 @@ export function unclearItem(id: string): Overlay {
 
 export function rerankItem(id: string, lane: Lane): Overlay {
   return update(rerankItemR(getOverlay(), id, lane));
+}
+
+export function addRule(rule: Rule): Overlay {
+  return update(addRuleR(getOverlay(), rule));
+}
+
+export function removeRule(id: string): Overlay {
+  return update(removeRuleR(getOverlay(), id));
+}
+
+export function setBulkExclude(enabled: boolean): Overlay {
+  return update(setBulkExcludeR(getOverlay(), enabled));
+}
+
+export function promoteSetAside(id: string, lane: Lane): Overlay {
+  return update(forceIncludeR(getOverlay(), id, lane));
 }

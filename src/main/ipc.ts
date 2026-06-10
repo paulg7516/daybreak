@@ -1,6 +1,7 @@
 // src/main/ipc.ts
 import { ipcMain, shell, BrowserWindow } from 'electron';
-import { getOverlay, setAwayWindow, clearItem, unclearItem, rerankItem } from './store';
+import { getOverlay, setAwayWindow, clearItem, unclearItem, rerankItem, addRule, removeRule, setBulkExclude, promoteSetAside } from './store';
+import type { Rule } from '../app/rules';
 import { buildView, isDemoMode } from './ingest-runner';
 import { validateAwayWindow } from '../app/away-window';
 import type { ViewResult } from '../app/ipc-types';
@@ -50,6 +51,15 @@ export function registerIpc(): void {
   ipcMain.handle('daybreak:clearItem', (_e, id: string) => { clearItem(id); });
   ipcMain.handle('daybreak:unclearItem', (_e, id: string) => { unclearItem(id); });
   ipcMain.handle('daybreak:rerankItem', (_e, id: string, lane: Lane) => { rerankItem(id, lane); });
+
+  ipcMain.handle('daybreak:getRules', () => {
+    const o = getOverlay();
+    return { rules: o.rules, bulkExcludeEnabled: o.bulkExcludeEnabled };
+  });
+  ipcMain.handle('daybreak:addRule', (_e, rule: Rule) => { addRule(rule); return viewForCurrentWindow(); });
+  ipcMain.handle('daybreak:removeRule', (_e, id: string) => { removeRule(id); return viewForCurrentWindow(); });
+  ipcMain.handle('daybreak:setBulkExclude', (_e, enabled: boolean) => { setBulkExclude(enabled); return viewForCurrentWindow(); });
+  ipcMain.handle('daybreak:promoteSetAside', (_e, id: string, lane: Lane) => { promoteSetAside(id, lane); return viewForCurrentWindow(); });
 
   ipcMain.handle('daybreak:openItem', async (_e, webLink: string) => {
     if (!webLink) return;
