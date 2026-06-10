@@ -8,6 +8,9 @@ import { Lane as LaneComponent } from './components/Lane';
 import { AwayWindowModal } from './components/AwayWindowModal';
 import { AuthPanel } from './components/AuthPanel';
 import { IngestStatus } from './components/IngestStatus';
+import { SetAsideBin } from './components/SetAsideBin';
+import { RulesSettings } from './components/RulesSettings';
+import type { Rule } from '../app/rules';
 
 const LANE_TITLES: Record<Lane, string> = {
   today: 'Needs you today',
@@ -23,6 +26,9 @@ export default function App() {
   const [awayError, setAwayError] = useState<string | null>(null);
   const [undo, setUndo] = useState<string | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [rules, setRules] = useState<Rule[]>([]);
+  const [bulkExclude, setBulkExclude] = useState(true);
 
   useEffect(() => {
     const off = daybreak.onIngest(({ phase: p, message }) => {
@@ -70,6 +76,31 @@ export default function App() {
     setView(result);
   }, []);
 
+  const onPromote = useCallback(async (id: string, lane: Lane) => {
+    setView(await daybreak.promoteSetAside(id, lane));
+  }, []);
+  const openSettings = useCallback(async () => {
+    const r = await daybreak.getRules();
+    setRules(r.rules);
+    setBulkExclude(r.bulkExcludeEnabled);
+    setShowSettings(true);
+  }, []);
+  const addRuleAction = useCallback(async (rule: Rule) => {
+    const v = await daybreak.addRule(rule);
+    setRules((rs) => (rs.some((x) => x.id === rule.id) ? rs : [...rs, rule]));
+    if (!('error' in v) && !('needsAwayWindow' in v)) setView(v);
+  }, []);
+  const removeRuleAction = useCallback(async (id: string) => {
+    const v = await daybreak.removeRule(id);
+    setRules((rs) => rs.filter((x) => x.id !== id));
+    if (!('error' in v) && !('needsAwayWindow' in v)) setView(v);
+  }, []);
+  const toggleBulk = useCallback(async (enabled: boolean) => {
+    setBulkExclude(enabled);
+    const v = await daybreak.setBulkExclude(enabled);
+    if (!('error' in v) && !('needsAwayWindow' in v)) setView(v);
+  }, []);
+
   const onOpen = useCallback((webLink: string) => { void daybreak.openItem(webLink); }, []);
   const onRerank = useCallback(async (id: string, lane: Lane) => {
     await daybreak.rerankItem(id, lane);
@@ -98,6 +129,19 @@ export default function App() {
     );
   }
 
+  if (showSettings) {
+    return (
+      <RulesSettings
+        rules={rules}
+        bulkExcludeEnabled={bulkExclude}
+        onAdd={addRuleAction}
+        onRemove={removeRuleAction}
+        onToggleBulk={toggleBulk}
+        onClose={() => setShowSettings(false)}
+      />
+    );
+  }
+
   if (view === null) {
     return <IngestStatus phase={phase === 'error' ? 'error' : 'fetching'} message={errorMsg} onRetry={refresh} />;
   }
@@ -113,7 +157,12 @@ export default function App() {
   // view is a TriageView
   return (
     <div className="min-h-dvh bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
-      <SummaryHeader summary={view.summary} awaySince={view.awaySince} />
+      <div className="flex items-start justify-between">
+        <SummaryHeader summary={view.summary} awaySince={view.awaySince} />
+        <button type="button" onClick={openSettings} className="m-4 shrink-0 rounded border border-slate-200 dark:border-slate-700 px-3 py-1 text-sm">
+          Rules
+        </button>
+      </div>
       <div className="p-4">
         {(phase === 'fetching' || phase === 'scoring' || phase === 'error') && (
           <div className="mb-4"><IngestStatus phase={phase} message={errorMsg} onRetry={refresh} /></div>
@@ -130,6 +179,7 @@ export default function App() {
             />
           ))}
         </div>
+        <SetAsideBin view={view.setAside} onPromote={onPromote} />
       </div>
       {undo && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded bg-slate-900 text-white px-4 py-2 text-sm" role="status" aria-live="polite">
