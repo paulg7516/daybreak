@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.renderer.json --noEmit",
     "score": "tsx src/cli.ts",
     "ingest": "tsx src/cli-ingest.ts",
+    "jira:login": "tsx src/cli-jira-login.ts",
     "build:main": "node scripts/build-main.mjs",
     "build:renderer": "vite build",
     "app:dev": "node scripts/build-main.mjs && concurrently -k \"vite\" \"wait-on tcp:5173 && electron .\"",
