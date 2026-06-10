@@ -1,5 +1,6 @@
 // src/main/ingest-runner.ts
 import { ingestBacklog } from '../ingest/ingest';
+import { ingestJsm } from '../ingest/jsm-ingest';
 import { scoreAll } from '../scoring/score';
 import { buildSummary } from '../summary/summary';
 import { applyOverlay } from '../app/overlay';
@@ -38,6 +39,13 @@ export async function buildView(sinceISO: string, events: IngestEvents): Promise
       );
       me = ingested.me;
       items = ingested.items;
+      try {
+        const jsmItems = await ingestJsm(sinceISO, me);
+        if (jsmItems.length) items = [...items, ...jsmItems];
+      } catch (err) {
+        // JSM is optional; a Jira failure must not break email triage.
+        console.warn('Daybreak: JSM ingest failed -', err instanceof Error ? err.message : err);
+      }
     }
 
     events.onPhase('scoring');

@@ -1,5 +1,6 @@
 // src/cli-ingest.ts
 import { ingestBacklog } from './ingest/ingest';
+import { ingestJsm } from './ingest/jsm-ingest';
 import { scoreAll } from './scoring/score';
 import { buildSummary } from './summary/summary';
 
@@ -25,7 +26,14 @@ async function main(): Promise<void> {
   const now = new Date();
   const sinceISO = resolveSince(now);
 
-  const { me, items } = await ingestBacklog(sinceISO);
+  const { me, items: emailItems } = await ingestBacklog(sinceISO);
+  let items = emailItems;
+  try {
+    const jsmItems = await ingestJsm(sinceISO, me);
+    if (jsmItems.length) items = [...emailItems, ...jsmItems];
+  } catch (err) {
+    console.warn('Daybreak: JSM ingest failed -', err instanceof Error ? err.message : err);
+  }
   const scored = scoreAll(items, { me, awaySince: sinceISO, now: now.toISOString() });
   const summary = buildSummary(scored);
 
