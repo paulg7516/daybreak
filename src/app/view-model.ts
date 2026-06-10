@@ -1,8 +1,9 @@
 // src/app/view-model.ts
-import type { Lane, SenderTag, Source } from '../model/item';
+import type { Lane, SenderTag, Source, DaybreakItem } from '../model/item';
 import type { Summary } from '../summary/summary';
 import { parseSenderTag } from '../scoring/sender-tag';
 import type { OverlaidItem } from './overlay';
+import type { SetAsideReason } from './rules';
 
 export interface ScoredItemView {
   id: string;
@@ -28,12 +29,31 @@ export interface LaneView {
   groups: SourceGroupView[];
 }
 
+export interface SetAsideItemView {
+  id: string;
+  subject: string;
+  from: string;
+  receivedAt: string;
+  reason: SetAsideReason;
+}
+
+export interface SetAsideView {
+  total: number;
+  items: SetAsideItemView[];
+}
+
+export interface SetAsideEntry {
+  item: DaybreakItem;
+  reason: SetAsideReason;
+}
+
 export interface TriageView {
   me: string;
   awaySince: string;
   summary: Summary;
   lanes: Record<Lane, LaneView>;
   clearedCount: number;
+  setAside: SetAsideView;
 }
 
 export interface ViewMeta {
@@ -75,14 +95,25 @@ function buildLane(lane: Lane, items: OverlaidItem[]): LaneView {
   return { lane, total: inLane.length, groups };
 }
 
-export function buildTriageView(items: OverlaidItem[], summary: Summary, meta: ViewMeta): TriageView {
+export function buildTriageView(
+  items: OverlaidItem[],
+  summary: Summary,
+  meta: ViewMeta,
+  setAside: SetAsideEntry[] = [],
+): TriageView {
   const lanes = {} as Record<Lane, LaneView>;
   for (const lane of LANES) lanes[lane] = buildLane(lane, items);
+
+  const setAsideItems: SetAsideItemView[] = setAside
+    .map((e) => ({ id: e.item.id, subject: e.item.subject, from: e.item.from, receivedAt: e.item.receivedAt, reason: e.reason }))
+    .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
+
   return {
     me: meta.me,
     awaySince: meta.awaySince,
     summary,
     lanes,
     clearedCount: meta.clearedCount ?? 0,
+    setAside: { total: setAsideItems.length, items: setAsideItems },
   };
 }
