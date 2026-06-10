@@ -3,6 +3,23 @@
 Tags an outgoing message with `X-PTO-Triage` so it lands in the recipient's Daybreak
 queue. Static task pane + Office.js, no build, no server.
 
+## LIVE (hosted on GitHub Pages)
+
+The task pane is published to the public repo `paulg7516/daybreak-addin` and served at
+`https://paulg7516.github.io/daybreak-addin/`. The deployment manifest (URLs pointed at
+Pages, validated) is `https://paulg7516.github.io/daybreak-addin/manifest.xml`.
+
+- **Deploy to the org (appears in Outlook "Built for your org"):** admin.microsoft.com
+  -> Settings -> Integrated apps -> Upload custom apps -> "Provide link to manifest file"
+  -> paste the manifest URL -> assign users -> Deploy.
+- **Quick personal test:** Outlook web -> Get Add-ins -> My add-ins -> Add a custom add-in
+  -> Add from URL -> paste the manifest URL.
+
+To update the hosted add-in, edit `addin/` here, re-run the localhost swap, and push the
+changed files to the `paulg7516/daybreak-addin` repo (Pages redeploys on push).
+
+The `manifest.xml` in THIS folder keeps the `localhost:3000` URLs for local dev/sideload.
+
 ## Dev: sideload against your own mailbox
 
 1. Trust a localhost HTTPS cert (once):
