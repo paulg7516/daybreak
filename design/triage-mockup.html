@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Daybreak - triage redesign mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ---- Design tokens (ui-ux-pro-max: navy + status, Inter, data-dense) ---- */
+  :root {
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+    --r: 8px; --r-sm: 6px;
+    /* light */
+    --bg: #f6f8fb;
+    --surface: #ffffff;
+    --surface-2: #fbfcfe;
+    --line: #e6eaf0;
+    --line-strong: #d6dce6;
+    --text: #0f1729;
+    --text-2: #5a6678;
+    --text-3: #8b96a8;
+    --primary: #2f5bea;
+    --today: #e5484d;     /* red */
+    --today-tint: #fdeced;
+    --week: #f0a020;      /* amber */
+    --week-tint: #fdf3e2;
+    --fyi: #6b7686;       /* slate */
+    --fyi-tint: #eef1f5;
+    --good: #15a06b;
+    --shadow: 0 1px 2px rgba(16,23,41,.06), 0 1px 3px rgba(16,23,41,.04);
+  }
+  html[data-theme="dark"] {
+    --bg: #080b12;
+    --surface: #0f141d;
+    --surface-2: #121825;
+    --line: #1d2533;
+    --line-strong: #2a3344;
+    --text: #e8edf5;
+    --text-2: #9aa6b8;
+    --text-3: #687385;
+    --primary: #5b82ff;
+    --today: #ff6166; --today-tint: #2a1416;
+    --week: #ffb648; --week-tint: #2a2113;
+    --fyi: #8893a4; --fyi-tint: #161c27;
+    --good: #2bd49a;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 1px 3px rgba(0,0,0,.3);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font); background: var(--bg); color: var(--text);
+    font-size: 13px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  /* ---- top bar ---- */
+  .topbar { display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 20px; border-bottom: 1px solid var(--line); background: var(--surface); position: sticky; top:0; z-index: 5; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:-.01em; font-size:14px; }
+  .brand .mark { width:18px; height:18px; border-radius:5px; background: linear-gradient(135deg,var(--primary),#7a4dff); }
+  .topbar .right { display:flex; align-items:center; gap:8px; }
+  .btn { font: inherit; font-size:12px; font-weight:500; border:1px solid var(--line-strong); background:var(--surface);
+    color:var(--text); border-radius:var(--r-sm); padding:5px 11px; cursor:pointer; transition:background .15s, border-color .15s; }
+  .btn:hover { background: var(--surface-2); border-color: var(--text-3); }
+  .btn.ghost { border-color: transparent; color: var(--text-2); }
+  .btn.ghost:hover { background: var(--surface-2); color: var(--text); }
+
+  /* ---- summary header ---- */
+  .summary { padding: 18px 20px 8px; }
+  .summary .since { color: var(--text-3); font-size:12px; font-weight:500; text-transform:uppercase; letter-spacing:.04em; }
+  .summary .line { margin-top:6px; font-size:18px; font-weight:600; letter-spacing:-.01em; display:flex; flex-wrap:wrap; gap:6px 18px; align-items:baseline; }
+  .summary .stat { display:inline-flex; align-items:baseline; gap:6px; }
+  .summary .stat b { font-size:20px; font-weight:700; }
+  .summary .stat.today b { color: var(--today); }
+  .summary .stat.risk b { color: var(--week); }
+  .summary .stat.done b { color: var(--good); }
+  .summary .stat span { color: var(--text-2); font-weight:500; font-size:13px; }
+
+  /* ---- lanes ---- */
+  .lanes { display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; padding: 10px 20px 20px; align-items:start; }
+  .lane { background: var(--surface); border:1px solid var(--line); border-radius: var(--r); overflow:hidden; box-shadow: var(--shadow); }
+  .lane-head { display:flex; align-items:center; justify-content:space-between; padding:10px 12px 10px 14px;
+    border-bottom:1px solid var(--line); position:relative; }
+  .lane-head::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; }
+  .lane.today .lane-head::before { background: var(--today); }
+  .lane.week  .lane-head::before { background: var(--week); }
+  .lane.fyi   .lane-head::before { background: var(--fyi); }
+  .lane-title { font-weight:600; font-size:13px; letter-spacing:-.01em; }
+  .lane-count { font-weight:600; font-size:12px; color:var(--text-2); background:var(--surface-2);
+    border:1px solid var(--line); border-radius:999px; padding:1px 8px; }
+
+  .group-head { display:flex; align-items:center; gap:7px; padding:7px 12px 5px 14px;
+    font-size:10.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:var(--text-3); cursor:pointer; }
+  .group-head .dot { width:5px; height:5px; border-radius:50%; background:var(--text-3); }
+  .group-head.system .dot { background: var(--primary); }
+  .group-head.internal .dot { background: var(--good); }
+  .group-head.vendor .dot { background: var(--week); }
+
+  .item { display:flex; gap:10px; padding:9px 12px 9px 14px; border-top:1px solid var(--line); cursor:default; transition: background .12s; }
+  .item:hover { background: var(--surface-2); }
+  .item.resolved { opacity:.55; }
+  .item .body { min-width:0; flex:1; }
+  .item .row1 { display:flex; align-items:center; gap:7px; }
+  .item .subj { font-weight:600; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .item .meta { margin-top:1px; color:var(--text-2); font-size:12px; display:flex; gap:8px; }
+  .item .reasons { margin-top:3px; color:var(--text-3); font-size:11.5px; }
+  .item .acts { display:flex; align-items:center; gap:4px; opacity:0; transition:opacity .12s; }
+  .item:hover .acts { opacity:1; }
+  .iact { border:1px solid var(--line-strong); background:var(--surface); border-radius:5px; padding:3px 8px; font-size:11.5px; font-weight:500; cursor:pointer; color:var(--text-2); }
+  .iact:hover { color:var(--text); border-color:var(--text-3); }
+  .iact.danger:hover { color: var(--today); border-color: var(--today); }
+
+  /* sender-tag pills */
+  .pill { font-size:10px; font-weight:600; letter-spacing:.02em; padding:1px 7px; border-radius:999px; white-space:nowrap; flex:none; }
+  .pill.blocked { background:var(--today-tint); color:var(--today); }
+  .pill.action  { background:var(--week-tint); color:var(--week); }
+  .pill.fyi     { background:var(--fyi-tint); color:var(--fyi); }
+  .pill.p1 { background:var(--today-tint); color:var(--today); }
+
+  /* ---- set aside ---- */
+  .aside { margin: 0 20px 24px; background: var(--surface-2); border:1px dashed var(--line-strong); border-radius: var(--r); }
+  .aside-head { display:flex; align-items:center; justify-content:space-between; padding:9px 14px; cursor:pointer; color:var(--text-2); font-size:12px; font-weight:500; }
+  .aside-row { display:flex; align-items:center; gap:10px; padding:7px 14px; border-top:1px solid var(--line); font-size:12px; color:var(--text-2); }
+  .aside-row .s { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--text); }
+  .reason-tag { font-size:10px; font-weight:600; color:var(--text-3); background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:1px 7px; }
+  select.mini { font:inherit; font-size:11px; border:1px solid var(--line-strong); background:var(--surface); color:var(--text-2); border-radius:5px; padding:2px 4px; }
+
+  .legend { padding: 0 20px 28px; color: var(--text-3); font-size:11px; }
+</style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand"><span class="mark"></span> Daybreak</div>
+    <div class="right">
+      <button class="btn ghost" id="themeBtn">Dark</button>
+      <button class="btn ghost">Out since May 26 - Refresh</button>
+      <button class="btn">Rules</button>
+    </div>
+  </div>
+
+  <div class="summary">
+    <div class="since">While you were out since May 26</div>
+    <div class="line">
+      <span class="stat today"><b class="tnum">3</b><span>need you today</span></span>
+      <span class="stat risk"><b class="tnum">2</b><span>SLAs at risk</span></span>
+      <span class="stat"><b class="tnum">5</b><span>this week</span></span>
+      <span class="stat done"><b class="tnum">14</b><span>resolved while away</span></span>
+    </div>
+  </div>
+
+  <div class="lanes">
+    <!-- TODAY -->
+    <div class="lane today">
+      <div class="lane-head"><span class="lane-title">Needs you today</span><span class="lane-count tnum">3</span></div>
+
+      <div class="group-head system"><span class="dot"></span> System <span class="tnum" style="margin-left:auto">1</span></div>
+      <div class="item">
+        <div class="body">
+          <div class="row1"><span class="subj">INC-4821 - Payments API returning 500s</span><span class="pill p1">P1</span></div>
+          <div class="meta"><span>jira@company.com</span><span class="tnum">May 7</span></div>
+          <div class="reasons">P1 - SLA breached - assigned to you</div>
+        </div>
+        <div class="acts"><button class="iact">Open</button><button class="iact danger">Clear</button></div>
+      </div>
+
+      <div class="group-head internal"><span class="dot"></span> Internal <span class="tnum" style="margin-left:auto">2</span></div>
+      <div class="item">
+        <div class="body">
+          <div class="row1"><span class="subj">Need your sign-off to ship the Q3 forecast</span><span class="pill blocked">Blocked</span></div>
+          <div class="meta"><span>cfo@company.com</span><span class="tnum">May 6</span></div>
+          <div class="reasons">Direct ask - blocked on you - manager</div>
+        </div>
+        <div class="acts"><button class="iact">Open</button><button class="iact danger">Clear</button></div>
+      </div>
+      <div class="item">
+        <div class="body">
+          <div class="row1"><span class="subj">Can you approve the new onboarding flow?</span></div>
+          <div class="meta"><span>design-lead@company.com</span><span class="tnum">May 8</span></div>
+          <div class="reasons">Direct ask - addressed to you</div>
+        </div>
+        <div class="acts"><button class="iact">Open</button><button class="iact danger">Clear</button></div>
+      </div>
+    </div>
+
+    <!-- THIS WEEK -->
+    <div class="lane week">
+      <div class="lane-head"><span class="lane-title">Time-sensitive this week</span><span class="lane-count tnum">2</span></div>
+      <div class="group-head internal"><span class="dot"></span> Internal <span class="tnum" style="margin-left:auto">1</span></div>
+      <div class="item">
+        <div class="body">
+          <div class="row1"><span class="subj">Review the vendor contract redlines</span><span class="pill action">Action - Jun 12</span></div>
+          <div class="meta"><span>legal@company.com</span><span class="tnum">May 5</span></div>
+          <div class="reasons">Action needed by Jun 12</div>
+        </div>
+        <div class="acts"><button class="iact">Open</button><button class="iact danger">Clear</button></div>
+      </div>
+      <div class="group-head vendor"><span class="dot"></span> Vendor <span class="tnum" style="margin-left:auto">1</span></div>
+      <div class="item">
+        <div class="body">
+          <div class="row1"><span class="subj">Invoice #4471 is due in 5 days</span></div>
+          <div class="meta"><span>billing@datadoghq.com</span><span class="tnum">May 4</span></div>
+          <div class="reasons">Renewal - amount due soon</div>
+        </div>
+        <div class="acts"><button class="iact">Open</button><button class="iact danger">Clear</button></div>
+      </div>
+    </div>
+
+    <!-- FYI -->
+    <div class="lane fyi">
+      <div class="lane-head"><span class="lane-title">FYI / batch-clear</span><span class="lane-count tnum">2</span></div>
+      <div class="group-head internal"><span class="dot"></span> Internal <span class="tnum" style="margin-left:auto">2</span></div>
+      <div class="item">
+        <div class="body">
+          <div class="row1"><span class="subj">Notes from Tuesday's planning</span><span class="pill fyi">FYI</span></div>
+          <div class="meta"><span>pm@company.com</span><span class="tnum">May 7</span></div>
+          <div class="reasons">cc'd - no reply needed</div>
+        </div>
+        <div class="acts"><button class="iact">Open</button><button class="iact danger">Clear</button></div>
+      </div>
+      <div class="item resolved">
+        <div class="body">
+          <div class="row1"><span class="subj">Question about the staging deploy</span></div>
+          <div class="meta"><span>peer@company.com</span><span class="tnum">May 3</span></div>
+          <div class="reasons">Resolved while you were out - "sorted it"</div>
+        </div>
+        <div class="acts"><button class="iact">Open</button><button class="iact danger">Clear</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SET ASIDE -->
+  <div class="aside">
+    <div class="aside-head"><span>Set aside</span><span class="tnum">2</span></div>
+    <div class="aside-row">
+      <span class="s">This week in cloud infrastructure - newsletter@cloudweekly.com</span>
+      <span class="reason-tag">Automated</span>
+      <select class="mini"><option>Move to...</option><option>Today</option><option>This week</option><option>FYI</option></select>
+    </div>
+    <div class="aside-row">
+      <span class="s">Your AWS usage report is ready - no-reply@aws.com</span>
+      <span class="reason-tag">Automated</span>
+      <select class="mini"><option>Move to...</option><option>Today</option><option>This week</option><option>FYI</option></select>
+    </div>
+  </div>
+
+  <div class="legend">Mockup - redesign direction only. Inter type, navy + status colors, lane status-rails, dense rows, recessed Set-aside. Toggle dark mode top-right.</div>
+
+<script>
+  const btn = document.getElementById('themeBtn');
+  btn.addEventListener('click', () => {
+    const root = document.documentElement;
+    const dark = root.getAttribute('data-theme') === 'dark';
+    root.setAttribute('data-theme', dark ? 'light' : 'dark');
+    btn.textContent = dark ? 'Dark' : 'Light';
+  });
+</script>
+</body>
+</html>
