@@ -14,8 +14,8 @@ export function AwayWindowModal({
     <div className="min-h-dvh grid place-items-center bg-bg px-6">
       <div className="elev-pop w-full max-w-md rounded-2xl p-7">
         {/* Icon badge */}
-        <div className="mb-5 grid h-12 w-12 place-items-center rounded-xl bg-accent/15 text-accent">
-          <Sunrise size={24} strokeWidth={2} />
+        <div className="mb-5 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-amber-400 via-rose-500 to-violet-600 text-white shadow-lg shadow-rose-500/40">
+          <Sunrise size={24} strokeWidth={2.25} />
         </div>
 
         <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-ink">Welcome back</h1>
