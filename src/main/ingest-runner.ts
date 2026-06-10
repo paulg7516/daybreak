@@ -3,10 +3,11 @@ import { ingestBacklog } from '../ingest/ingest';
 import { scoreAll } from '../scoring/score';
 import { buildSummary } from '../summary/summary';
 import { applyOverlay } from '../app/overlay';
-import { buildTriageView, type TriageView } from '../app/view-model';
+import { buildTriageView, type TriageView, type SetAsideEntry } from '../app/view-model';
 import { DEMO_ME, demoItems } from '../app/demo-data';
-import type { DaybreakItem } from '../model/item';
+import type { DaybreakItem, Lane } from '../model/item';
 import { getOverlay } from './store';
+import { classifyItem } from '../app/rules';
 
 export type IngestPhase = 'auth' | 'fetching' | 'scoring' | 'done' | 'error';
 export interface IngestEvents {
@@ -40,15 +41,31 @@ export async function buildView(sinceISO: string, events: IngestEvents): Promise
     }
 
     events.onPhase('scoring');
-    const scored = scoreAll(items, { me, awaySince: sinceISO, now });
-    const summary = buildSummary(scored);
-
     const overlay = getOverlay();
+
+    // Inclusion gate: only included items are scored into lanes; the rest are set aside.
+    const included: typeof items = [];
+    const forcedLane = new Map<string, Lane>();
+    const setAside: SetAsideEntry[] = [];
+    for (const it of items) {
+      const decision = classifyItem(it, overlay);
+      if (decision.kind === 'include') {
+        included.push(it);
+        if (decision.lane) forcedLane.set(it.id, decision.lane);
+      } else {
+        setAside.push({ item: it, reason: decision.reason });
+      }
+    }
+
+    const scored = scoreAll(included, { me, awaySince: sinceISO, now }).map((s) =>
+      forcedLane.has(s.item.id) ? { ...s, lane: forcedLane.get(s.item.id)! } : s,
+    );
+    const summary = buildSummary(scored);
     const overlaid = applyOverlay(scored, overlay);
     const clearedCount = Object.keys(overlay.cleared).length;
 
     events.onPhase('done');
-    return buildTriageView(overlaid, summary, { me, awaySince: sinceISO, clearedCount });
+    return buildTriageView(overlaid, summary, { me, awaySince: sinceISO, clearedCount }, setAside);
   } catch (err) {
     events.onPhase('error', err instanceof Error ? err.message : String(err));
     throw err;
