@@ -97,8 +97,10 @@ function renderIcon(size) {
   return out;
 }
 
+// Filenames are versioned (mark-*) so a redeploy serves NEW URLs - Office/Outlook
+// cache add-in icons by URL, so reusing a filename keeps the stale image.
 mkdirSync('addin/assets', { recursive: true });
 for (const size of [16, 32, 80]) {
-  writeFileSync(`addin/assets/icon-${size}.png`, encodePng(size, renderIcon(size)));
+  writeFileSync(`addin/assets/mark-${size}.png`, encodePng(size, renderIcon(size)));
 }
-console.log('Daybreak add-in: wrote sunrise icon-16/32/80.png');
+console.log('Daybreak add-in: wrote sunrise mark-16/32/80.png');
