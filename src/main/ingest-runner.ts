@@ -7,7 +7,7 @@ import { applyOverlay } from '../app/overlay';
 import { buildTriageView, type TriageView, type SetAsideEntry } from '../app/view-model';
 import { DEMO_ME, demoItems, demoRules } from '../app/demo-data';
 import type { DaybreakItem, Lane } from '../model/item';
-import { getOverlay } from './store';
+import { getOverlay, getJiraConfig } from './store';
 import { classifyItem } from '../app/rules';
 
 export type IngestPhase = 'auth' | 'fetching' | 'scoring' | 'done' | 'error';
@@ -40,7 +40,7 @@ export async function buildView(sinceISO: string, events: IngestEvents): Promise
       me = ingested.me;
       items = ingested.items;
       try {
-        const jsmItems = await ingestJsm(sinceISO, me);
+        const jsmItems = await ingestJsm(sinceISO, me, getJiraConfig() ?? undefined);
         if (jsmItems.length) items = [...items, ...jsmItems];
       } catch (err) {
         // JSM is optional; a Jira failure must not break email triage.
