@@ -4,7 +4,7 @@ import { scoreAll } from '../scoring/score';
 import { buildSummary } from '../summary/summary';
 import { applyOverlay } from '../app/overlay';
 import { buildTriageView, type TriageView, type SetAsideEntry } from '../app/view-model';
-import { DEMO_ME, demoItems } from '../app/demo-data';
+import { DEMO_ME, demoItems, demoRules } from '../app/demo-data';
 import type { DaybreakItem, Lane } from '../model/item';
 import { getOverlay } from './store';
 import { classifyItem } from '../app/rules';
@@ -41,7 +41,11 @@ export async function buildView(sinceISO: string, events: IngestEvents): Promise
     }
 
     events.onPhase('scoring');
-    const overlay = getOverlay();
+    // In demo mode, seed an include rule so company.com items populate the lanes
+    // while vendor/bulk mail falls to Set-aside, exercising the whole curated queue.
+    const overlay = isDemoMode()
+      ? { ...getOverlay(), rules: [...getOverlay().rules, ...demoRules()] }
+      : getOverlay();
 
     // Inclusion gate: only included items are scored into lanes; the rest are set aside.
     const included: typeof items = [];
