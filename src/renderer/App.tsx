@@ -1,5 +1,6 @@
 // src/renderer/App.tsx
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Sunrise, LayoutList, SlidersHorizontal, RefreshCw, CalendarDays } from 'lucide-react';
 import { daybreak } from './bridge';
 import type { ViewResult } from '../app/ipc-types';
 import type { Lane } from '../model/item';
@@ -17,6 +18,10 @@ const LANE_TITLES: Record<Lane, string> = {
   this_week: 'Time-sensitive this week',
   fyi: 'FYI / batch-clear',
 };
+
+function sinceLabel(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
 
 export default function App() {
   const [view, setView] = useState<ViewResult | null>(null);
@@ -48,7 +53,6 @@ export default function App() {
     return off;
   }, []);
 
-  // Clear the undo-toast timer on unmount so it cannot fire after teardown.
   useEffect(() => () => { if (undoTimer.current) clearTimeout(undoTimer.current); }, []);
 
   const showUndo = useCallback((id: string) => {
@@ -62,11 +66,8 @@ export default function App() {
     setPhase('fetching');
     const result = await daybreak.setAwayWindow(sinceISO);
     setPhase('idle');
-    if ('error' in result) {
-      setAwayError(result.error);
-    } else {
-      setView(result);
-    }
+    if ('error' in result) setAwayError(result.error);
+    else setView(result);
   }, []);
 
   const refresh = useCallback(async () => {
@@ -119,8 +120,7 @@ export default function App() {
     setView(await daybreak.refresh());
   }, [undo]);
 
-  // A pending device-code prompt takes priority so it is visible during the very
-  // first sign-in, when the view is still the away-window modal.
+  // Full-screen takeovers (no shell): auth, settings, loading, away-window, error.
   if (auth) {
     return (
       <div className="min-h-dvh grid place-items-center bg-bg px-6">
@@ -128,7 +128,6 @@ export default function App() {
       </div>
     );
   }
-
   if (showSettings) {
     return (
       <RulesSettings
@@ -141,7 +140,6 @@ export default function App() {
       />
     );
   }
-
   if (view === null) {
     return (
       <div className="min-h-dvh grid place-items-center bg-bg px-6">
@@ -151,11 +149,9 @@ export default function App() {
       </div>
     );
   }
-
   if ('needsAwayWindow' in view) {
     return <AwayWindowModal onSubmit={submitAwayWindow} error={awayError} />;
   }
-
   if ('error' in view) {
     return (
       <div className="min-h-dvh grid place-items-center bg-bg px-6">
@@ -166,56 +162,73 @@ export default function App() {
     );
   }
 
-  // view is a TriageView
+  // Triage surface with the app shell.
   return (
-    <div className="min-h-dvh bg-bg text-ink">
-      {/* top bar */}
-      <header className="sticky top-0 z-10 flex items-center justify-between px-5 py-[10px] border-b border-line bg-surface">
-        <div className="flex items-center gap-[10px] text-[14px] font-bold tracking-[-0.01em] text-ink">
-          <span
-            className="inline-block w-[18px] h-[18px] rounded-[5px]"
-            style={{ background: 'linear-gradient(135deg, var(--brand), #7a4dff)' }}
-            aria-hidden="true"
-          />
-          Daybreak
+    <div className="flex min-h-dvh bg-bg text-ink">
+      {/* slim left nav rail */}
+      <nav className="sticky top-0 flex h-dvh w-14 shrink-0 flex-col items-center gap-1 border-r border-line bg-panel py-3">
+        <div className="mb-2 grid h-9 w-9 place-items-center rounded-xl bg-accent/15 text-accent" title="Daybreak">
+          <Sunrise size={19} strokeWidth={2} />
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={openSettings}
-            className="rounded-md border border-line-strong bg-surface text-[12px] font-medium text-ink px-[11px] py-[5px] transition-colors hover:bg-surface-2 hover:border-ink-3"
-          >
-            Rules
-          </button>
-        </div>
-      </header>
+        <button type="button" aria-label="Triage" aria-current="page"
+          className="grid h-10 w-10 place-items-center rounded-xl bg-accent/15 text-accent">
+          <LayoutList size={19} strokeWidth={2} />
+        </button>
+        <button type="button" aria-label="Rules" onClick={openSettings}
+          className="grid h-10 w-10 place-items-center rounded-xl text-ink-3 transition-colors hover:bg-panel-2 hover:text-ink">
+          <SlidersHorizontal size={19} strokeWidth={2} />
+        </button>
+      </nav>
 
-      <SummaryHeader summary={view.summary} awaySince={view.awaySince} />
+      {/* main column */}
+      <main className="min-w-0 flex-1">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-bg/85 px-6 py-3 backdrop-blur">
+          <div className="flex items-baseline gap-2">
+            <span className="text-sm font-semibold tracking-tight">Daybreak</span>
+            <span className="text-xs text-ink-3">Return-from-leave triage</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs text-ink-2">
+              <CalendarDays size={13} /> Out since <span className="font-mono text-ink">{sinceLabel(view.awaySince)}</span>
+            </span>
+            <button type="button" onClick={refresh} aria-label="Refresh"
+              className="flex items-center gap-1.5 rounded-lg border border-line-strong bg-panel px-2.5 py-1 text-xs font-medium text-ink-2 transition-colors hover:border-ink-3 hover:text-ink">
+              <RefreshCw size={13} /> Refresh
+            </button>
+          </div>
+        </header>
 
-      <div className="px-5 pb-5">
-        {(phase === 'fetching' || phase === 'scoring' || phase === 'error') && (
-          <div className="mb-[14px]"><IngestStatus phase={phase} message={errorMsg} onRetry={refresh} /></div>
-        )}
-        <div className="grid gap-[14px] md:grid-cols-3 items-start">
-          {(['today', 'this_week', 'fyi'] as Lane[]).map((lane) => (
-            <LaneComponent
-              key={lane}
-              laneView={view.lanes[lane]}
-              title={LANE_TITLES[lane]}
-              onOpen={onOpen}
-              onClear={onClear}
-              onRerank={onRerank}
-            />
-          ))}
+        <div className="px-6 pb-8">
+          <SummaryHeader summary={view.summary} awaySince={view.awaySince} />
+
+          {(phase === 'fetching' || phase === 'scoring' || phase === 'error') && (
+            <div className="mb-4"><IngestStatus phase={phase} message={errorMsg} onRetry={refresh} /></div>
+          )}
+
+          <div className="grid items-start gap-4 lg:grid-cols-3">
+            {(['today', 'this_week', 'fyi'] as Lane[]).map((lane) => (
+              <LaneComponent
+                key={lane}
+                laneView={view.lanes[lane]}
+                title={LANE_TITLES[lane]}
+                onOpen={onOpen}
+                onClear={onClear}
+                onRerank={onRerank}
+              />
+            ))}
+          </div>
+
+          <div className="mt-4">
+            <SetAsideBin view={view.setAside} onPromote={onPromote} />
+          </div>
         </div>
-        <div className="mt-[14px]">
-          <SetAsideBin view={view.setAside} onPromote={onPromote} />
-        </div>
-      </div>
+      </main>
 
       {undo && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-md bg-ink text-surface px-4 py-2 text-[13px] shadow-sm" role="status" aria-live="polite">
-          Cleared <button type="button" className="ml-3 underline font-medium" onClick={onUndo}>Undo</button>
+        <div className="elev-pop fixed bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-3 rounded-xl px-4 py-2.5 text-[13px]"
+          role="status" aria-live="polite">
+          <span className="text-ink">Cleared</span>
+          <button type="button" className="font-medium text-accent hover:underline" onClick={onUndo}>Undo</button>
         </div>
       )}
     </div>

@@ -1,4 +1,5 @@
 // src/renderer/components/ItemRow.tsx
+import { ExternalLink, X, CheckCircle2 } from 'lucide-react';
 import type { ScoredItemView } from '../../app/view-model';
 
 function relTime(iso: string): string {
@@ -27,40 +28,45 @@ export function ItemRow({
   onClear: (id: string) => void;
   onRerank: (id: string, lane: ScoredItemView['lane']) => void;
 }) {
-  const pillClass = row.senderTag ? (PILL_CLASS[row.senderTag] ?? 'bg-surface-2 text-ink-3') : '';
+  const pillClass = row.senderTag ? (PILL_CLASS[row.senderTag] ?? 'bg-panel-2 text-ink-3') : '';
   return (
-    <div className={`group flex gap-[10px] px-3 py-[9px] pl-[14px] border-t border-line transition-colors hover:bg-surface-2 cursor-default${row.resolved ? ' opacity-55' : ''}`}>
+    <div className={`group flex items-start gap-3 border-t border-line px-3.5 py-2.5 transition-colors hover:bg-panel-2${row.resolved ? ' opacity-60' : ''}`}>
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-[7px]">
-          <span className="truncate text-[13px] font-semibold text-ink">{row.subject}</span>
+        <div className="flex items-center gap-2">
+          {row.resolved && <CheckCircle2 size={13} className="shrink-0 text-good" />}
+          <span className="truncate text-[13px] font-medium text-ink">{row.subject}</span>
           {row.senderTag && (
-            <span className={`shrink-0 rounded-full px-[7px] py-px text-[10px] font-semibold tracking-[.02em] ${pillClass}`}>
+            <span className={`inline-flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${pillClass}`}>
+              <span className="h-1 w-1 rounded-full bg-current" aria-hidden="true" />
               {TAG_LABEL[row.senderTag]}
             </span>
           )}
         </div>
-        <div className="mt-px flex gap-2 text-[12px] text-ink-2">
-          <span>{row.from}</span>
-          <span className="tabular-nums">{relTime(row.receivedAt)}</span>
+        <div className="mt-0.5 flex items-center gap-2 text-[12px] text-ink-2">
+          <span className="truncate">{row.from}</span>
+          <span className="text-ink-3">·</span>
+          <span className="shrink-0 font-mono tabular-nums text-ink-3">{relTime(row.receivedAt)}</span>
         </div>
         {row.reasons.length > 0 && (
-          <div className="mt-[3px] text-[11.5px] text-ink-3">{row.reasons.join(' · ')}</div>
+          <div className="mt-1 truncate text-[11.5px] text-ink-3">{row.reasons.join(' · ')}</div>
         )}
       </div>
-      <div className="flex shrink-0 items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-[120ms]">
+      <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
         <button
           type="button"
-          className="border border-line-strong bg-surface rounded-[5px] px-2 py-[3px] text-[11.5px] font-medium text-ink-2 cursor-pointer transition-colors hover:text-ink hover:border-ink-3 disabled:opacity-40"
+          aria-label="Open"
+          title="Open"
           disabled={!row.webLink}
           onClick={() => row.webLink && onOpen(row.webLink)}
+          className="grid h-7 w-7 place-items-center rounded-md text-ink-3 transition-colors hover:bg-panel hover:text-ink disabled:opacity-40"
         >
-          Open
+          <ExternalLink size={14} />
         </button>
         <select
           aria-label="Re-rank"
-          className="border border-line-strong bg-surface rounded-[5px] px-1 py-[3px] text-[11.5px] font-medium text-ink-2 cursor-pointer transition-colors hover:border-ink-3"
           value={row.lane}
           onChange={(e) => onRerank(row.id, e.target.value as ScoredItemView['lane'])}
+          className="rounded-md border border-line bg-panel px-1.5 py-1 text-[11px] font-medium text-ink-2 transition-colors hover:border-ink-3"
         >
           <option value="today">Today</option>
           <option value="this_week">This week</option>
@@ -68,10 +74,12 @@ export function ItemRow({
         </select>
         <button
           type="button"
-          className="border border-line-strong bg-surface rounded-[5px] px-2 py-[3px] text-[11.5px] font-medium text-ink-2 cursor-pointer transition-colors hover:text-today hover:border-today"
+          aria-label="Clear"
+          title="Clear"
           onClick={() => onClear(row.id)}
+          className="grid h-7 w-7 place-items-center rounded-md text-ink-3 transition-colors hover:bg-today-tint hover:text-today"
         >
-          Clear
+          <X size={14} />
         </button>
       </div>
     </div>

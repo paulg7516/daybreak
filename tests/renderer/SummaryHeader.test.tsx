@@ -11,8 +11,12 @@ const summary: Summary = {
 describe('SummaryHeader', () => {
   it('shows the headline counts', () => {
     render(<SummaryHeader summary={summary} awaySince="2026-05-25T00:00:00.000Z" />);
-    expect(screen.getByText(/3 need you today/i)).toBeInTheDocument();
-    expect(screen.getByText(/2 SLAs at risk/i)).toBeInTheDocument();
-    expect(screen.getByText(/14 resolved while you were out/i)).toBeInTheDocument();
+    // Each stat chip renders number and label as separate elements.
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expect(screen.getByText(/need you today/i)).toBeInTheDocument();
+    expect(screen.getByText('2')).toBeInTheDocument();
+    expect(screen.getByText(/SLAs at risk/i)).toBeInTheDocument();
+    expect(screen.getByText('14')).toBeInTheDocument();
+    expect(screen.getByText(/resolved while you were out/i)).toBeInTheDocument();
   });
 });

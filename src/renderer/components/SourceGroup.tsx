@@ -1,5 +1,6 @@
 // src/renderer/components/SourceGroup.tsx
 import { useState } from 'react';
+import { Ticket, Users, Store, ChevronDown } from 'lucide-react';
 import type { SourceGroupView, ScoredItemView } from '../../app/view-model';
 import type { Source } from '../../model/item';
 import { ItemRow } from './ItemRow';
@@ -10,10 +11,10 @@ const SOURCE_LABEL: Record<Source, string> = {
   email_vendor: 'Vendor',
 };
 
-const DOT_COLOR: Record<Source, string> = {
-  jsm: 'bg-brand',
-  email_internal: 'bg-good',
-  email_vendor: 'bg-week',
+const SOURCE_ICON: Record<Source, React.ReactNode> = {
+  jsm: <Ticket size={13} strokeWidth={2} className="text-accent shrink-0" />,
+  email_internal: <Users size={13} strokeWidth={2} className="text-good shrink-0" />,
+  email_vendor: <Store size={13} strokeWidth={2} className="text-week shrink-0" />,
 };
 
 export function SourceGroup({
@@ -28,18 +29,23 @@ export function SourceGroup({
   onRerank: (id: string, lane: ScoredItemView['lane']) => void;
 }) {
   const [open, setOpen] = useState(true);
-  const dotColor = DOT_COLOR[group.source];
   return (
     <section>
       <button
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-[7px] px-3 py-[7px] pl-[14px] pb-[5px] text-[10.5px] font-semibold uppercase tracking-[.06em] text-ink-3 transition-colors hover:text-ink-2"
+        className="flex w-full items-center gap-2 px-3.5 py-2 text-[10.5px] font-semibold uppercase tracking-[.06em] text-ink-3 transition-colors hover:text-ink-2 hover:bg-panel-2"
       >
-        <span className={`inline-block w-[5px] h-[5px] rounded-full shrink-0 ${dotColor}`} aria-hidden="true" />
+        {SOURCE_ICON[group.source]}
         <span>{SOURCE_LABEL[group.source]}</span>
-        <span className="tabular-nums ml-auto">{group.items.length}</span>
+        <span className="font-mono tabular-nums ml-auto">{group.items.length}</span>
+        <ChevronDown
+          size={12}
+          strokeWidth={2}
+          className={`shrink-0 transition-transform duration-150 ${open ? '' : '-rotate-90'}`}
+          aria-hidden="true"
+        />
       </button>
       {open && group.items.map((row) => (
         <ItemRow key={row.id} row={row} onOpen={onOpen} onClear={onClear} onRerank={onRerank} />
