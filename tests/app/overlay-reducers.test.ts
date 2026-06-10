@@ -11,7 +11,7 @@ import {
 
 describe('overlay reducers', () => {
   it('emptyOverlay has a null away window and no cleared/rerank entries', () => {
-    expect(emptyOverlay()).toEqual({ awayWindow: null, cleared: {}, rerank: {} });
+    expect(emptyOverlay()).toEqual({ awayWindow: null, cleared: {}, rerank: {}, rules: [], bulkExcludeEnabled: true, forcedInclude: {} });
   });
 
   it('setAwayWindow records since + setAt without mutating the input', () => {

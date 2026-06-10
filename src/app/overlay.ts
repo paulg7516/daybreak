@@ -1,14 +1,18 @@
 // src/app/overlay.ts
 import type { Lane, ScoredItem } from '../model/item';
+import type { Rule } from './rules';
 
 export interface Overlay {
   awayWindow: { since: string; setAt: string } | null;
   cleared: Record<string, true>;
   rerank: Record<string, Lane>;
+  rules: Rule[];
+  bulkExcludeEnabled: boolean;
+  forcedInclude: Record<string, Lane>; // one-off promotes out of Set-aside, keyed by item id
 }
 
 export function emptyOverlay(): Overlay {
-  return { awayWindow: null, cleared: {}, rerank: {} };
+  return { awayWindow: null, cleared: {}, rerank: {}, rules: [], bulkExcludeEnabled: true, forcedInclude: {} };
 }
 
 export function setAwayWindow(o: Overlay, sinceISO: string, nowISO: string): Overlay {
