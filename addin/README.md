@@ -15,10 +15,15 @@ Pages, validated) is `https://paulg7516.github.io/daybreak-addin/manifest.xml`.
 - **Quick personal test:** Outlook web -> Get Add-ins -> My add-ins -> Add a custom add-in
   -> Add from URL -> paste the manifest URL.
 
-To update the hosted add-in, edit `addin/` here, re-run the localhost swap, and push the
-changed files to the `paulg7516/daybreak-addin` repo (Pages redeploys on push).
+To update the hosted add-in: edit `addin/` here, copy the changed files (manifest.xml /
+src / assets) into the `paulg7516/daybreak-addin` repo as-is (keep the `localhost:3000`
+URLs), and push. A GitHub Action (`.github/workflows/deploy.yml` in that repo) swaps
+`localhost:3000` to the Pages URL, validates the manifest, and deploys to Pages
+automatically - so the source manifest stays identical to this folder's dev version.
 
-The `manifest.xml` in THIS folder keeps the `localhost:3000` URLs for local dev/sideload.
+The `manifest.xml` in THIS folder keeps the `localhost:3000` URLs for local dev/sideload;
+the deployed manifest at `https://paulg7516.github.io/daybreak-addin/manifest.xml` carries
+the production URLs (rewritten by the Action).
 
 ## Dev: sideload against your own mailbox
 
