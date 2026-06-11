@@ -1,29 +1,36 @@
 // tests/scoring/sender-tag.test.ts
 import { describe, it, expect } from 'vitest';
-import { parseSenderTag } from '../../src/scoring/sender-tag';
+import { parseDeclaredIntent } from '../../src/scoring/sender-tag';
 
-describe('parseSenderTag', () => {
-  it('returns null when no header present', () => {
-    expect(parseSenderTag(undefined)).toBeNull();
-    expect(parseSenderTag({ 'X-Other': 'foo' })).toBeNull();
+describe('parseDeclaredIntent', () => {
+  it('returns null when no X-PTO-Triage header is present', () => {
+    expect(parseDeclaredIntent(undefined)).toBeNull();
+    expect(parseDeclaredIntent({ 'X-Other': 'foo' })).toBeNull();
   });
 
-  it('parses simple tags case-insensitively', () => {
-    expect(parseSenderTag({ 'x-pto-triage': 'blocked' })).toEqual({ tag: 'blocked' });
-    expect(parseSenderTag({ 'X-PTO-Triage': 'WHENEVER' })).toEqual({ tag: 'whenever' });
-    expect(parseSenderTag({ 'X-Pto-Triage': 'fyi' })).toEqual({ tag: 'fyi' });
+  it('maps each intent to its lane, case-insensitively', () => {
+    expect(parseDeclaredIntent({ 'x-pto-triage': 'respond' })).toEqual({ lane: 'respond' });
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'APPROVE' })).toEqual({ lane: 'approve' });
+    expect(parseDeclaredIntent({ 'X-Pto-Triage': 'review' })).toEqual({ lane: 'review' });
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'fyi' })).toEqual({ lane: 'fyi' });
   });
 
-  it('parses an action tag with a by= date', () => {
-    expect(parseSenderTag({ 'X-PTO-Triage': 'action;by=2026-06-20' }))
-      .toEqual({ tag: 'action', by: '2026-06-20' });
+  it('reads an optional by= deadline on actionable intents', () => {
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'approve;by=2026-06-20' }))
+      .toEqual({ lane: 'approve', deadline: '2026-06-20' });
   });
 
-  it('parses an action tag with no date', () => {
-    expect(parseSenderTag({ 'X-PTO-Triage': 'action' })).toEqual({ tag: 'action', by: undefined });
+  it('never attaches a deadline to fyi', () => {
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'fyi;by=2026-06-20' })).toEqual({ lane: 'fyi' });
   });
 
-  it('returns null for an unknown tag value', () => {
-    expect(parseSenderTag({ 'X-PTO-Triage': 'urgent' })).toBeNull();
+  it('aliases the legacy expectation vocabulary', () => {
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'blocked' })).toEqual({ lane: 'respond' });
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'action;by=2026-06-20' })).toEqual({ lane: 'approve', deadline: '2026-06-20' });
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'whenever' })).toEqual({ lane: 'review' });
+  });
+
+  it('returns null for an unknown value', () => {
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'urgent' })).toBeNull();
   });
 });

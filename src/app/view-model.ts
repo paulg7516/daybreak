@@ -1,119 +1,82 @@
 // src/app/view-model.ts
-import type { Lane, SenderTag, Source, DaybreakItem } from '../model/item';
+import { LANE_ORDER, type Lane, type Source, type Urgency } from '../model/item';
 import type { Summary } from '../summary/summary';
-import { parseSenderTag } from '../scoring/sender-tag';
 import type { OverlaidItem } from './overlay';
-import type { SetAsideReason } from './rules';
 
-export interface ScoredItemView {
+// A flat, renderable row. The renderer can re-group these by lane (default),
+// sender, or source, so the view model keeps them flat with the fields needed for
+// any grouping plus the urgency badge.
+export interface TriageRow {
   id: string;
   subject: string;
   from: string;
   receivedAt: string;
-  reasons: string[];
-  resolved: boolean;
-  senderTag?: SenderTag;
-  webLink?: string;
   lane: Lane;
-  reranked: boolean;
-}
-
-export interface SourceGroupView {
+  urgency: Urgency;
+  deadline?: string;
+  reasons: string[];
   source: Source;
-  items: ScoredItemView[];
+  webLink?: string;
+  reranked: boolean;
 }
 
 export interface LaneView {
   lane: Lane;
   total: number;
-  groups: SourceGroupView[];
-}
-
-export interface SetAsideItemView {
-  id: string;
-  subject: string;
-  from: string;
-  receivedAt: string;
-  reason: SetAsideReason;
-}
-
-export interface SetAsideView {
-  total: number;
-  items: SetAsideItemView[];
-}
-
-export interface SetAsideEntry {
-  item: DaybreakItem;
-  reason: SetAsideReason;
+  items: TriageRow[];
 }
 
 export interface TriageView {
   me: string;
-  awaySince: string;
+  since: string;
   summary: Summary;
-  lanes: Record<Lane, LaneView>;
+  lanes: LaneView[]; // ordered by LANE_ORDER
   clearedCount: number;
-  setAside: SetAsideView;
 }
 
 export interface ViewMeta {
   me: string;
-  awaySince: string;
+  since: string;
   clearedCount?: number;
 }
 
-const LANES: Lane[] = ['today', 'this_week', 'fyi'];
-const SOURCE_ORDER: Source[] = ['jsm', 'email_internal', 'email_vendor'];
+const URGENCY_RANK: Record<Urgency, number> = { overdue: 3, today: 2, this_week: 1, none: 0 };
 
-function toRow(o: OverlaidItem): ScoredItemView {
-  const it = o.scored.item;
-  const tag = parseSenderTag(it.internetHeaders);
+function toRow(o: OverlaidItem): TriageRow {
+  const t = o.triaged;
   return {
-    id: it.id,
-    subject: it.subject,
-    from: it.from,
-    receivedAt: it.receivedAt,
-    reasons: o.scored.reasons,
-    resolved: o.scored.resolved,
-    senderTag: tag?.tag,
-    webLink: it.webLink,
+    id: t.item.id,
+    subject: t.item.subject,
+    from: t.item.from,
+    receivedAt: t.item.receivedAt,
     lane: o.lane,
+    urgency: t.urgency,
+    deadline: t.deadline,
+    reasons: t.reasons,
+    source: t.item.source,
+    webLink: t.item.webLink,
     reranked: o.reranked,
   };
 }
 
 function buildLane(lane: Lane, items: OverlaidItem[]): LaneView {
-  const inLane = items.filter((o) => o.lane === lane);
-  const groups: SourceGroupView[] = [];
-  for (const source of SOURCE_ORDER) {
-    const rows = inLane
-      .filter((o) => o.scored.item.source === source)
-      .sort((a, b) => b.scored.rank - a.scored.rank)
-      .map(toRow);
-    if (rows.length > 0) groups.push({ source, items: rows });
-  }
-  return { lane, total: inLane.length, groups };
+  const rows = items
+    .filter((o) => o.lane === lane)
+    .map(toRow)
+    .sort(
+      (a, b) =>
+        URGENCY_RANK[b.urgency] - URGENCY_RANK[a.urgency] ||
+        new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime(),
+    );
+  return { lane, total: rows.length, items: rows };
 }
 
-export function buildTriageView(
-  items: OverlaidItem[],
-  summary: Summary,
-  meta: ViewMeta,
-  setAside: SetAsideEntry[] = [],
-): TriageView {
-  const lanes = {} as Record<Lane, LaneView>;
-  for (const lane of LANES) lanes[lane] = buildLane(lane, items);
-
-  const setAsideItems: SetAsideItemView[] = setAside
-    .map((e) => ({ id: e.item.id, subject: e.item.subject, from: e.item.from, receivedAt: e.item.receivedAt, reason: e.reason }))
-    .sort((a, b) => new Date(b.receivedAt).getTime() - new Date(a.receivedAt).getTime());
-
+export function buildTriageView(items: OverlaidItem[], summary: Summary, meta: ViewMeta): TriageView {
   return {
     me: meta.me,
-    awaySince: meta.awaySince,
+    since: meta.since,
     summary,
-    lanes,
+    lanes: LANE_ORDER.map((lane) => buildLane(lane, items)),
     clearedCount: meta.clearedCount ?? 0,
-    setAside: { total: setAsideItems.length, items: setAsideItems },
   };
 }

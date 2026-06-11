@@ -1,7 +1,17 @@
 // src/model/item.ts
 export type Source = 'jsm' | 'email_internal' | 'email_vendor';
-export type Lane = 'today' | 'this_week' | 'fyi';
-export type SenderTag = 'blocked' | 'action' | 'whenever' | 'fyi';
+
+// The lane IS the sender's declared intent (or, for JSM, the ticket's derived
+// action-type). There is no inference: an email's lane comes straight from the
+// X-PTO-Triage tag the sender set via the add-in.
+export type Lane = 'respond' | 'approve' | 'review' | 'fyi';
+
+// Urgency is a separate axis from the lane: a badge + sort key derived from a
+// declared deadline (email) or SLA/priority (JSM). It never decides the lane.
+export type Urgency = 'overdue' | 'today' | 'this_week' | 'none';
+
+// Display order of lanes on the board, most-actionable first.
+export const LANE_ORDER: Lane[] = ['respond', 'approve', 'review', 'fyi'];
 
 export interface ThreadMessage {
   from: string;
@@ -30,25 +40,26 @@ export interface DaybreakItem {
   internetHeaders?: Record<string, string>; // includes X-PTO-Triage when present
   // ticketing fields
   jsm?: JsmFields;
-  // ingestion metadata (populated by the Graph ingestion layer)
+  // ingestion metadata (populated by the ingestion layer)
   webLink?: string;   // deep link to open the item in Outlook/JSM
   threadId?: string;  // conversation/thread identifier for grouping
   isRead?: boolean;
 }
 
-export interface ScoringContext {
+// Context for triage. No inference inputs (managers/reports/contacts) any more -
+// the sender declares intent, so all triage needs is who "me" is and the clock.
+export interface TriageContext {
   me: string;
-  managers?: string[];
-  reports?: string[];
-  frequentContacts?: string[];
-  awaySince: string; // ISO date; messages/replies after this are "while you were out"
-  now: string;       // ISO timestamp; injected for deterministic scoring and tests
+  since: string; // ISO date; the "catch up since" boundary, for display/context
+  now: string;   // ISO timestamp; injected for deterministic triage and tests
 }
 
-export interface ScoredItem {
+// The result of triage: the declared lane plus a derived urgency badge. No rank
+// (urgency + receivedAt sort), no resolved flag (resolved-while-away is gone).
+export interface TriagedItem {
   item: DaybreakItem;
   lane: Lane;
-  rank: number;    // 0-100, higher is more urgent, used to sort within a lane
+  urgency: Urgency;
+  deadline?: string; // ISO date, when the sender declared one
   reasons: string[];
-  resolved: boolean; // resolved-while-away
 }

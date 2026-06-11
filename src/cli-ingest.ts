@@ -1,7 +1,8 @@
 // src/cli-ingest.ts
 import { ingestMail } from './ingest/mail';
 import { ingestJsm } from './ingest/jsm-ingest';
-import { scoreAll } from './scoring/score';
+import { triageAll } from './scoring/triage';
+import { applyOverlay, emptyOverlay } from './app/overlay';
 import { buildSummary } from './summary/summary';
 
 // Resolve the away window: --since <ISO> arg, then DAYBREAK_AWAY_SINCE env,
@@ -34,11 +35,12 @@ async function main(): Promise<void> {
   } catch (err) {
     console.warn('Daybreak: JSM ingest failed -', err instanceof Error ? err.message : err);
   }
-  const scored = scoreAll(items, { me, awaySince: sinceISO, now: now.toISOString() });
-  const summary = buildSummary(scored);
+  const triaged = triageAll(items, { me, since: sinceISO, now: now.toISOString() });
+  const overlaid = applyOverlay(triaged, emptyOverlay());
+  const summary = buildSummary(overlaid);
 
   console.log(
-    JSON.stringify({ me, awaySince: sinceISO, count: items.length, summary, scored }, null, 2),
+    JSON.stringify({ me, since: sinceISO, count: triaged.length, summary, triaged }, null, 2),
   );
 }
 
