@@ -19,12 +19,14 @@
     "app:demo": "DAYBREAK_DEMO=1 npm run app:dev",
     "app:build": "npm run build:main && npm run build:renderer",
     "app:dist": "npm run app:build && electron-builder --mac --universal --publish never",
-    "app:dist:demo": "DAYBREAK_DEMO=1 npm run app:dist"
+    "app:dist:demo": "DAYBREAK_DEMO=1 npm run app:dist",
+    "app:dist:gmail": "DAYBREAK_BAKE_PROVIDER=gmail npm run app:dist"
   },
   "dependencies": {
     "@azure/msal-node": "^2.16.0",
     "electron-store": "^8.2.0",
     "electron-updater": "^6.3.9",
+    "google-auth-library": "^10.7.0",
     "keytar": "^7.9.0",
     "lucide-react": "^0.460.0"
   },

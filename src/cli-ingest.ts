@@ -1,5 +1,5 @@
 // src/cli-ingest.ts
-import { ingestBacklog } from './ingest/ingest';
+import { ingestMail } from './ingest/mail';
 import { ingestJsm } from './ingest/jsm-ingest';
 import { scoreAll } from './scoring/score';
 import { buildSummary } from './summary/summary';
@@ -26,7 +26,7 @@ async function main(): Promise<void> {
   const now = new Date();
   const sinceISO = resolveSince(now);
 
-  const { me, items: emailItems } = await ingestBacklog(sinceISO);
+  const { me, items: emailItems } = await ingestMail(sinceISO);
   let items = emailItems;
   try {
     const jsmItems = await ingestJsm(sinceISO, me);

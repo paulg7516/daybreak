@@ -11,11 +11,26 @@ export interface IngestResult {
   items: DaybreakItem[];
 }
 
+// A provider-agnostic sign-in prompt surfaced to the UI/CLI during ingest.
+// Microsoft uses device-code (visit a URL, enter a code); Google uses a loopback
+// redirect (just open a URL). The `provider` discriminator lets the UI render the
+// right copy.
+export type AuthPrompt =
+  | { provider: 'microsoft'; verificationUri: string; userCode: string; message: string }
+  | { provider: 'google'; url: string };
+
 export async function ingestBacklog(
   sinceISO: string,
-  onDeviceCode?: (info: { verificationUri: string; userCode: string; message: string }) => void,
+  onAuthPrompt?: (prompt: AuthPrompt) => void,
 ): Promise<IngestResult> {
-  const token = await getAccessToken(onDeviceCode);
+  const token = await getAccessToken((info) =>
+    onAuthPrompt?.({
+      provider: 'microsoft',
+      verificationUri: info.verificationUri,
+      userCode: info.userCode,
+      message: info.message,
+    }),
+  );
   const { address } = await getSignedInUser(token);
   const me = address.toLowerCase();
   const at = me.lastIndexOf('@');

@@ -1,5 +1,5 @@
 // src/main/ingest-runner.ts
-import { ingestBacklog } from '../ingest/ingest';
+import { ingestMail } from '../ingest/mail';
 import { ingestJsm } from '../ingest/jsm-ingest';
 import { scoreAll } from '../scoring/score';
 import { buildSummary } from '../summary/summary';
@@ -34,8 +34,8 @@ export async function buildView(sinceISO: string, events: IngestEvents): Promise
       me = DEMO_ME;
       items = demoItems(now);
     } else {
-      const ingested = await ingestBacklog(sinceISO, (info) =>
-        events.onPhase('auth', JSON.stringify({ verificationUri: info.verificationUri, userCode: info.userCode })),
+      const ingested = await ingestMail(sinceISO, (prompt) =>
+        events.onPhase('auth', JSON.stringify(prompt)),
       );
       me = ingested.me;
       items = ingested.items;

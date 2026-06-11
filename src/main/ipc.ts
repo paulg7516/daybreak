@@ -33,7 +33,20 @@ async function viewForCurrentWindow(): Promise<ViewResult> {
   if (!since) return { needsAwayWindow: true };
   try {
     return await buildView(since, {
-      onPhase: (phase, message) => emit('daybreak:ingest', { phase, message }),
+      onPhase: (phase, message) => {
+        // For Google's loopback sign-in, open the consent URL automatically so the
+        // user does not have to copy a long URL. Microsoft's device-code prompt is
+        // shown in-app instead (it needs a short code typed in).
+        if (phase === 'auth' && message) {
+          try {
+            const prompt = JSON.parse(message) as { provider?: string; url?: string };
+            if (prompt.provider === 'google' && prompt.url) void shell.openExternal(prompt.url);
+          } catch {
+            /* ignore a malformed auth payload */
+          }
+        }
+        emit('daybreak:ingest', { phase, message });
+      },
     });
   } catch (err) {
     return { error: err instanceof Error ? err.message : String(err) };
