@@ -1,19 +1,25 @@
 // src/app/overlay.ts
 import type { Lane, TriagedItem } from '../model/item';
+import { defaultLaneConfig, type LaneSetting } from './lane-config';
 
 // Persisted recipient-side state. No rules / bulk / forced-include any more - the
 // sender decides what enters, so the recipient only keeps corrections (cleared,
-// re-rank), the catch-up boundary, and the Jira connection.
+// re-rank), the catch-up boundary, lane display config, and the Jira connection.
 export interface Overlay {
   awayWindow: { since: string; setAt: string } | null;
   lastOpenedAt: string | null; // for the "catch up since" default
   cleared: Record<string, true>;
   rerank: Record<string, Lane>;
+  laneConfig: LaneSetting[]; // per-user lane order/labels/visibility
   jira: { baseUrl: string; email: string } | null;
 }
 
 export function emptyOverlay(): Overlay {
-  return { awayWindow: null, lastOpenedAt: null, cleared: {}, rerank: {}, jira: null };
+  return { awayWindow: null, lastOpenedAt: null, cleared: {}, rerank: {}, laneConfig: defaultLaneConfig(), jira: null };
+}
+
+export function setLaneConfig(o: Overlay, laneConfig: LaneSetting[]): Overlay {
+  return { ...o, laneConfig };
 }
 
 export function setJiraConfig(o: Overlay, baseUrl: string, email: string): Overlay {

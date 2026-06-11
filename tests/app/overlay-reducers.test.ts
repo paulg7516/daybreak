@@ -8,6 +8,7 @@ import {
   unclearItem,
   rerankItem,
 } from '../../src/app/overlay';
+import { defaultLaneConfig } from '../../src/app/lane-config';
 
 describe('overlay reducers', () => {
   it('emptyOverlay is the minimal declared-intent overlay', () => {
@@ -16,6 +17,7 @@ describe('overlay reducers', () => {
       lastOpenedAt: null,
       cleared: {},
       rerank: {},
+      laneConfig: defaultLaneConfig(),
       jira: null,
     });
   });

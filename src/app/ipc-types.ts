@@ -4,6 +4,7 @@
 // import it without pulling in process-specific globals.
 import type { Lane } from '../model/item';
 import type { TriageView } from './view-model';
+import type { LaneSetting } from './lane-config';
 
 // The result of asking main for the current view. A discriminated union so the
 // renderer can pattern-match instead of try/catch around the IPC call:
@@ -29,6 +30,8 @@ export interface DaybreakBridge {
   unclearItem(id: string): Promise<void>;
   rerankItem(id: string, lane: Lane): Promise<void>;
   openItem(webLink: string): Promise<void>;
+  getLaneConfig(): Promise<LaneSetting[]>;
+  setLaneConfig(config: LaneSetting[]): Promise<void>;
   getJiraConfig(): Promise<{ baseUrl: string; email: string; hasToken: boolean }>;
   setJiraConfig(input: { baseUrl: string; email: string; token?: string }): Promise<void>;
   testJiraConnection(input: { baseUrl: string; email: string; token?: string }): Promise<{ ok: true; displayName: string } | { ok: false; error: string }>;

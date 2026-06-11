@@ -1,5 +1,4 @@
 // src/renderer/components/LaneSection.tsx
-import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { Lane } from '../../model/item';
 import type { TriageRow } from '../../app/view-model';
@@ -10,8 +9,12 @@ export function LaneSection({
   lane,
   label,
   items,
-  defaultCollapsed = false,
+  collapsed,
+  onToggle,
   bySender = false,
+  selected,
+  focusedId,
+  onToggleSelect,
   onOpen,
   onClear,
   onRerank,
@@ -19,21 +22,37 @@ export function LaneSection({
   lane: Lane;
   label?: string;
   items: TriageRow[];
-  defaultCollapsed?: boolean;
+  collapsed: boolean;
+  onToggle: () => void;
   bySender?: boolean;
+  selected: Set<string>;
+  focusedId: string | null;
+  onToggleSelect: (id: string) => void;
   onOpen: (webLink: string) => void;
   onClear: (id: string) => void;
   onRerank: (id: string, lane: Lane) => void;
 }) {
   const meta = LANE_META[lane];
-  const [collapsed, setCollapsed] = useState(defaultCollapsed);
+
+  const renderRow = (row: TriageRow) => (
+    <ItemRow
+      key={row.id}
+      row={row}
+      selected={selected.has(row.id)}
+      focused={focusedId === row.id}
+      onToggleSelect={onToggleSelect}
+      onOpen={onOpen}
+      onClear={onClear}
+      onRerank={onRerank}
+    />
+  );
 
   return (
     <section className="elev-panel overflow-hidden rounded-xl">
       <div className={`h-[3px] w-full ${meta.rail}`} aria-hidden="true" />
       <button
         type="button"
-        onClick={() => setCollapsed((c) => !c)}
+        onClick={onToggle}
         aria-expanded={!collapsed}
         className="flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left transition-colors hover:bg-panel-2"
       >
@@ -52,15 +71,11 @@ export function LaneSection({
           groupRowsBySender(items).map((g) => (
             <div key={g.sender}>
               <div className="border-t border-line bg-panel-2/40 px-3.5 py-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-ink-3">{g.sender}</div>
-              {g.rows.map((row) => (
-                <ItemRow key={row.id} row={row} onOpen={onOpen} onClear={onClear} onRerank={onRerank} />
-              ))}
+              {g.rows.map(renderRow)}
             </div>
           ))
         ) : (
-          items.map((row) => (
-            <ItemRow key={row.id} row={row} onOpen={onOpen} onClear={onClear} onRerank={onRerank} />
-          ))
+          items.map(renderRow)
         )
       )}
     </section>

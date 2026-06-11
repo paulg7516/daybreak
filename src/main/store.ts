@@ -7,9 +7,11 @@ import {
   clearItem as clearItemR,
   unclearItem as unclearItemR,
   rerankItem as rerankItemR,
+  setLaneConfig as setLaneConfigR,
   setJiraConfig as setJiraConfigR,
   type Overlay,
 } from '../app/overlay';
+import { normalizeLaneConfig, type LaneSetting } from '../app/lane-config';
 import type { Lane } from '../model/item';
 
 // electron-store persists a single "overlay" key. Email content is never stored;
@@ -47,6 +49,14 @@ export function unclearItem(id: string): Overlay {
 
 export function rerankItem(id: string, lane: Lane): Overlay {
   return update(rerankItemR(getOverlay(), id, lane));
+}
+
+export function getLaneConfig(): LaneSetting[] {
+  return normalizeLaneConfig(getOverlay().laneConfig);
+}
+
+export function setLaneConfig(laneConfig: LaneSetting[]): Overlay {
+  return update(setLaneConfigR(getOverlay(), normalizeLaneConfig(laneConfig)));
 }
 
 export function getJiraConfig(): { baseUrl: string; email: string } | null {

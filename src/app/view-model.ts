@@ -2,6 +2,7 @@
 import { LANE_ORDER, type Lane, type Source, type Urgency } from '../model/item';
 import type { Summary } from '../summary/summary';
 import type { OverlaidItem } from './overlay';
+import { normalizeLaneConfig, type LaneSetting } from './lane-config';
 
 // A flat, renderable row. The renderer can re-group these by lane (default),
 // sender, or source, so the view model keeps them flat with the fields needed for
@@ -79,4 +80,24 @@ export function buildTriageView(items: OverlaidItem[], summary: Summary, meta: V
     lanes: LANE_ORDER.map((lane) => buildLane(lane, items)),
     clearedCount: meta.clearedCount ?? 0,
   };
+}
+
+// A lane after the user's display config is applied (renamed, reordered, hidden).
+export interface ConfiguredLane {
+  lane: Lane;
+  label: string;
+  total: number;
+  items: TriageRow[];
+}
+
+// Reorder/relabel/filter the view's lanes per the user's lane config. Hidden lanes
+// are dropped from the result (their items simply are not shown).
+export function applyLaneConfig(lanes: LaneView[], config: LaneSetting[] | undefined): ConfiguredLane[] {
+  const byLane = new Map(lanes.map((l) => [l.lane, l]));
+  return normalizeLaneConfig(config)
+    .filter((c) => c.visible)
+    .map((c) => {
+      const lv = byLane.get(c.lane);
+      return { lane: c.lane, label: c.label, total: lv?.total ?? 0, items: lv?.items ?? [] };
+    });
 }

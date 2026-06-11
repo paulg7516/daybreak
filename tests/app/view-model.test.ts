@@ -1,6 +1,6 @@
 // tests/app/view-model.test.ts
 import { describe, it, expect } from 'vitest';
-import { buildTriageView } from '../../src/app/view-model';
+import { buildTriageView, applyLaneConfig } from '../../src/app/view-model';
 import { buildSummary } from '../../src/summary/summary';
 import type { OverlaidItem } from '../../src/app/overlay';
 import type { Lane, Urgency } from '../../src/model/item';
@@ -47,5 +47,28 @@ describe('buildTriageView', () => {
     const items = [o('x', 'approve', 'overdue')];
     const view = buildTriageView(items, buildSummary(items), meta);
     expect(view.lanes.find((l) => l.lane === 'approve')!.items[0].urgency).toBe('overdue');
+  });
+});
+
+describe('applyLaneConfig', () => {
+  const items = [o('a', 'respond', 'none'), o('b', 'fyi', 'none')];
+  const lanes = buildTriageView(items, buildSummary(items), meta).lanes;
+
+  it('reorders, relabels, and hides lanes per the config', () => {
+    const out = applyLaneConfig(lanes, [
+      { lane: 'fyi', label: 'Skim', visible: true },
+      { lane: 'respond', label: 'Reply now', visible: true },
+      { lane: 'approve', label: 'Approve', visible: false },
+      { lane: 'review', label: 'Review', visible: false },
+    ]);
+    expect(out.map((c) => [c.lane, c.label])).toEqual([
+      ['fyi', 'Skim'],
+      ['respond', 'Reply now'],
+    ]);
+    expect(out[1].items.map((i) => i.id)).toEqual(['a']);
+  });
+
+  it('falls back to all visible lanes for an empty config', () => {
+    expect(applyLaneConfig(lanes, []).map((c) => c.lane)).toEqual(['respond', 'approve', 'review', 'fyi']);
   });
 });

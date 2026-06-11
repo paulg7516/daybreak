@@ -17,17 +17,35 @@ function relTime(iso: string): string {
 
 export function ItemRow({
   row,
+  selected = false,
+  focused = false,
+  onToggleSelect,
   onOpen,
   onClear,
   onRerank,
 }: {
   row: TriageRow;
+  selected?: boolean;
+  focused?: boolean;
+  onToggleSelect?: (id: string) => void;
   onOpen: (webLink: string) => void;
   onClear: (id: string) => void;
   onRerank: (id: string, lane: Lane) => void;
 }) {
   return (
-    <div className="group flex items-start gap-3 border-t border-line px-3.5 py-2.5 transition-colors hover:bg-panel-2">
+    <div
+      data-row-id={row.id}
+      className={`group flex items-start gap-3 border-t border-line px-3.5 py-2.5 transition-colors ${focused ? 'bg-panel-2 ring-1 ring-inset ring-accent/50' : 'hover:bg-panel-2'} ${selected ? 'bg-accent/5' : ''}`}
+    >
+      {onToggleSelect && (
+        <input
+          type="checkbox"
+          aria-label={`Select ${row.subject}`}
+          checked={selected}
+          onChange={() => onToggleSelect(row.id)}
+          className={`mt-0.5 accent-accent transition-opacity ${selected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+        />
+      )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <UrgencyBadge urgency={row.urgency} />

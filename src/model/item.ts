@@ -13,6 +13,15 @@ export type Urgency = 'overdue' | 'today' | 'this_week' | 'none';
 // Display order of lanes on the board, most-actionable first.
 export const LANE_ORDER: Lane[] = ['respond', 'approve', 'review', 'fyi'];
 
+// Default display labels; the user can rename lanes in Settings (the underlying
+// lane id / sender tag is fixed).
+export const LANE_LABELS: Record<Lane, string> = {
+  respond: 'Respond',
+  approve: 'Approve / Decide',
+  review: 'Review',
+  fyi: 'FYI',
+};
+
 export interface ThreadMessage {
   from: string;
   sentAt: string; // ISO timestamp

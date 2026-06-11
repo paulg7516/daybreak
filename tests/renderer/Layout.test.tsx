@@ -28,6 +28,8 @@ beforeEach(() => {
     unclearItem: vi.fn(),
     rerankItem: vi.fn(),
     openItem: vi.fn(),
+    getLaneConfig: vi.fn().mockResolvedValue([]),
+    setLaneConfig: vi.fn(),
     getJiraConfig: vi.fn().mockResolvedValue({ baseUrl: '', email: '', hasToken: false }),
     onIngest: vi.fn().mockReturnValue(() => {}),
   };

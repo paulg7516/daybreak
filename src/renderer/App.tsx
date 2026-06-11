@@ -3,7 +3,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Sunrise, LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays, Users, Search, Rows3, Columns3 } from 'lucide-react';
 import { daybreak } from './bridge';
 import type { ViewResult } from '../app/ipc-types';
-import { LANE_ORDER, type Lane } from '../model/item';
+import type { Lane } from '../model/item';
+import { applyLaneConfig } from '../app/view-model';
+import { defaultLaneConfig, type LaneSetting } from '../app/lane-config';
 import { Headline } from './components/Headline';
 import { LaneSection } from './components/LaneSection';
 import { LaneColumn } from './components/LaneColumn';
@@ -28,10 +30,12 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState<string | undefined>();
   const [auth, setAuth] = useState<AuthPrompt | null>(null);
   const [awayError, setAwayError] = useState<string | null>(null);
+  const [showAway, setShowAway] = useState(false);
   const [undo, setUndo] = useState<string | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [page, setPage] = useState<'board' | 'settings'>('board');
   const [jiraConfig, setJiraConfig] = useState<JiraConfigView>({ baseUrl: '', email: '', hasToken: false });
+  const [laneConfig, setLaneConfig] = useState<LaneSetting[]>(defaultLaneConfig);
   const [bySender, setBySender] = useState(false);
   const [senderFilter, setSenderFilter] = useState('');
   const [layout, setLayout] = useState<Layout>(() => {
@@ -41,6 +45,17 @@ export default function App() {
   const setLayoutPersisted = useCallback((l: Layout) => {
     setLayout(l);
     try { localStorage.setItem('daybreak.layout', l); } catch { /* ignore storage failure */ }
+  }, []);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState<Record<Lane, boolean>>(() => ({ ...COLLAPSED_BY_DEFAULT }));
+  const toggleCollapse = useCallback((lane: Lane) => setCollapsed((c) => ({ ...c, [lane]: !c[lane] })), []);
+  const onToggleSelect = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
   }, []);
 
   useEffect(() => {
@@ -58,7 +73,13 @@ export default function App() {
       }
     });
     void daybreak.getView().then(setView);
+    void daybreak.getLaneConfig().then(setLaneConfig);
     return off;
+  }, []);
+
+  const onSaveLaneConfig = useCallback((config: LaneSetting[]) => {
+    setLaneConfig(config);
+    void daybreak.setLaneConfig(config);
   }, []);
 
   useEffect(() => () => { if (undoTimer.current) clearTimeout(undoTimer.current); }, []);
@@ -75,7 +96,7 @@ export default function App() {
     const result = await daybreak.setAwayWindow(sinceISO);
     setPhase('idle');
     if ('error' in result) setAwayError(result.error);
-    else setView(result);
+    else { setView(result); setShowAway(false); }
   }, []);
 
   const refresh = useCallback(async () => {
@@ -119,6 +140,13 @@ export default function App() {
     setUndo(null);
     setView(await daybreak.refresh());
   }, [undo]);
+  const clearSelected = useCallback(async () => {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    await Promise.all(ids.map((id) => daybreak.clearItem(id)));
+    setSelected(new Set());
+    setView(await daybreak.refresh());
+  }, [selected]);
 
   const board = view && !('needsAwayWindow' in view) && !('error' in view) ? view : null;
 
@@ -131,6 +159,41 @@ export default function App() {
       items: q ? l.items.filter((r) => r.from.toLowerCase().includes(q)) : l.items,
     }));
   }, [board, senderFilter]);
+
+  // Apply the user's lane config (order / rename / hide) on top of the filter.
+  const configuredLanes = useMemo(() => applyLaneConfig(filteredLanes, laneConfig), [filteredLanes, laneConfig]);
+
+  // Rows the keyboard can land on, in visual order: in stacked mode skip collapsed
+  // lanes; in columns mode all configured rows are visible.
+  const visibleRows = useMemo(
+    () => (layout === 'columns' ? configuredLanes : configuredLanes.filter((cl) => !collapsed[cl.lane])).flatMap((cl) => cl.items),
+    [configuredLanes, layout, collapsed],
+  );
+
+  // Keyboard triage: j/k (or arrows) move the cursor, e/x clear, o/Enter open,
+  // space selects, Escape clears the selection. Ignored while typing in a field.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA')) return;
+      const ids = visibleRows.map((r) => r.id);
+      if (e.key === 'Escape') { setSelected(new Set()); return; }
+      if (ids.length === 0) return;
+      const idx = focusedId ? ids.indexOf(focusedId) : -1;
+      const focusTo = (id: string | undefined) => {
+        if (!id) return;
+        setFocusedId(id);
+        document.querySelector(`[data-row-id="${id}"]`)?.scrollIntoView?.({ block: 'nearest' });
+      };
+      if (e.key === 'j' || e.key === 'ArrowDown') { e.preventDefault(); focusTo(ids[idx + 1] ?? ids[idx === -1 ? 0 : idx]); }
+      else if (e.key === 'k' || e.key === 'ArrowUp') { e.preventDefault(); focusTo(idx <= 0 ? ids[0] : ids[idx - 1]); }
+      else if ((e.key === 'e' || e.key === 'x' || e.key === 'Backspace') && focusedId) { e.preventDefault(); const nextId = ids[idx + 1] ?? ids[idx - 1]; setFocusedId(nextId ?? null); void onClear(focusedId); }
+      else if ((e.key === 'o' || e.key === 'Enter') && focusedId) { const row = visibleRows.find((r) => r.id === focusedId); if (row?.webLink) onOpen(row.webLink); }
+      else if (e.key === ' ' && focusedId) { e.preventDefault(); onToggleSelect(focusedId); }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [visibleRows, focusedId, onClear, onOpen, onToggleSelect]);
 
   // Full-screen takeovers (no shell yet): auth, away-window, first load, fatal error.
   if (auth) {
@@ -189,9 +252,11 @@ export default function App() {
             <span className="text-xs text-ink-3">Declared-intent triage</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs text-ink-2">
+            <button type="button" onClick={() => setShowAway(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs text-ink-2 transition-colors hover:border-ink-3 hover:text-ink"
+              title="Change the catch-up window">
               <CalendarDays size={13} /> Catch up since <span className="font-mono text-ink">{sinceLabel(view.since)}</span>
-            </span>
+            </button>
             <button type="button" onClick={refresh} aria-label="Refresh"
               className="flex items-center gap-1.5 rounded-lg border border-line-strong bg-panel px-2.5 py-1 text-xs font-medium text-ink-2 transition-colors hover:border-ink-3 hover:text-ink">
               <RefreshCw size={13} /> Refresh
@@ -200,7 +265,14 @@ export default function App() {
         </header>
 
         {page === 'settings' ? (
-          <Settings jiraConfig={jiraConfig} onSaveJira={onSaveJira} onTestJira={onTestJira} onClearJiraToken={onClearJiraToken} />
+          <Settings
+            laneConfig={laneConfig}
+            onSaveLaneConfig={onSaveLaneConfig}
+            jiraConfig={jiraConfig}
+            onSaveJira={onSaveJira}
+            onTestJira={onTestJira}
+            onClearJiraToken={onClearJiraToken}
+          />
         ) : (
           <div className={`px-6 pb-10 ${layout === 'columns' ? '' : 'mx-auto max-w-3xl'}`}>
             <Headline summary={view.summary} since={view.since} />
@@ -253,53 +325,74 @@ export default function App() {
               </div>
             </div>
 
-            {layout === 'stacked' ? (
+            <p className="mb-2 text-[10.5px] text-ink-3">
+              <span className="font-mono">j/k</span> move · <span className="font-mono">e</span> clear · <span className="font-mono">o</span> open · <span className="font-mono">space</span> select
+            </p>
+
+            {configuredLanes.length === 0 ? (
+              <p className="rounded-xl border border-line bg-panel px-4 py-6 text-center text-[13px] text-ink-3">
+                All lanes are hidden. Show some in Settings -&gt; Lanes.
+              </p>
+            ) : layout === 'stacked' ? (
               <div className="flex flex-col gap-3">
-                {LANE_ORDER.map((lane) => {
-                  const lv = filteredLanes.find((l) => l.lane === lane);
-                  return (
-                    <LaneSection
-                      key={lane}
-                      lane={lane}
-                      items={lv?.items ?? []}
-                      defaultCollapsed={COLLAPSED_BY_DEFAULT[lane]}
-                      bySender={bySender}
-                      onOpen={onOpen}
-                      onClear={onClear}
-                      onRerank={onRerank}
-                    />
-                  );
-                })}
+                {configuredLanes.map((cl) => (
+                  <LaneSection
+                    key={cl.lane}
+                    lane={cl.lane}
+                    label={cl.label}
+                    items={cl.items}
+                    collapsed={collapsed[cl.lane]}
+                    onToggle={() => toggleCollapse(cl.lane)}
+                    bySender={bySender}
+                    selected={selected}
+                    focusedId={focusedId}
+                    onToggleSelect={onToggleSelect}
+                    onOpen={onOpen}
+                    onClear={onClear}
+                    onRerank={onRerank}
+                  />
+                ))}
               </div>
             ) : (
               <div className="flex items-start gap-3 overflow-x-auto pb-2">
-                {LANE_ORDER.map((lane) => {
-                  const lv = filteredLanes.find((l) => l.lane === lane);
-                  return (
-                    <LaneColumn
-                      key={lane}
-                      lane={lane}
-                      items={lv?.items ?? []}
-                      bySender={bySender}
-                      onOpen={onOpen}
-                      onClear={onClear}
-                      onRerank={onRerank}
-                    />
-                  );
-                })}
+                {configuredLanes.map((cl) => (
+                  <LaneColumn
+                    key={cl.lane}
+                    lane={cl.lane}
+                    label={cl.label}
+                    items={cl.items}
+                    bySender={bySender}
+                    selected={selected}
+                    focusedId={focusedId}
+                    onToggleSelect={onToggleSelect}
+                    onOpen={onOpen}
+                    onClear={onClear}
+                    onRerank={onRerank}
+                  />
+                ))}
               </div>
             )}
           </div>
         )}
       </main>
 
-      {undo && (
+      {showAway && (
+        <AwayWindowModal onSubmit={submitAwayWindow} onCancel={() => { setShowAway(false); setAwayError(null); }} error={awayError} />
+      )}
+
+      {selected.size > 0 ? (
+        <div className="elev-pop fixed bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-3 rounded-xl px-4 py-2.5 text-[13px]" role="status" aria-live="polite">
+          <span className="font-medium text-ink">{selected.size} selected</span>
+          <button type="button" className="rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-ink transition-opacity hover:opacity-90" onClick={clearSelected}>Clear selected</button>
+          <button type="button" className="text-[12px] font-medium text-ink-2 hover:text-ink" onClick={() => setSelected(new Set())}>Cancel</button>
+        </div>
+      ) : undo ? (
         <div className="elev-pop fixed bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-3 rounded-xl px-4 py-2.5 text-[13px]"
           role="status" aria-live="polite">
           <span className="text-ink">Cleared</span>
           <button type="button" className="font-medium text-accent hover:underline" onClick={onUndo}>Undo</button>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
