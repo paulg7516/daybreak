@@ -1,11 +1,14 @@
 // src/renderer/App.tsx
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Sunrise, LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays, Users, Search } from 'lucide-react';
+import { Sunrise, LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays, Users, Search, Rows3, Columns3 } from 'lucide-react';
 import { daybreak } from './bridge';
 import type { ViewResult } from '../app/ipc-types';
 import { LANE_ORDER, type Lane } from '../model/item';
 import { Headline } from './components/Headline';
 import { LaneSection } from './components/LaneSection';
+import { LaneColumn } from './components/LaneColumn';
+
+type Layout = 'stacked' | 'columns';
 import { AwayWindowModal } from './components/AwayWindowModal';
 import { AuthPanel, type AuthPrompt } from './components/AuthPanel';
 import { IngestStatus } from './components/IngestStatus';
@@ -31,6 +34,14 @@ export default function App() {
   const [jiraConfig, setJiraConfig] = useState<JiraConfigView>({ baseUrl: '', email: '', hasToken: false });
   const [bySender, setBySender] = useState(false);
   const [senderFilter, setSenderFilter] = useState('');
+  const [layout, setLayout] = useState<Layout>(() => {
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('daybreak.layout') : null;
+    return saved === 'columns' ? 'columns' : 'stacked';
+  });
+  const setLayoutPersisted = useCallback((l: Layout) => {
+    setLayout(l);
+    try { localStorage.setItem('daybreak.layout', l); } catch { /* ignore storage failure */ }
+  }, []);
 
   useEffect(() => {
     const off = daybreak.onIngest(({ phase: p, message }) => {
@@ -191,7 +202,7 @@ export default function App() {
         {page === 'settings' ? (
           <Settings jiraConfig={jiraConfig} onSaveJira={onSaveJira} onTestJira={onTestJira} onClearJiraToken={onClearJiraToken} />
         ) : (
-          <div className="mx-auto max-w-3xl px-6 pb-10">
+          <div className={`px-6 pb-10 ${layout === 'columns' ? '' : 'mx-auto max-w-3xl'}`}>
             <Headline summary={view.summary} since={view.since} />
 
             {(phase === 'fetching' || phase === 'scoring' || phase === 'error') && (
@@ -218,25 +229,66 @@ export default function App() {
               >
                 <Users size={13} /> Group by sender
               </button>
+
+              {/* layout toggle: stacked board vs kanban columns */}
+              <div className="ml-auto flex items-center rounded-lg border border-line p-0.5">
+                <button
+                  type="button"
+                  aria-label="Board layout"
+                  aria-pressed={layout === 'stacked'}
+                  onClick={() => setLayoutPersisted('stacked')}
+                  className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium transition-colors ${layout === 'stacked' ? 'bg-accent/15 text-accent' : 'text-ink-3 hover:text-ink'}`}
+                >
+                  <Rows3 size={13} /> Board
+                </button>
+                <button
+                  type="button"
+                  aria-label="Columns layout"
+                  aria-pressed={layout === 'columns'}
+                  onClick={() => setLayoutPersisted('columns')}
+                  className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium transition-colors ${layout === 'columns' ? 'bg-accent/15 text-accent' : 'text-ink-3 hover:text-ink'}`}
+                >
+                  <Columns3 size={13} /> Columns
+                </button>
+              </div>
             </div>
 
-            <div className="flex flex-col gap-3">
-              {LANE_ORDER.map((lane) => {
-                const lv = filteredLanes.find((l) => l.lane === lane);
-                return (
-                  <LaneSection
-                    key={lane}
-                    lane={lane}
-                    items={lv?.items ?? []}
-                    defaultCollapsed={COLLAPSED_BY_DEFAULT[lane]}
-                    bySender={bySender}
-                    onOpen={onOpen}
-                    onClear={onClear}
-                    onRerank={onRerank}
-                  />
-                );
-              })}
-            </div>
+            {layout === 'stacked' ? (
+              <div className="flex flex-col gap-3">
+                {LANE_ORDER.map((lane) => {
+                  const lv = filteredLanes.find((l) => l.lane === lane);
+                  return (
+                    <LaneSection
+                      key={lane}
+                      lane={lane}
+                      items={lv?.items ?? []}
+                      defaultCollapsed={COLLAPSED_BY_DEFAULT[lane]}
+                      bySender={bySender}
+                      onOpen={onOpen}
+                      onClear={onClear}
+                      onRerank={onRerank}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex items-start gap-3 overflow-x-auto pb-2">
+                {LANE_ORDER.map((lane) => {
+                  const lv = filteredLanes.find((l) => l.lane === lane);
+                  return (
+                    <LaneColumn
+                      key={lane}
+                      lane={lane}
+                      items={lv?.items ?? []}
+                      bySender={bySender}
+                      onOpen={onOpen}
+                      onClear={onClear}
+                      onRerank={onRerank}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </main>
