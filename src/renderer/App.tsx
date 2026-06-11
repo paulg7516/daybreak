@@ -7,7 +7,7 @@ import type { Lane } from '../model/item';
 import { SummaryHeader } from './components/SummaryHeader';
 import { Lane as LaneComponent } from './components/Lane';
 import { AwayWindowModal } from './components/AwayWindowModal';
-import { AuthPanel } from './components/AuthPanel';
+import { AuthPanel, type AuthPrompt } from './components/AuthPanel';
 import { IngestStatus } from './components/IngestStatus';
 import { SetAsideBin } from './components/SetAsideBin';
 import { Settings } from './components/Settings';
@@ -28,7 +28,7 @@ export default function App() {
   const [view, setView] = useState<ViewResult | null>(null);
   const [phase, setPhase] = useState<'idle' | 'fetching' | 'scoring' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | undefined>();
-  const [auth, setAuth] = useState<{ verificationUri: string; userCode: string } | null>(null);
+  const [auth, setAuth] = useState<AuthPrompt | null>(null);
   const [awayError, setAwayError] = useState<string | null>(null);
   const [undo, setUndo] = useState<string | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
