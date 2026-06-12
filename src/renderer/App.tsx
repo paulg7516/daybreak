@@ -1,6 +1,6 @@
 // src/renderer/App.tsx
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Sunrise, LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays } from 'lucide-react';
+import { LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays } from 'lucide-react';
 import { daybreak } from './bridge';
 import type { ViewResult } from '../app/ipc-types';
 import type { Lane } from '../model/item';
@@ -186,8 +186,12 @@ export default function App() {
     <div className="flex min-h-dvh bg-bg text-ink">
       {/* slim left nav rail */}
       <nav className="sticky top-0 flex h-dvh w-14 shrink-0 flex-col items-center gap-1 border-r border-line bg-panel py-3">
-        <div className="mb-2 grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-amber-400 via-rose-500 to-violet-600 text-white shadow-lg shadow-rose-500/40" title="Daybreak">
-          <Sunrise size={19} strokeWidth={2.25} />
+        <div className="mb-2 h-9 w-9 overflow-hidden rounded-xl shadow-lg shadow-orange-500/40" title="Daybreak">
+          <svg viewBox="0 0 120 120" className="h-full w-full" aria-hidden="true">
+            <rect width="120" height="120" fill="#ff6a3d" />
+            <path d="M34.1 60 A24.7 24.7 0 0 1 83.5 60 Z" fill="#fff" />
+            <path d="M41.2 67.1 A24.7 24.7 0 0 0 90.6 67.1 Z" fill="#fff" opacity="0.7" />
+          </svg>
         </div>
         <button type="button" aria-label="Triage" aria-current="page"
           className="grid h-10 w-10 place-items-center rounded-xl bg-accent/15 text-accent">
@@ -203,7 +207,7 @@ export default function App() {
       <main className="min-w-0 flex-1">
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-bg/85 px-6 py-3 backdrop-blur">
           <div className="flex items-baseline gap-2">
-            <span className="bg-gradient-to-r from-amber-300 via-rose-400 to-violet-400 bg-clip-text text-sm font-bold tracking-tight text-transparent">Daybreak</span>
+            <span className="text-sm font-bold tracking-tight text-ink">Daybreak</span>
             <span className="text-xs text-ink-3">Return-from-leave triage</span>
           </div>
           <div className="flex items-center gap-2">
