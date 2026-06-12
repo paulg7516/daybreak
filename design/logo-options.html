@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daybreak - logo explorations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f6f8fb; --surface:#fff; --ink:#0f1729; --ink-2:#5a6678; --ink-3:#8b96a8;
+    --border:#e6eaf0; --accent:#2f5bea; --accent-soft:#eef2fe; --dark:#080b12;
+    --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    --shadow:0 1px 2px rgba(16,23,41,.06),0 1px 3px rgba(16,23,41,.05);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:48px clamp(20px,5vw,48px) 80px}
+  header{margin-bottom:40px}
+  .eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border:1px solid #dbe4fd;padding:6px 13px 6px 11px;border-radius:999px;margin-bottom:18px}
+  .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  h1{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;font-weight:600;margin:0 0 10px}
+  .lede{color:var(--ink-2);font-size:17px;max-width:640px;margin:0}
+  h2{font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:48px 0 18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+  @media(max-width:880px){.grid{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:560px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px;box-shadow:var(--shadow);position:relative}
+  .stage{height:120px;border-radius:12px;background:var(--bg);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+  .stage svg{width:64px;height:64px}
+  .strip{display:flex;align-items:center;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+  .lock{display:inline-flex;align-items:center;gap:9px;font-weight:600;font-size:17px;letter-spacing:-.01em}
+  .lock svg{width:24px;height:24px}
+  .fav{width:18px;height:18px}
+  .chip{width:46px;height:46px;border-radius:11px;background:var(--dark);display:inline-flex;align-items:center;justify-content:center;margin-left:auto}
+  .chip svg{width:30px;height:30px}
+  .name{font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+  .note{font-size:13.5px;color:var(--ink-2);margin:0;line-height:1.5}
+  .pill{font-size:10.5px;font-weight:600;letter-spacing:.02em;padding:2px 8px;border-radius:999px;text-transform:uppercase}
+  .pill.now{background:#eaffea;color:#15a06b;border:1px solid #b9ecd0}
+  .pill.warn{background:#fdeced;color:#e5484d;border:1px solid #f6cdd0}
+  .pill.alt{background:var(--accent-soft);color:var(--accent);border:1px solid #dbe4fd}
+</style>
+</head>
+<body>
+
+<!-- ===== symbol definitions (single source, reused at every size) ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b6bff"/><stop offset="1" stop-color="#7c4dff"/></linearGradient>
+
+  <symbol id="m-tilesun" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><path d="M47 73 A13 13 0 1 1 73 73 Z" fill="#fff"/><line x1="36" y1="73" x2="84" y2="73" stroke="#fff" stroke-width="6" stroke-linecap="round"/><line x1="50" y1="84" x2="70" y2="84" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".55"/></symbol>
+
+  <symbol id="m-gradsun" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="url(#grad)"/><path d="M47 73 A13 13 0 1 1 73 73 Z" fill="#fff"/><line x1="36" y1="73" x2="84" y2="73" stroke="#fff" stroke-width="6" stroke-linecap="round"/><line x1="50" y1="84" x2="70" y2="84" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".55"/></symbol>
+
+  <symbol id="m-risesun" viewBox="0 0 120 120"><path d="M41.6 78 A22 22 0 1 1 78.4 78 Z" fill="#2f5bea"/><line x1="16" y1="78" x2="104" y2="78" stroke="#2f5bea" stroke-width="9" stroke-linecap="round"/><line x1="36" y1="92" x2="84" y2="92" stroke="#9bb0f5" stroke-width="9" stroke-linecap="round"/></symbol>
+
+  <symbol id="m-sunlanes" viewBox="0 0 120 120"><path d="M37 62 a23 23 0 0 1 46 0" fill="#2f5bea"/><rect x="33" y="70" width="54" height="8" rx="4" fill="#2f5bea"/><rect x="42" y="86" width="36" height="8" rx="4" fill="#9bb0f5"/></symbol>
+
+  <symbol id="m-arcs" viewBox="0 0 120 120"><g fill="none" stroke-linecap="round"><circle cx="60" cy="72" r="9" fill="#2f5bea"/><path d="M37 72 a23 23 0 0 1 46 0" stroke="#2f5bea" stroke-width="7"/><path d="M22 72 a38 38 0 0 1 76 0" stroke="#9bb0f5" stroke-width="7"/><line x1="14" y1="84" x2="106" y2="84" stroke="#2f5bea" stroke-width="8"/></g></symbol>
+
+  <symbol id="m-halfsun" viewBox="0 0 120 120"><g fill="none" stroke="#2f5bea" stroke-width="9" stroke-linecap="round"><path d="M32 72 a28 28 0 0 1 56 0" fill="#2f5bea" stroke="none"/><line x1="16" y1="72" x2="104" y2="72"/></g></symbol>
+
+  <symbol id="m-lanes" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><rect x="38" y="45" width="44" height="11" rx="5.5" fill="#fff"/><rect x="38" y="62" width="30" height="9" rx="4.5" fill="#fff" opacity=".42"/><rect x="38" y="76" width="36" height="9" rx="4.5" fill="#fff" opacity=".42"/></symbol>
+
+  <symbol id="m-focus" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><circle cx="43" cy="51" r="4.5" fill="#fff"/><rect x="53" y="47.5" width="30" height="7" rx="3.5" fill="#fff"/><circle cx="43" cy="66" r="4.5" fill="#fff" opacity=".4"/><rect x="53" y="62.5" width="30" height="7" rx="3.5" fill="#fff" opacity=".4"/><circle cx="43" cy="80" r="4.5" fill="#fff" opacity=".4"/><rect x="53" y="76.5" width="24" height="7" rx="3.5" fill="#fff" opacity=".4"/></symbol>
+
+  <symbol id="m-funnel" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><path d="M37 45 H83 L65 68 V82 L55 76 V68 Z" fill="#fff"/></symbol>
+
+  <symbol id="m-break" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><path d="M40 57 A20 20 0 0 1 80 57 Z" fill="#fff"/><path d="M40 63 A20 20 0 0 0 80 63 Z" fill="#fff" opacity=".5"/></symbol>
+
+  <symbol id="m-check" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><path d="M41 61 l11 12 28-29" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+
+  <symbol id="m-mono" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><text x="60" y="86" font-family="Inter,sans-serif" font-weight="700" font-size="66" fill="#fff" text-anchor="middle">D</text></symbol>
+
+  <symbol id="m-board" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><rect x="37" y="42" width="14" height="36" rx="4" fill="#fff"/><rect x="56" y="42" width="14" height="24" rx="4" fill="#fff" opacity=".55"/><rect x="75" y="42" width="14" height="16" rx="4" fill="#fff" opacity=".55"/></symbol>
+
+  <symbol id="m-route" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><g stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M34 60 H50"/><path d="M50 60 C62 60 64 47 76 47"/><path d="M50 60 H76"/><path d="M50 60 C62 60 64 73 76 73"/></g><g fill="#fff"><circle cx="80" cy="47" r="5"/><circle cx="80" cy="60" r="5"/><circle cx="80" cy="73" r="5"/></g><circle cx="33" cy="60" r="5" fill="#fff"/></symbol>
+
+  <symbol id="m-sort" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><path d="M44 46 V80 M37 71 l7 9 7-9" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><rect x="58" y="47" width="28" height="6" rx="3" fill="#fff"/><rect x="58" y="60" width="20" height="6" rx="3" fill="#fff" opacity=".65"/><rect x="58" y="73" width="12" height="6" rx="3" fill="#fff" opacity=".65"/></symbol>
+
+  <symbol id="m-sliders" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><g stroke="#fff" stroke-width="6" stroke-linecap="round"><line x1="36" y1="50" x2="84" y2="50"/><line x1="36" y1="64" x2="84" y2="64"/><line x1="36" y1="78" x2="84" y2="78"/></g><g fill="#2f5bea" stroke="#fff" stroke-width="5"><circle cx="68" cy="50" r="6.5"/><circle cx="48" cy="64" r="6.5"/><circle cx="74" cy="78" r="6.5"/></g></symbol>
+
+  <symbol id="m-layers" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><path d="M60 40 L86 53 L60 66 L34 53 Z" fill="#fff"/><path d="M34 63 L60 76 L86 63" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/></symbol>
+
+  <symbol id="m-inbox" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><path d="M38 46 h44 v28 a4 4 0 0 1 -4 4 h-36 a4 4 0 0 1 -4 -4 Z" fill="none" stroke="#fff" stroke-width="6" stroke-linejoin="round"/><path d="M38 66 h12 l4 7 h12 l4 -7 h12" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+
+  <!-- fragmented -> whole -->
+  <symbol id="m-frag4" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><g fill="#fff"><path d="M60 60 L46.2 42.9 A22 22 0 0 1 73.8 42.9 Z"/><path d="M60 60 L77.1 46.2 A22 22 0 0 1 77.1 73.8 Z" opacity=".8"/><path d="M60 60 L73.8 77.1 A22 22 0 0 1 46.2 77.1 Z" opacity=".62"/><path d="M60 60 L42.9 73.8 A22 22 0 0 1 42.9 46.2 Z" opacity=".88"/></g></symbol>
+
+  <symbol id="m-frag3" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><g fill="#fff"><path d="M60 60 L42.2 47.1 A22 22 0 0 1 77.8 47.1 Z"/><path d="M60 60 L80.1 51.1 A22 22 0 0 1 62.3 81.9 Z" opacity=".74"/><path d="M60 60 L57.7 81.9 A22 22 0 0 1 39.9 51.1 Z" opacity=".88"/></g></symbol>
+
+  <symbol id="m-fragX" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><g fill="#fff"><g transform="translate(0,-4)"><path d="M60 60 L46.2 42.9 A22 22 0 0 1 73.8 42.9 Z"/></g><g transform="translate(4,0)"><path d="M60 60 L77.1 46.2 A22 22 0 0 1 77.1 73.8 Z" opacity=".8"/></g><g transform="translate(0,4)"><path d="M60 60 L73.8 77.1 A22 22 0 0 1 46.2 77.1 Z" opacity=".62"/></g><g transform="translate(-4,0)"><path d="M60 60 L42.9 73.8 A22 22 0 0 1 42.9 46.2 Z" opacity=".88"/></g></g></symbol>
+
+  <symbol id="m-half" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><path d="M38 60 A21 21 0 0 1 80 60 Z" fill="#fff"/><path d="M44 66 A21 21 0 0 0 86 66 Z" fill="#fff" opacity=".7"/></symbol>
+
+  <symbol id="m-vhalf" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><path d="M60 38 A22 22 0 0 0 60 82 Z" fill="#fff"/><path d="M63 34 A22 22 0 0 1 63 78 Z" fill="#fff" opacity=".7"/></symbol>
+
+  <symbol id="m-fault" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="#2f5bea"/><circle cx="60" cy="60" r="22" fill="#fff"/><path d="M52 39 L64 56 L54 64 L66 81" fill="none" stroke="#2f5bea" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+
+  <symbol id="m-line" viewBox="0 0 120 120"><circle cx="60" cy="62" r="11" fill="#2f5bea"/><line x1="16" y1="80" x2="104" y2="80" stroke="#2f5bea" stroke-width="9" stroke-linecap="round"/><line x1="34" y1="80" x2="86" y2="80" stroke="#9bb0f5" stroke-width="0"/></symbol>
+</defs></svg>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Brand exploration</div>
+    <h1>Daybreak logo explorations</h1>
+    <p class="lede">Every direction from this round, designed at icon, wordmark, favicon, and dark-tile sizes. Grouped by idea. The app-tile style is the modern, sharp direction; open-form marks are the calmer alternative.</p>
+  </header>
+
+  <!-- ============ DAWN / SUNRISE ============ -->
+  <h2>Dawn &amp; sunrise marks</h2>
+  <div class="grid">
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-tilesun"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-tilesun"/></svg><span class="lock"><svg><use href="#m-tilesun"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-tilesun"/></svg></span></div>
+      <p class="name">App tile + sun <span class="pill now">Current</span></p>
+      <p class="note">Navy app icon with a white rising-sun knockout. The modern app-mark idiom; what is live on the site now.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-gradsun"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-gradsun"/></svg><span class="lock"><svg><use href="#m-gradsun"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-gradsun"/></svg></span></div>
+      <p class="name">Gradient tile + sun <span class="pill alt">Bolder</span></p>
+      <p class="note">Same tile with a blue-to-purple gradient. More pop, more premium - but adds the gradient you were unsure about.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-risesun"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-risesun"/></svg><span class="lock"><svg><use href="#m-risesun"/></svg>Daybreak</span></div>
+      <p class="name">Rising sun + reflection</p>
+      <p class="note">Open-form: a sun on the horizon with a reflection line. Calmer, less "app icon." The pre-tile version.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-sunlanes"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-sunlanes"/></svg><span class="lock"><svg><use href="#m-sunlanes"/></svg>Daybreak</span></div>
+      <p class="name">Sun over lanes</p>
+      <p class="note">Sun atop two stacked bars - fuses dawn with the triage board. Gets a little muddy at favicon size.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-arcs"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-arcs"/></svg><span class="lock"><svg><use href="#m-arcs"/></svg>Daybreak</span></div>
+      <p class="name">Concentric arcs</p>
+      <p class="note">Sun core with rising arcs. Dynamic, but reads close to a rainbow / gauge at small sizes.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-halfsun"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-halfsun"/></svg><span class="lock"><svg><use href="#m-halfsun"/></svg>Daybreak</span></div>
+      <p class="name">Half-disc + horizon</p>
+      <p class="note">The simplest dawn mark. Clean, but the dome can read as a hill / loaf rather than a sun.</p>
+    </div>
+
+  </div>
+
+  <!-- ============ PRODUCT-CONCEPT ============ -->
+  <h2>Product-concept marks (no sunrise)</h2>
+  <div class="grid">
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-focus"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-focus"/></svg><span class="lock"><svg><use href="#m-focus"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-focus"/></svg></span></div>
+      <p class="name">Focus list <span class="pill alt">Top non-sun pick</span></p>
+      <p class="note">A feed with the top item active and the rest dimmed - "what needs you, first." Product-true and distinct from a plain list.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-funnel"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-funnel"/></svg><span class="lock"><svg><use href="#m-funnel"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-funnel"/></svg></span></div>
+      <p class="name">Funnel</p>
+      <p class="note">The pile, filtered down to what matters. Clear and modern, but funnel is a common/generic filter glyph.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-break"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-break"/></svg><span class="lock"><svg><use href="#m-break"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-break"/></svg></span></div>
+      <p class="name">Split "break"</p>
+      <p class="note">A disc broken by a band of light - the day-<em>break</em> wordplay. Clever, but can read as a half / contrast toggle.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-check"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-check"/></svg><span class="lock"><svg><use href="#m-check"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-check"/></svg></span></div>
+      <p class="name">Checkmark</p>
+      <p class="note">"Caught up." Friendly and legible, but it is the to-do-app cliche - least distinctive.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-lanes"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-lanes"/></svg><span class="lock"><svg><use href="#m-lanes"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-lanes"/></svg></span></div>
+      <p class="name">Priority lanes <span class="pill warn">Clashes w/ Nowtify</span></p>
+      <p class="note">Stacked bars with the top lane emphasized. Strong concept, but too close to Nowtify's stacked-bar mark - ruled out.</p>
+    </div>
+
+  </div>
+
+  <!-- ============ MONOGRAM ============ -->
+  <h2>Monogram</h2>
+  <div class="grid">
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-mono"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-mono"/></svg><span class="lock"><svg><use href="#m-mono"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-mono"/></svg></span></div>
+      <p class="name">Monogram "D"</p>
+      <p class="note">Bold letter tile. The safest, most scalable mark - but concept-light (it is just a letter).</p>
+    </div>
+
+  </div>
+
+  <!-- ============ SORTING / FILTERING / ROUTING ============ -->
+  <h2>Sorting, filtering &amp; routing</h2>
+  <div class="grid">
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-board"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-board"/></svg><span class="lock"><svg><use href="#m-board"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-board"/></svg></span></div>
+      <p class="name">Triage board <span class="pill alt">Sorting pick</span></p>
+      <p class="note">Columns of a board with varying content. Daybreak literally is a board, so it fits - and stays distinct from Nowtify.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-route"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-route"/></svg><span class="lock"><svg><use href="#m-route"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-route"/></svg></span></div>
+      <p class="name">Route</p>
+      <p class="note">One stream split into lanes - exactly what declared intent does. Most ownable, but can read as a git-branch / share glyph.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-sort"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-sort"/></svg><span class="lock"><svg><use href="#m-sort"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-sort"/></svg></span></div>
+      <p class="name">Sort</p>
+      <p class="note">Arrow + graduated bars. Instantly legible as "sort," but it is a standard UI control glyph - a little generic.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-sliders"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-sliders"/></svg><span class="lock"><svg><use href="#m-sliders"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-sliders"/></svg></span></div>
+      <p class="name">Filter sliders</p>
+      <p class="note">Tune what comes through. Clean and modern, but reads as the universal "settings / filter" glyph.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-layers"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-layers"/></svg><span class="lock"><svg><use href="#m-layers"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-layers"/></svg></span></div>
+      <p class="name">Layers</p>
+      <p class="note">Organized into stacked layers. Modern, but the layers glyph is widely used and concept-loose.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-inbox"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-inbox"/></svg><span class="lock"><svg><use href="#m-inbox"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-inbox"/></svg></span></div>
+      <p class="name">Inbox <span class="pill warn">Off-message</span></p>
+      <p class="note">A tray, caught up. Reads clearly, but the site says Daybreak is "not another inbox," so this fights the positioning.</p>
+    </div>
+
+  </div>
+
+  <!-- ============ FRAGMENTED -> WHOLE ============ -->
+  <h2>Fragmented &rarr; whole &nbsp;<span style="text-transform:none;letter-spacing:0;font-weight:500;color:#8b96a8">Day &middot; Break, put back together</span></h2>
+  <div class="grid">
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-frag4"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-frag4"/></svg><span class="lock"><svg><use href="#m-frag4"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-frag4"/></svg></span></div>
+      <p class="name">Reassembled disc <span class="pill alt">Concept pick</span></p>
+      <p class="note">Four shards with clean seams locking into one circle. Best tells the story - broken, then made whole. Reads abstractly as a sun without being literal.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-frag3"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-frag3"/></svg><span class="lock"><svg><use href="#m-frag3"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-frag3"/></svg></span></div>
+      <p class="name">Reassembled disc - 3 shards</p>
+      <p class="note">Same idea with three pieces. Fewer seams, so it reads less like a pie chart and a touch more deliberate.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-fragX"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-fragX"/></svg><span class="lock"><svg><use href="#m-fragX"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-fragX"/></svg></span></div>
+      <p class="name">Assembling</p>
+      <p class="note">The same shards pulled a few pixels apart - caught mid snap-together. More energy and motion; slightly busier small.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-half"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-half"/></svg><span class="lock"><svg><use href="#m-half"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-half"/></svg></span></div>
+      <p class="name">Split &amp; aligned</p>
+      <p class="note">Two halves, broken then set back together with a small offset. Cleanest and calmest, but the reassembly story is subtle.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-vhalf"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-vhalf"/></svg><span class="lock"><svg><use href="#m-vhalf"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-vhalf"/></svg></span></div>
+      <p class="name">Vertical fracture</p>
+      <p class="note">A disc split down the middle, halves shifted. The seam is more obvious than the horizontal split.</p>
+    </div>
+
+    <div class="card">
+      <div class="stage"><svg><use href="#m-fault"/></svg></div>
+      <div class="strip"><svg class="fav"><use href="#m-fault"/></svg><span class="lock"><svg><use href="#m-fault"/></svg>Daybreak</span><span class="chip"><svg><use href="#m-fault"/></svg></span></div>
+      <p class="name">Fault line</p>
+      <p class="note">One whole disc with a fracture running through it. Honest "break," but the crack can read as a lightning bolt.</p>
+    </div>
+
+  </div>
+
+</div>
+</body>
+</html>

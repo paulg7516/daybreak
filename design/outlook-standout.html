@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daybreak - standing out in Outlook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Segoe+UI&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f6f8fb;--surface:#fff;--ink:#0f1729;--ink-2:#5a6678;--ink-3:#8b96a8;--border:#e6eaf0;
+    --accent:#2f5bea;--accent-soft:#eef2fe;--font:'Inter',-apple-system,sans-serif;
+    --shadow:0 1px 2px rgba(16,23,41,.06),0 1px 3px rgba(16,23,41,.05);
+    --ol-blue:#0f6cbd; /* Outlook blue */}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:980px;margin:0 auto;padding:48px clamp(20px,5vw,44px) 90px}
+  .eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);border:1px solid #dbe4fd;padding:6px 13px 6px 11px;border-radius:999px;margin-bottom:18px}
+  .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent)}
+  h1{font-size:clamp(28px,4vw,40px);letter-spacing:-.03em;font-weight:600;margin:0 0 12px}
+  .lede{color:var(--ink-2);font-size:17px;max-width:680px;margin:0 0 8px}
+  h2{font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:46px 0 18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+
+  /* conflict swatches */
+  .conflict{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .sw{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-2)}
+  .sw i{width:34px;height:34px;border-radius:8px;display:block;border:1px solid rgba(0,0,0,.06)}
+  .vs{color:var(--ink-3);font-weight:600;font-size:13px}
+
+  /* per-color panel */
+  .panel{display:grid;grid-template-columns:240px 1fr;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);margin-bottom:18px}
+  @media(max-width:720px){.panel{grid-template-columns:1fr}}
+  .pinfo{padding:22px;border-right:1px solid var(--border)}
+  @media(max-width:720px){.pinfo{border-right:0;border-bottom:1px solid var(--border)}}
+  .pinfo .tiles{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .pinfo .tiles svg.big{width:54px;height:54px}
+  .pinfo .tiles svg.fav{width:22px;height:22px}
+  .pname{font-size:15px;font-weight:600;margin:0 0 2px;display:flex;align-items:center;gap:8px}
+  .phex{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--ink-3);margin:0 0 10px}
+  .pnote{font-size:13px;color:var(--ink-2);margin:0;line-height:1.5}
+  .pill{font-size:10px;font-weight:700;letter-spacing:.03em;padding:2px 8px;border-radius:999px;text-transform:uppercase}
+  .pill.rec{background:#fff1ea;color:#d6541f;border:1px solid #ffd3bd}
+  .pill.bad{background:#fdeced;color:#e5484d;border:1px solid #f6cdd0}
+  .pill.ok{background:#eef2fe;color:#2f5bea;border:1px solid #dbe4fd}
+
+  /* outlook ribbon mock */
+  .ol{padding:0;background:#faf9f8}
+  .ol-bar{height:40px;background:var(--ol-blue);display:flex;align-items:center;gap:10px;padding:0 14px;color:#fff;font-family:'Segoe UI',var(--font)}
+  .ol-bar .o-logo{width:18px;height:18px;border-radius:4px;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:var(--ol-blue);font-weight:700;font-size:12px}
+  .ol-bar .o-title{font-size:13px;font-weight:600}
+  .ol-bar .o-search{margin-left:14px;height:22px;flex:1;max-width:320px;background:rgba(255,255,255,.22);border-radius:4px}
+  .ol-cmd{display:flex;align-items:center;gap:4px;padding:8px 12px;background:#faf9f8;border-bottom:1px solid #edebe9;overflow-x:auto}
+  .ocmd{display:inline-flex;flex-direction:column;align-items:center;gap:3px;padding:6px 10px;border-radius:6px;color:#3b3a39;font-family:'Segoe UI',var(--font);font-size:10px;white-space:nowrap}
+  .ocmd svg{width:18px;height:18px}
+  .ocmd.sep{border-left:1px solid #e1dfdd;margin-left:4px;padding-left:14px}
+  .addin{display:inline-flex;flex-direction:column;align-items:center;gap:3px;padding:6px 12px;border-radius:6px;background:#fff;border:1px solid #e1dfdd;font-family:'Segoe UI',var(--font);font-size:10px;font-weight:600;color:#1b1a19;white-space:nowrap}
+  .addin svg{width:22px;height:22px}
+  .ol-read{padding:16px 18px;font-family:'Segoe UI',var(--font)}
+  .ol-read .subj{font-size:15px;font-weight:600;color:#201f1e;margin-bottom:6px}
+  .ol-read .from{font-size:12px;color:#605e5c}
+  .reco{background:#0f1729;color:#fff;border-radius:18px;padding:30px 32px;margin-top:30px}
+  .reco h3{margin:0 0 10px;font-size:22px;letter-spacing:-.02em}
+  .reco p{margin:0;color:rgba(255,255,255,.72);font-size:15px;line-height:1.6}
+  .reco b{color:#ff9e7a}
+</style></head><body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="sun" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="currentColor"/><path d="M47 73 A13 13 0 1 1 73 73 Z" fill="#fff"/><line x1="36" y1="73" x2="84" y2="73" stroke="#fff" stroke-width="6" stroke-linecap="round"/><line x1="50" y1="84" x2="70" y2="84" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".55"/></symbol>
+  <symbol id="disc" viewBox="0 0 120 120"><rect x="8" y="8" width="104" height="104" rx="26" fill="currentColor"/><g fill="#fff"><path d="M60 60 L42.2 47.1 A22 22 0 0 1 77.8 47.1 Z"/><path d="M60 60 L80.1 51.1 A22 22 0 0 1 62.3 81.9 Z" opacity=".74"/><path d="M60 60 L57.7 81.9 A22 22 0 0 1 39.9 51.1 Z" opacity=".88"/></g></symbol>
+  <symbol id="i-reply" viewBox="0 0 24 24"><path d="M9 17l-5-5 5-5M4 12h11a5 5 0 0 1 5 5v1" fill="none" stroke="#3b3a39" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-fwd" viewBox="0 0 24 24"><path d="M15 17l5-5-5-5M20 12H9a5 5 0 0 0-5 5v1" fill="none" stroke="#3b3a39" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13" fill="none" stroke="#3b3a39" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-arch" viewBox="0 0 24 24"><path d="M3 6h18v4H3zM5 10v9h14v-9M9 14h6" fill="none" stroke="#3b3a39" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Brand color · Outlook fit</div>
+    <h1>Standing out in Outlook</h1>
+    <p class="lede">Daybreak lives inside Outlook (the tagging add-in). A blue icon disappears into Microsoft's blue chrome. The brand should break away from blue - and the name points the way: dawn.</p>
+  </header>
+
+  <h2>The conflict</h2>
+  <div class="conflict">
+    <span class="sw"><i style="background:#0f6cbd"></i> Outlook blue &middot; #0F6CBD</span>
+    <span class="vs">vs</span>
+    <span class="sw"><i style="background:#2f5bea"></i> Daybreak (current) &middot; #2F5BEA</span>
+    <span class="vs" style="margin-left:auto;color:#e5484d">Same family - it blends.</span>
+  </div>
+
+  <h2>Candidate brand colors, shown in an Outlook ribbon</h2>
+
+  <!-- helper: one panel per color -->
+  <!-- CURRENT BLUE -->
+  <div class="panel">
+    <div class="pinfo">
+      <div class="tiles"><svg class="big" style="color:#2f5bea"><use href="#sun"/></svg><svg class="fav" style="color:#2f5bea"><use href="#disc"/></svg></div>
+      <p class="pname">Royal blue <span class="pill bad">Blends in</span></p>
+      <p class="phex">#2F5BEA &middot; current</p>
+      <p class="pnote">Reads as just another Microsoft-blue button. Lowest standout.</p>
+    </div>
+    <div class="ol">
+      <div class="ol-bar"><span class="o-logo">O</span><span class="o-title">Outlook</span><span class="o-search"></span></div>
+      <div class="ol-cmd">
+        <span class="ocmd"><svg><use href="#i-trash"/></svg>Delete</span>
+        <span class="ocmd"><svg><use href="#i-arch"/></svg>Archive</span>
+        <span class="ocmd"><svg><use href="#i-reply"/></svg>Reply</span>
+        <span class="ocmd"><svg><use href="#i-fwd"/></svg>Forward</span>
+        <span class="addin sep"><svg style="color:#2f5bea"><use href="#sun"/></svg>Daybreak</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SUNRISE CORAL (rec) -->
+  <div class="panel">
+    <div class="pinfo">
+      <div class="tiles"><svg class="big" style="color:#ff6a3d"><use href="#sun"/></svg><svg class="fav" style="color:#ff6a3d"><use href="#disc"/></svg></div>
+      <p class="pname">Sunrise coral <span class="pill rec">Recommended</span></p>
+      <p class="phex">#FF6A3D</p>
+      <p class="pnote">Maximum contrast with Outlook blue and a literal dawn warmth. The most ownable - no M365 tool is warm.</p>
+    </div>
+    <div class="ol">
+      <div class="ol-bar"><span class="o-logo">O</span><span class="o-title">Outlook</span><span class="o-search"></span></div>
+      <div class="ol-cmd">
+        <span class="ocmd"><svg><use href="#i-trash"/></svg>Delete</span>
+        <span class="ocmd"><svg><use href="#i-arch"/></svg>Archive</span>
+        <span class="ocmd"><svg><use href="#i-reply"/></svg>Reply</span>
+        <span class="ocmd"><svg><use href="#i-fwd"/></svg>Forward</span>
+        <span class="addin sep"><svg style="color:#ff6a3d"><use href="#sun"/></svg>Daybreak</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- AMBER -->
+  <div class="panel">
+    <div class="pinfo">
+      <div class="tiles"><svg class="big" style="color:#f59e0b"><use href="#sun"/></svg><svg class="fav" style="color:#f59e0b"><use href="#disc"/></svg></div>
+      <p class="pname">Amber <span class="pill ok">Strong</span></p>
+      <p class="phex">#F59E0B</p>
+      <p class="pnote">Warm and dawn-like, pops hard. But it leans "caution/warning," and sits close to the in-app amber urgency badge.</p>
+    </div>
+    <div class="ol">
+      <div class="ol-bar"><span class="o-logo">O</span><span class="o-title">Outlook</span><span class="o-search"></span></div>
+      <div class="ol-cmd">
+        <span class="ocmd"><svg><use href="#i-trash"/></svg>Delete</span>
+        <span class="ocmd"><svg><use href="#i-arch"/></svg>Archive</span>
+        <span class="ocmd"><svg><use href="#i-reply"/></svg>Reply</span>
+        <span class="ocmd"><svg><use href="#i-fwd"/></svg>Forward</span>
+        <span class="addin sep"><svg style="color:#f59e0b"><use href="#sun"/></svg>Daybreak</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROSE -->
+  <div class="panel">
+    <div class="pinfo">
+      <div class="tiles"><svg class="big" style="color:#fb5673"><use href="#sun"/></svg><svg class="fav" style="color:#fb5673"><use href="#disc"/></svg></div>
+      <p class="pname">Dawn rose <span class="pill ok">Strong</span></p>
+      <p class="phex">#FB5673</p>
+      <p class="pnote">Pink dawn is real. Warm, pops against blue, and stays distinct from the red/amber urgency badges. A touch more playful.</p>
+    </div>
+    <div class="ol">
+      <div class="ol-bar"><span class="o-logo">O</span><span class="o-title">Outlook</span><span class="o-search"></span></div>
+      <div class="ol-cmd">
+        <span class="ocmd"><svg><use href="#i-trash"/></svg>Delete</span>
+        <span class="ocmd"><svg><use href="#i-arch"/></svg>Archive</span>
+        <span class="ocmd"><svg><use href="#i-reply"/></svg>Reply</span>
+        <span class="ocmd"><svg><use href="#i-fwd"/></svg>Forward</span>
+        <span class="addin sep"><svg style="color:#fb5673"><use href="#sun"/></svg>Daybreak</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIOLET -->
+  <div class="panel">
+    <div class="pinfo">
+      <div class="tiles"><svg class="big" style="color:#7c5cfc"><use href="#sun"/></svg><svg class="fav" style="color:#7c5cfc"><use href="#disc"/></svg></div>
+      <p class="pname">Violet <span class="pill ok">Safe system</span></p>
+      <p class="phex">#7C5CFC</p>
+      <p class="pnote">Cleanly distinct from Outlook blue and from the warm urgency badges. Modern, but cooler - loses the dawn tie-in and is common in SaaS.</p>
+    </div>
+    <div class="ol">
+      <div class="ol-bar"><span class="o-logo">O</span><span class="o-title">Outlook</span><span class="o-search"></span></div>
+      <div class="ol-cmd">
+        <span class="ocmd"><svg><use href="#i-trash"/></svg>Delete</span>
+        <span class="ocmd"><svg><use href="#i-arch"/></svg>Archive</span>
+        <span class="ocmd"><svg><use href="#i-reply"/></svg>Reply</span>
+        <span class="ocmd"><svg><use href="#i-fwd"/></svg>Forward</span>
+        <span class="addin sep"><svg style="color:#7c5cfc"><use href="#sun"/></svg>Daybreak</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="reco">
+    <h3>Recommendation</h3>
+    <p>Move the brand off blue to a warm dawn color. <b>Sunrise coral (#FF6A3D)</b> is the strongest: it owns the "daybreak" idea, has the highest contrast against Outlook's blue chrome, and no Microsoft tool looks like it. If you want to keep maximum daylight between the brand and the in-app red/amber urgency badges, <b>Dawn rose (#FB5673)</b> is the close runner-up. Violet is the safe-but-generic fallback. Whichever wins, it carries the whole system: site accent, app primary, and the Outlook add-in icon.</p>
+  </div>
+
+</div>
+</body></html>
