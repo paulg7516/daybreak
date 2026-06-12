@@ -1,19 +1,15 @@
 // addin/scripts/make-icons.mjs
-// Renders the Daybreak brand mark (sunrise on the amber->rose->violet gradient) as
-// RGBA PNG icons, zero dependencies (Node zlib + manual CRC). 4x supersampled for
-// smooth edges; transparent outside the rounded tile.
+// Renders the Daybreak brand mark - a white "split & aligned disc" (the day-BREAK
+// put back together) on a solid sunrise-coral tile - as RGBA PNG icons. Zero
+// dependencies (Node zlib + manual CRC). 4x supersampled for smooth edges;
+// transparent outside the rounded tile. Matches the website logo (docs/index.html).
 import { deflateSync } from 'node:zlib';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
-// Gradient stops: amber-400, rose-500, violet-600 (matches the app logo).
-const STOPS = [[251, 191, 36], [244, 63, 94], [124, 58, 237]];
-
-function lerp(a, b, t) { return a + (b - a) * t; }
-function gradientAt(t) {
-  const [a, b, c] = STOPS;
-  if (t < 0.5) { const u = t / 0.5; return [lerp(a[0], b[0], u), lerp(a[1], b[1], u), lerp(a[2], b[2], u)]; }
-  const u = (t - 0.5) / 0.5; return [lerp(b[0], c[0], u), lerp(b[1], c[1], u), lerp(b[2], c[2], u)];
-}
+// Brand: sunrise coral - chosen to stand out against Outlook's blue chrome.
+const CORAL = [255, 106, 61];
+// Lower half-disc is white at 70% over the coral tile -> precompute the solid blend.
+const HALF = CORAL.map((c) => Math.round(255 * 0.7 + c * 0.3)); // ~[255, 210, 197]
 
 function crc32(buf) {
   let c = ~0;
@@ -37,13 +33,14 @@ function encodePng(size, rgba) {
   return Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', deflateSync(raw)), chunk('IEND', Buffer.alloc(0))]);
 }
 
-// Sunrise glyph + rounded-tile mask, evaluated in supersampled space of side S.
+// Split-disc glyph + rounded full-bleed tile, in supersampled space of side S.
+// Two half-discs: a bright upper half and a slightly offset, dimmer lower half,
+// with a thin coral "break" band between them.
 function makeShape(S) {
-  const radius = S * 0.22;
-  const sunCx = S * 0.5, sunCy = S * 0.47, sunR = S * 0.16;
-  const horizonY = S * 0.63, hx0 = S * 0.2, hx1 = S * 0.8, hHalf = S * 0.028;
-  const rayAngles = [-Math.PI / 2, -Math.PI / 2 - 0.62, -Math.PI / 2 + 0.62, -Math.PI / 2 - 1.15, -Math.PI / 2 + 1.15];
-  const rayIn = sunR * 1.32, rayOut = sunR * 1.95;
+  const radius = S * 0.22;                    // tile corner radius
+  const r = S * 0.206, r2 = r * r;            // half-disc radius
+  const topCx = S * 0.490, topCy = S * 0.500; // upper half centre; flat side at y=topCy
+  const botCx = S * 0.549, botCy = S * 0.559; // lower half centre, offset; flat at y=botCy
 
   const inTile = (x, y) => {
     const minx = radius, maxx = S - 1 - radius, miny = radius, maxy = S - 1 - radius;
@@ -52,26 +49,20 @@ function makeShape(S) {
     if (y < miny) dy = miny - y; else if (y > maxy) dy = y - maxy;
     return dx * dx + dy * dy <= radius * radius;
   };
-  const isWhite = (x, y) => {
-    const dx = x - sunCx, dy = y - sunCy;
-    if (dy <= hHalf && dx * dx + dy * dy <= sunR * sunR) return true; // sun (above the horizon)
-    if (x >= hx0 && x <= hx1 && Math.abs(y - horizonY) <= hHalf) return true; // horizon bar
-    const dist = Math.hypot(dx, dy);
-    if (dy < 0 && dist >= rayIn && dist <= rayOut) {
-      const ang = Math.atan2(dy, dx);
-      for (const a of rayAngles) {
-        let d = Math.abs(ang - a); if (d > Math.PI) d = 2 * Math.PI - d;
-        if (d < 0.16) return true;
-      }
-    }
-    return false;
+  // Foreground colour for a glyph pixel, or null where the coral tile shows.
+  const glyphAt = (x, y) => {
+    const tdx = x - topCx, tdy = y - topCy;
+    if (y <= topCy && tdx * tdx + tdy * tdy <= r2) return [255, 255, 255]; // upper half
+    const bdx = x - botCx, bdy = y - botCy;
+    if (y >= botCy && bdx * bdx + bdy * bdy <= r2) return HALF;            // lower half
+    return null;
   };
-  return { inTile, isWhite };
+  return { inTile, glyphAt };
 }
 
 function renderIcon(size) {
   const SS = 4, S = size * SS;
-  const { inTile, isWhite } = makeShape(S);
+  const { inTile, glyphAt } = makeShape(S);
   const out = Buffer.alloc(size * size * 4);
   const total = SS * SS;
   for (let py = 0; py < size; py++) {
@@ -81,9 +72,7 @@ function renderIcon(size) {
         for (let ox = 0; ox < SS; ox++) {
           const sx = px * SS + ox, sy = py * SS + oy;
           if (!inTile(sx, sy)) continue;
-          let r, g, b;
-          if (isWhite(sx, sy)) { r = 255; g = 255; b = 255; }
-          else { const t = (sx + sy) / (2 * (S - 1)); [r, g, b] = gradientAt(t); }
+          const [r, g, b] = glyphAt(sx, sy) || CORAL;
           sr += r; sg += g; sb += b; cnt++;
         }
       }
@@ -97,12 +86,11 @@ function renderIcon(size) {
   return out;
 }
 
-// Filenames are versioned (mark-*) so a redeploy serves NEW URLs - Office/Outlook
-// cache add-in icons by URL, so reusing a filename keeps the stale image.
-// 16/32/80 = ribbon button sizes; 64 = IconUrl; 128 = HighResolutionIconUrl (the
-// large logo the admin center / store render, so it must be native-res, not upscaled).
+// Filenames are size-suffixed and reused; bump the manifest <Version> on redeploy so
+// Office/Outlook (which cache add-in icons by URL) fetch the refreshed images.
+// 16/32/80 = ribbon button sizes; 64 = IconUrl; 128 = HighResolutionIconUrl.
 mkdirSync('addin/assets', { recursive: true });
 for (const size of [16, 32, 64, 80, 128]) {
   writeFileSync(`addin/assets/mark-${size}.png`, encodePng(size, renderIcon(size)));
 }
-console.log('Daybreak add-in: wrote sunrise mark-16/32/64/80/128.png');
+console.log('Daybreak add-in: wrote coral split-disc mark-16/32/64/80/128.png');
