@@ -4,7 +4,7 @@
 /* ===========================================================================
    Daybreak - "mission-control" design system.
    Dark-first ops/observability aesthetic: deep cool canvas, elevated panels with
-   a lit-from-above highlight, one electric-indigo accent, status colors as
+   a lit-from-above highlight, one sunrise-coral accent, status colors as
    signals, monospace for data. Tokens adapt to light via prefers-color-scheme.
 =========================================================================== */
 @layer base {
@@ -18,13 +18,13 @@
     --ink: #eef1f7;
     --ink-2: #a2abbd;
     --ink-3: #687184;
-    --accent: #6e6bff;
+    --accent: #ff6a3d;
     --accent-ink: #ffffff;
     --today: #ff5f63;  --today-tint: #2a1518;
     --week: #ffb23e;   --week-tint: #2a2113;
     --fyi: #8b95a8;    --fyi-tint: #181d27;
     --good: #2dd4a7;   --good-tint: #102a24;
-    --ring: #6e6bff;
+    --ring: #ff6a3d;
     --shadow-panel: 0 1px 0 0 rgba(255,255,255,.04) inset, 0 10px 30px -16px rgba(0,0,0,.7);
     --shadow-pop: 0 1px 0 0 rgba(255,255,255,.05) inset, 0 16px 40px -12px rgba(0,0,0,.75);
   }
