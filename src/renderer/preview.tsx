@@ -49,7 +49,7 @@ const view: TriageView = {
   since: '2026-06-04T00:00:00.000Z',
   summary: { total: 7, needYou: 4, overdue: 2, byLane: { respond: 2, approve: 2, review: 1, fyi: 2 } },
   lanes,
-  clearedCount: 0,
+  cleared: [],
 };
 
 (window as unknown as { daybreak: unknown }).daybreak = {

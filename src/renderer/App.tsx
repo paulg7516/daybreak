@@ -1,6 +1,6 @@
 // src/renderer/App.tsx
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Sunrise, LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays, Users, Search, Rows3, Columns3 } from 'lucide-react';
+import { Sunrise, LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays, Users, Search, Rows3, Columns3, Undo2 } from 'lucide-react';
 import { daybreak } from './bridge';
 import type { ViewResult } from '../app/ipc-types';
 import type { Lane } from '../model/item';
@@ -9,6 +9,8 @@ import { defaultLaneConfig, type LaneSetting } from '../app/lane-config';
 import { Headline } from './components/Headline';
 import { LaneSection } from './components/LaneSection';
 import { LaneColumn } from './components/LaneColumn';
+import { KeyboardLegend } from './components/KeyboardLegend';
+import { ClearedDrawer } from './components/ClearedDrawer';
 
 type Layout = 'stacked' | 'columns';
 import { AwayWindowModal } from './components/AwayWindowModal';
@@ -31,8 +33,9 @@ export default function App() {
   const [auth, setAuth] = useState<AuthPrompt | null>(null);
   const [awayError, setAwayError] = useState<string | null>(null);
   const [showAway, setShowAway] = useState(false);
-  const [undo, setUndo] = useState<string | null>(null);
+  const [undo, setUndo] = useState<string[] | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showCleared, setShowCleared] = useState(false);
   const [page, setPage] = useState<'board' | 'settings'>('board');
   const [jiraConfig, setJiraConfig] = useState<JiraConfigView>({ baseUrl: '', email: '', hasToken: false });
   const [laneConfig, setLaneConfig] = useState<LaneSetting[]>(defaultLaneConfig);
@@ -84,8 +87,9 @@ export default function App() {
 
   useEffect(() => () => { if (undoTimer.current) clearTimeout(undoTimer.current); }, []);
 
-  const showUndo = useCallback((id: string) => {
-    setUndo(id);
+  const showUndo = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+    setUndo(ids);
     if (undoTimer.current) clearTimeout(undoTimer.current);
     undoTimer.current = setTimeout(() => setUndo(null), 5000);
   }, []);
@@ -130,13 +134,13 @@ export default function App() {
   }, []);
   const onClear = useCallback(async (id: string) => {
     await daybreak.clearItem(id);
-    showUndo(id);
+    showUndo([id]);
     setView(await daybreak.refresh());
   }, [showUndo]);
   const onUndo = useCallback(async () => {
     if (!undo) return;
     if (undoTimer.current) clearTimeout(undoTimer.current);
-    await daybreak.unclearItem(undo);
+    await Promise.all(undo.map((id) => daybreak.unclearItem(id)));
     setUndo(null);
     setView(await daybreak.refresh());
   }, [undo]);
@@ -145,8 +149,18 @@ export default function App() {
     if (ids.length === 0) return;
     await Promise.all(ids.map((id) => daybreak.clearItem(id)));
     setSelected(new Set());
+    showUndo(ids);
     setView(await daybreak.refresh());
-  }, [selected]);
+  }, [selected, showUndo]);
+  const onRestore = useCallback(async (id: string) => {
+    await daybreak.unclearItem(id);
+    setView(await daybreak.refresh());
+  }, []);
+  const onRestoreAll = useCallback(async (ids: string[]) => {
+    await Promise.all(ids.map((id) => daybreak.unclearItem(id)));
+    setShowCleared(false);
+    setView(await daybreak.refresh());
+  }, []);
 
   const board = view && !('needsAwayWindow' in view) && !('error' in view) ? view : null;
 
@@ -257,6 +271,13 @@ export default function App() {
               title="Change the catch-up window">
               <CalendarDays size={13} /> Catch up since <span className="font-mono text-ink">{sinceLabel(view.since)}</span>
             </button>
+            {view.cleared.length > 0 && (
+              <button type="button" onClick={() => setShowCleared(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs font-medium text-ink-2 transition-colors hover:border-ink-3 hover:text-ink"
+                title="Restore cleared items">
+                <Undo2 size={13} /> Cleared <span className="font-mono tabular-nums">{view.cleared.length}</span>
+              </button>
+            )}
             <button type="button" onClick={refresh} aria-label="Refresh"
               className="flex items-center gap-1.5 rounded-lg border border-line-strong bg-panel px-2.5 py-1 text-xs font-medium text-ink-2 transition-colors hover:border-ink-3 hover:text-ink">
               <RefreshCw size={13} /> Refresh
@@ -325,9 +346,7 @@ export default function App() {
               </div>
             </div>
 
-            <p className="mb-2 text-[10.5px] text-ink-3">
-              <span className="font-mono">j/k</span> move · <span className="font-mono">e</span> clear · <span className="font-mono">o</span> open · <span className="font-mono">space</span> select
-            </p>
+            <KeyboardLegend />
 
             {configuredLanes.length === 0 ? (
               <p className="rounded-xl border border-line bg-panel px-4 py-6 text-center text-[13px] text-ink-3">
@@ -389,10 +408,19 @@ export default function App() {
       ) : undo ? (
         <div className="elev-pop fixed bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-3 rounded-xl px-4 py-2.5 text-[13px]"
           role="status" aria-live="polite">
-          <span className="text-ink">Cleared</span>
+          <span className="text-ink">{undo.length === 1 ? 'Cleared' : `${undo.length} cleared`}</span>
           <button type="button" className="font-medium text-accent hover:underline" onClick={onUndo}>Undo</button>
         </div>
       ) : null}
+
+      {showCleared && (
+        <ClearedDrawer
+          items={view.cleared}
+          onRestore={onRestore}
+          onRestoreAll={() => onRestoreAll(view.cleared.map((c) => c.id))}
+          onClose={() => setShowCleared(false)}
+        />
+      )}
     </div>
   );
 }

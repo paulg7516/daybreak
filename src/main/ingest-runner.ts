@@ -52,10 +52,13 @@ export async function buildView(sinceISO: string, events: IngestEvents): Promise
     const triaged = triageAll(items, { me, since: sinceISO, now });
     const overlaid = applyOverlay(triaged, overlay);
     const summary = buildSummary(overlaid);
-    const clearedCount = Object.keys(overlay.cleared).length;
+    // Items the user cleared (still within the catch-up window) - the recovery list.
+    const cleared = triaged
+      .filter((t) => overlay.cleared[t.item.id])
+      .map((t) => ({ id: t.item.id, subject: t.item.subject, from: t.item.from, receivedAt: t.item.receivedAt }));
 
     events.onPhase('done');
-    return buildTriageView(overlaid, summary, { me, since: sinceISO, clearedCount });
+    return buildTriageView(overlaid, summary, { me, since: sinceISO }, cleared);
   } catch (err) {
     events.onPhase('error', err instanceof Error ? err.message : String(err));
     throw err;

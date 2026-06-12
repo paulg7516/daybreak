@@ -15,7 +15,7 @@ const view: TriageView = {
     { lane: 'review', total: 0, items: [] },
     { lane: 'fyi', total: 0, items: [] },
   ],
-  clearedCount: 0,
+  cleared: [],
 };
 
 beforeEach(() => {

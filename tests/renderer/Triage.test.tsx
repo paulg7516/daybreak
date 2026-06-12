@@ -18,7 +18,7 @@ const view: TriageView = {
     { lane: 'review', total: 0, items: [] },
     { lane: 'fyi', total: 0, items: [] },
   ],
-  clearedCount: 0,
+  cleared: [],
 };
 
 let clearItem: ReturnType<typeof vi.fn>;
@@ -58,5 +58,21 @@ describe('bulk + keyboard triage', () => {
     await userEvent.keyboard('j'); // focus r1
     await userEvent.keyboard('e'); // clear focused
     expect(clearItem).toHaveBeenCalledWith('r1');
+  });
+
+  it('restores a cleared item from the recovery drawer', async () => {
+    const clearedView = { ...view, cleared: [{ id: 'c1', subject: 'Oops cleared', from: 'x@co.com', receivedAt: '2026-06-10T09:00:00Z' }] };
+    const unclearItem = vi.fn().mockResolvedValue(undefined);
+    const d = (window as unknown as { daybreak: Record<string, unknown> }).daybreak;
+    d.getView = vi.fn().mockResolvedValue(clearedView);
+    d.refresh = vi.fn().mockResolvedValue(clearedView);
+    d.unclearItem = unclearItem;
+
+    render(<App />);
+    await screen.findByText('Answer me');
+    await userEvent.click(screen.getByRole('button', { name: /cleared 1/i }));
+    await screen.findByText('Oops cleared');
+    await userEvent.click(screen.getByRole('button', { name: 'Restore' }));
+    expect(unclearItem).toHaveBeenCalledWith('c1');
   });
 });

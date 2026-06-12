@@ -27,18 +27,26 @@ export interface LaneView {
   items: TriageRow[];
 }
 
+// A row the user cleared, surfaced so it can be restored. Nothing is deleted - a
+// cleared item is just hidden, so this is the recovery list.
+export interface ClearedRow {
+  id: string;
+  subject: string;
+  from: string;
+  receivedAt: string;
+}
+
 export interface TriageView {
   me: string;
   since: string;
   summary: Summary;
   lanes: LaneView[]; // ordered by LANE_ORDER
-  clearedCount: number;
+  cleared: ClearedRow[];
 }
 
 export interface ViewMeta {
   me: string;
   since: string;
-  clearedCount?: number;
 }
 
 const URGENCY_RANK: Record<Urgency, number> = { overdue: 3, today: 2, this_week: 1, none: 0 };
@@ -72,13 +80,18 @@ function buildLane(lane: Lane, items: OverlaidItem[]): LaneView {
   return { lane, total: rows.length, items: rows };
 }
 
-export function buildTriageView(items: OverlaidItem[], summary: Summary, meta: ViewMeta): TriageView {
+export function buildTriageView(
+  items: OverlaidItem[],
+  summary: Summary,
+  meta: ViewMeta,
+  cleared: ClearedRow[] = [],
+): TriageView {
   return {
     me: meta.me,
     since: meta.since,
     summary,
     lanes: LANE_ORDER.map((lane) => buildLane(lane, items)),
-    clearedCount: meta.clearedCount ?? 0,
+    cleared,
   };
 }
 
