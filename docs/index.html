@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daybreak - What needs you, first</title>
+<meta name="description" content="A local-first desktop app for every catch-up - after deep work, a day of meetings, or time away. Senders tag what they need from you; Daybreak sorts it into clear lanes with urgency badges. Email and Jira Service Management, on your machine.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://api.github.com https://*.goatcounter.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><path d='M41.6 78 A22 22 0 1 1 78.4 78 Z' fill='%232f5bea'/><line x1='16' y1='78' x2='104' y2='78' stroke='%232f5bea' stroke-width='9' stroke-linecap='round'/><line x1='36' y1='92' x2='84' y2='92' stroke='%239bb0f5' stroke-width='9' stroke-linecap='round'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Light page surface - from the Daybreak app's own light tokens */
+    --bg: #f6f8fb;
+    --surface: #ffffff;
+    --surface-2: #fbfcfe;
+    --ink: #0f1729;
+    --ink-2: #5a6678;
+    --ink-3: #8b96a8;
+    --border: #e6eaf0;
+    --border-strong: #d6dce6;
+    /* One restrained accent. No gradient. */
+    --accent: #2f5bea;
+    --accent-hover: #2549c8;
+    --accent-soft: #eef2fe;
+    /* Status colours, used only inside the product visual */
+    --today: #e5484d;
+    --week: #f0a020;
+    --fyi: #6b7686;
+    --good: #15a06b;
+
+    /* Dark inset tokens (the product board) - the app's dark theme */
+    --d-bg: #080b12;
+    --d-surface: #0f141d;
+    --d-surface-2: #121825;
+    --d-line: #1d2533;
+    --d-line-strong: #2a3344;
+    --d-text: #e8edf5;
+    --d-text-2: #9aa6b8;
+    --d-text-3: #687385;
+    --d-primary: #5b82ff;
+    --d-today: #ff6166;   --d-today-tint: #2a1416;
+    --d-week: #ffb648;    --d-week-tint: #2a2113;
+    --d-fyi: #8893a4;     --d-fyi-tint: #161c27;
+    --d-good: #2bd49a;
+
+    --maxw: 1120px;
+    --pad-x: clamp(20px, 5vw, 48px);
+    --section-y: clamp(64px, 9vw, 110px);
+    --radius: 14px;
+    --radius-sm: 9px;
+    --shadow: 0 1px 2px rgba(16,23,41,.06), 0 1px 3px rgba(16,23,41,.05);
+    --shadow-lg: 0 24px 60px -24px rgba(16,23,41,.30), 0 8px 24px -12px rgba(16,23,41,.14);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+  section[id] { scroll-margin-top: calc(-1 * var(--section-y)); }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  html, body { margin: 0; padding: 0; overflow-x: hidden; }
+  body {
+    font-family: var(--font);
+    color: var(--ink);
+    background: var(--bg);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  a { color: inherit; text-decoration: none; }
+  img, svg { display: block; max-width: 100%; }
+  button { font: inherit; cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  .container {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding-left: var(--pad-x);
+    padding-right: var(--pad-x);
+  }
+
+  /* ---------- Nav ---------- */
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(246, 248, 251, 0.72);
+    backdrop-filter: saturate(180%) blur(14px);
+    -webkit-backdrop-filter: saturate(180%) blur(14px);
+    border-bottom: 1px solid transparent;
+    transition: border-color 200ms ease;
+  }
+  .nav.scrolled { border-bottom-color: var(--border); }
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    position: relative;
+  }
+  .nav-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.01em; }
+  .nav-mark { width: 26px; height: 26px; }
+  .nav-wordmark { font-size: 18px; }
+  .nav-links { display: flex; align-items: center; gap: 28px; font-size: 14px; color: var(--ink-2); }
+  .nav-links a.link:hover { color: var(--ink); }
+  .nav-cta {
+    background: var(--accent);
+    color: #fff !important;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-weight: 500;
+    transition: background 180ms ease;
+  }
+  .nav-cta:hover { background: var(--accent-hover); }
+  .nav-toggle, .nav-burger { display: none; }
+
+  @media (max-width: 768px) {
+    .nav-burger {
+      display: inline-flex; flex-direction: column; justify-content: space-between;
+      width: 22px; height: 16px; cursor: pointer;
+    }
+    .nav-burger span { display: block; height: 2px; background: var(--ink); border-radius: 2px; transition: transform 200ms ease, opacity 200ms ease; }
+    .nav-links {
+      position: absolute; top: 100%; left: 0; right: 0;
+      flex-direction: column; gap: 0; align-items: stretch;
+      background: rgba(255, 255, 255, 0.97);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 8px var(--pad-x) 18px;
+      max-height: 0; overflow: hidden; transition: max-height 240ms ease;
+    }
+    .nav-links a.link { padding: 12px 0; font-size: 15px; }
+    .nav-links .nav-cta { margin-top: 8px; text-align: center; }
+    .nav-toggle:checked ~ .nav-links { max-height: 320px; }
+    .nav-toggle:checked ~ .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav-toggle:checked ~ .nav-burger span:nth-child(2) { opacity: 0; }
+    .nav-toggle:checked ~ .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    padding-top: clamp(52px, 8vw, 92px);
+    padding-bottom: var(--section-y);
+    text-align: center;
+    overflow: hidden;
+    position: relative;
+  }
+  /* One cohesive cool wash so the page is not paper-flat. Sober, ~9% peak. */
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 72% 56% at 50% -8%, rgba(47, 91, 234, 0.09), transparent 64%);
+    pointer-events: none; z-index: 0;
+  }
+  .hero > * { position: relative; z-index: 1; }
+  .hero-inner { display: flex; flex-direction: column; align-items: center; }
+  .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.13em;
+    text-transform: uppercase; color: var(--accent); margin: 0 0 22px;
+  }
+  .hero-title {
+    font-size: clamp(34px, 6vw, 66px);
+    line-height: 1.06; letter-spacing: -0.03em; font-weight: 600;
+    margin: 0 0 22px; max-width: 880px; width: 100%;
+  }
+  .hero-title .soft { color: var(--ink-3); }
+  .hero-sub { max-width: 600px; width: 100%; color: var(--ink-2); font-size: clamp(16px, 1.5vw, 19px); margin: 0 0 36px; }
+  .hero-cta { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .btn-row { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 9px;
+    background: var(--accent); color: #fff !important;
+    padding: 15px 26px; border-radius: 999px; font-weight: 500; font-size: 16px;
+    transition: background 180ms ease, transform 180ms ease;
+  }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 9px;
+    background: var(--surface); color: var(--ink) !important;
+    padding: 15px 24px; border-radius: 999px; font-weight: 500; font-size: 16px;
+    border: 1px solid var(--border-strong);
+    transition: border-color 180ms ease, transform 180ms ease;
+  }
+  .btn-secondary:hover { border-color: var(--ink-3); transform: translateY(-1px); }
+  .btn-primary svg, .btn-secondary svg { width: 18px; height: 18px; }
+  .hero-meta {
+    font-family: var(--font-mono); font-size: 13px; color: var(--ink-3);
+    margin: 0; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
+  }
+  .hero-meta .dot { opacity: 0.5; }
+
+  /* ---------- Product window (dark board inset) ---------- */
+  .shot { margin: clamp(44px, 6vw, 72px) auto 0; max-width: 920px; }
+  .window {
+    background: var(--d-bg);
+    border: 1px solid var(--d-line-strong);
+    border-radius: 16px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    text-align: left;
+  }
+  .win-bar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px;
+    background: var(--d-surface);
+    border-bottom: 1px solid var(--d-line);
+  }
+  .win-dots { display: inline-flex; gap: 7px; }
+  .win-dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
+  .win-dots i:nth-child(1) { background: #ff5f57; }
+  .win-dots i:nth-child(2) { background: #febc2e; }
+  .win-dots i:nth-child(3) { background: #28c840; }
+  .win-title { display: inline-flex; align-items: center; gap: 7px; color: var(--d-text-2); font-size: 12.5px; font-weight: 500; }
+  .win-title svg { width: 14px; height: 14px; }
+  .board { background: var(--d-bg); padding: 18px 18px 22px; }
+  .board-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 2px 4px 16px; flex-wrap: wrap; }
+  .board-headline { color: var(--d-text); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .board-headline b { color: var(--d-today); font-weight: 600; }
+  .board-since { color: var(--d-text-3); font-size: 12px; font-family: var(--font-mono); }
+
+  .lane { border-top: 1px solid var(--d-line); }
+  .lane:first-of-type { border-top: 0; }
+  .lane-head {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 4px 11px; color: var(--d-text-2);
+    font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .lane-head .count {
+    margin-left: 2px; color: var(--d-text-3); font-weight: 500; letter-spacing: 0;
+    background: var(--d-surface-2); border: 1px solid var(--d-line); border-radius: 999px;
+    font-size: 11px; padding: 1px 8px;
+  }
+  .lane-head .chev { margin-left: auto; color: var(--d-text-3); }
+  .lane-head .chev svg { width: 16px; height: 16px; }
+
+  .item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 12px; margin-bottom: 7px;
+    background: var(--d-surface); border: 1px solid var(--d-line); border-radius: 10px;
+  }
+  .item:last-child { margin-bottom: 2px; }
+  .item-main { min-width: 0; flex: 1; }
+  .item-subj { color: var(--d-text); font-size: 13.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item-meta { color: var(--d-text-3); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .src { color: var(--d-text-2); font-family: var(--font-mono); font-size: 11px; }
+  .badge {
+    flex: none; font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
+    padding: 3px 9px; border-radius: 999px; white-space: nowrap;
+  }
+  .badge.overdue { color: var(--d-today); background: var(--d-today-tint); border: 1px solid rgba(255,97,102,.35); }
+  .badge.today   { color: var(--d-today); background: transparent; border: 1px solid rgba(255,97,102,.4); }
+  .badge.week    { color: var(--d-week); background: var(--d-week-tint); border: 1px solid rgba(255,182,72,.3); }
+
+  /* ---------- Generic section ---------- */
+  section { padding-top: var(--section-y); padding-bottom: var(--section-y); }
+  .section-head { max-width: 640px; margin: 0 auto 56px; text-align: center; }
+  .section-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+  .section-title { font-size: clamp(28px, 3.6vw, 40px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 600; margin: 0 0 14px; }
+  .section-sub { color: var(--ink-2); font-size: clamp(15px, 1.4vw, 18px); margin: 0; }
+
+  /* ---------- How it works ---------- */
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .step {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 28px 26px; box-shadow: var(--shadow);
+  }
+  .step-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--accent-soft); color: var(--accent);
+    font-weight: 600; font-size: 14px; margin-bottom: 18px;
+  }
+  .step h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 8px; }
+  .step p { color: var(--ink-2); font-size: 14.5px; margin: 0; }
+  .step .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+  .step .tag {
+    font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
+    background: var(--surface-2); border: 1px solid var(--border); color: var(--ink-2);
+  }
+
+  /* ---------- Features ---------- */
+  .features { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 26px; }
+  .feature { padding: 4px 2px; }
+  .feature-ico {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--accent-soft); color: var(--accent); margin-bottom: 16px;
+  }
+  .feature-ico svg { width: 21px; height: 21px; }
+  .feature h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 6px; }
+  .feature p { color: var(--ink-2); font-size: 14.5px; margin: 0; }
+
+  /* ---------- FAQ ---------- */
+  .faq-list { max-width: 760px; margin: 0 auto; }
+  .faq-item { border-top: 1px solid var(--border); }
+  .faq-item:last-child { border-bottom: 1px solid var(--border); }
+  .faq-item summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 22px 4px; cursor: pointer; list-style: none;
+    font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary .pm { color: var(--ink-3); transition: transform 200ms ease; flex: none; }
+  .faq-item summary .pm svg { width: 20px; height: 20px; }
+  .faq-item[open] summary .pm { transform: rotate(45deg); }
+  .faq-item .faq-body { padding: 0 4px 22px; color: var(--ink-2); font-size: 15.5px; max-width: 660px; }
+
+  /* ---------- Closing CTA ---------- */
+  .closing { text-align: center; }
+  .closing-card {
+    background: var(--ink); color: #fff;
+    border-radius: 20px; padding: clamp(40px, 6vw, 64px) var(--pad-x);
+    max-width: var(--maxw); margin: 0 auto; position: relative; overflow: hidden;
+  }
+  .closing-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 50% 70% at 50% 0%, rgba(91, 130, 255, 0.22), transparent 60%);
+    pointer-events: none;
+  }
+  .closing-card > * { position: relative; }
+  .closing-card h2 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 600; margin: 0 0 14px; }
+  .closing-card p { color: rgba(255,255,255,.66); font-size: 16px; margin: 0 0 30px; }
+  .closing-card .btn-primary { background: #fff; color: var(--ink) !important; }
+  .closing-card .btn-primary:hover { background: #eef2fe; }
+  .closing-card .hero-meta { color: rgba(255,255,255,.5); margin-top: 18px; display: flex; justify-content: center; }
+
+  /* ---------- Footer ---------- */
+  .footer { border-top: 1px solid var(--border); padding: 40px 0; }
+  .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  .footer-brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 600; }
+  .footer-brand svg { width: 22px; height: 22px; }
+  .footer-links { display: flex; gap: 24px; font-size: 14px; color: var(--ink-2); }
+  .footer-links a:hover { color: var(--ink); }
+  .footer-credit { color: var(--ink-3); font-size: 13px; }
+
+  @media (max-width: 860px) {
+    .steps { grid-template-columns: 1fr; }
+    .feature-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .feature-grid { grid-template-columns: 1fr; }
+    .board { padding: 14px 12px 16px; }
+    .footer-inner { flex-direction: column; align-items: flex-start; gap: 16px; }
+    :root { --section-y: 64px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===================== NAV ===================== -->
+<header class="nav" id="siteNav">
+  <div class="container nav-inner">
+    <a class="nav-brand" href="#top" aria-label="Daybreak home">
+      <svg class="nav-mark" viewBox="0 0 120 120" aria-hidden="true">
+        <path d="M41.6 78 A22 22 0 1 1 78.4 78 Z" fill="#2f5bea"/>
+        <line x1="16" y1="78" x2="104" y2="78" stroke="#2f5bea" stroke-width="9" stroke-linecap="round"/>
+        <line x1="36" y1="92" x2="84" y2="92" stroke="#9bb0f5" stroke-width="9" stroke-linecap="round"/>
+      </svg>
+      <span class="nav-wordmark">Daybreak</span>
+    </a>
+    <input type="checkbox" id="navToggle" class="nav-toggle" aria-label="Toggle navigation">
+    <nav class="nav-links" aria-label="Primary">
+      <a class="link" href="#how">How it works</a>
+      <a class="link" href="#features">Features</a>
+      <a class="link" href="#faq">FAQ</a>
+      <a class="nav-cta" id="navDownload" href="https://github.com/paulg7516/daybreak/releases/latest">Download</a>
+    </nav>
+    <label for="navToggle" class="nav-burger" aria-hidden="true"><span></span><span></span><span></span></label>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section class="hero" id="top">
+  <div class="container hero-inner">
+    <p class="eyebrow">For when you step away</p>
+    <h1 class="hero-title">What needs you, first.<br><span class="soft">Everything else can wait.</span></h1>
+    <p class="hero-sub">
+      Daybreak is a desktop app for every time you step back to your inbox - after deep
+      work, a day of meetings, or a week off. Anyone who needs something from you tags
+      what it is, so you get a short, sorted list instead of a thousand unread.
+    </p>
+    <div class="hero-cta">
+      <div class="btn-row">
+        <a class="btn-primary" id="downloadBtn" href="https://github.com/paulg7516/daybreak/releases/latest" download>
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.49 2.27-1.3 3.06-.84.83-2.2 1.46-3.32 1.37-.14-1.1.43-2.27 1.2-3 .85-.81 2.28-1.42 3.42-1.43zM21.6 17.04c-.6 1.38-.89 2-1.66 3.22-1.08 1.71-2.6 3.84-4.48 3.85-1.67.02-2.1-1.09-4.37-1.08-2.27.01-2.74 1.1-4.42 1.08-1.88-.02-3.32-1.94-4.4-3.65-3.02-4.78-3.34-10.39-1.47-13.37 1.33-2.12 3.43-3.36 5.4-3.36 2.01 0 3.27 1.1 4.93 1.1 1.61 0 2.59-1.1 4.92-1.1 1.76 0 3.62.96 4.95 2.62-4.35 2.38-3.64 8.59.07 10.59z"/></svg>
+          Download for macOS
+        </a>
+        <a class="btn-secondary" id="downloadWin" href="https://github.com/paulg7516/daybreak/releases/latest">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5.1 10.2 4v7.1H3V5.1zm0 13.8L10.2 20v-7.05H3V18.9zM11.1 3.85 21 2.5v8.6h-9.9V3.85zm0 16.3L21 21.5v-8.55h-9.9v7.2z"/></svg>
+          Windows
+        </a>
+      </div>
+      <p class="hero-meta">
+        <span id="downloadVersion">v1.0</span>
+        <span class="dot">&middot;</span>
+        <span id="downloadSize">~180 MB</span>
+        <span class="dot">&middot;</span>
+        <span>Local-first, your data stays on your machine</span>
+      </p>
+    </div>
+
+    <!-- Dark product board: the real triage UI, rebuilt in markup -->
+    <div class="shot">
+      <div class="window" role="img" aria-label="Daybreak triage board showing four lanes - Respond, Approve, Review and FYI - with urgency badges">
+        <div class="win-bar">
+          <span class="win-dots"><i></i><i></i><i></i></span>
+          <span class="win-title">
+            <svg viewBox="0 0 120 120" aria-hidden="true"><path d="M41.6 78 A22 22 0 1 1 78.4 78 Z" fill="#5b82ff"/><line x1="16" y1="78" x2="104" y2="78" stroke="#5b82ff" stroke-width="9" stroke-linecap="round"/></svg>
+            Daybreak
+          </span>
+        </div>
+        <div class="board">
+          <div class="board-head">
+            <span class="board-headline">8 need you <b>&middot; 2 overdue</b></span>
+            <span class="board-since">Catch up since Mon, Jun 2</span>
+          </div>
+
+          <!-- RESPOND -->
+          <div class="lane">
+            <div class="lane-head">Respond <span class="count">3</span></div>
+            <div class="item">
+              <div class="item-main">
+                <div class="item-subj">Re: Q3 budget sign-off needed before close</div>
+                <div class="item-meta">Dana Whitfield</div>
+              </div>
+              <span class="badge overdue">Overdue</span>
+            </div>
+            <div class="item">
+              <div class="item-main">
+                <div class="item-subj">Can you confirm the vendor SOW wording?</div>
+                <div class="item-meta">Marcus Lee</div>
+              </div>
+              <span class="badge today">Today</span>
+            </div>
+            <div class="item">
+              <div class="item-main">
+                <div class="item-subj">Customer escalation: ACME login failures</div>
+                <div class="item-meta"><span class="src">JSM &middot; INC-2841</span> &middot; assigned to you</div>
+              </div>
+              <span class="badge today">Today</span>
+            </div>
+          </div>
+
+          <!-- APPROVE -->
+          <div class="lane">
+            <div class="lane-head">Approve <span class="count">2</span></div>
+            <div class="item">
+              <div class="item-main">
+                <div class="item-subj">Time-off request: Priya Nair (Aug 4 to 8)</div>
+                <div class="item-meta">Priya Nair</div>
+              </div>
+              <span class="badge week">This week</span>
+            </div>
+            <div class="item">
+              <div class="item-main">
+                <div class="item-subj">Access request: production database (read)</div>
+                <div class="item-meta"><span class="src">JSM &middot; REQ-1190</span></div>
+              </div>
+              <span class="badge week">This week</span>
+            </div>
+          </div>
+
+          <!-- REVIEW (collapsed) -->
+          <div class="lane">
+            <div class="lane-head">Review <span class="count">5</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></div>
+          </div>
+
+          <!-- FYI (collapsed) -->
+          <div class="lane">
+            <div class="lane-head">FYI <span class="count">12</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== HOW IT WORKS ===================== -->
+<section id="how">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-eyebrow">How it works</p>
+      <h2 class="section-title">The sender decides. You just triage.</h2>
+      <p class="section-sub">No guessing at what matters from subject lines. Importance is declared at the source, then sorted for you.</p>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h3>Senders tag at the source</h3>
+        <p>In Outlook, a colleague marks what they need from you and an optional deadline. The tag travels with the message.</p>
+        <div class="tags"><span class="tag">Respond</span><span class="tag">Approve</span><span class="tag">Review</span><span class="tag">FYI</span></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h3>Daybreak gathers what is addressed to you</h3>
+        <p>Tagged mail plus your Jira Service Management tickets. Untagged noise never enters the board, and everything is processed locally.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h3>You come back to lanes, not a pile</h3>
+        <p>Items sort by action type. Urgency badges float Overdue and Today to the top. "Catch up since" defaults to your last visit.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FEATURES ===================== -->
+<section class="features" id="features">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-eyebrow">Features</p>
+      <h2 class="section-title">A companion board, not another inbox</h2>
+      <p class="section-sub">Daybreak only holds what was deliberately routed to you. That is the whole point.</p>
+    </div>
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg></div>
+        <h3>Declared intent, no guessing</h3>
+        <p>The sender's tag is the lane. No recipient-side inference, no scoring you have to second-guess.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/></svg></div>
+        <h3>Four clear lanes</h3>
+        <p>Respond, Approve, Review, FYI. Every item lands in exactly one, so you always know the next action.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <h3>Urgency at a glance</h3>
+        <p>Overdue, Today and This week badges, derived from sender deadlines and ticket SLAs.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
+        <h3>Email and JSM together</h3>
+        <p>Outlook and Exchange mail beside your Jira Service Management tickets. Gmail read-only too.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <h3>Local-first and private</h3>
+        <p>Your mail and tickets are processed on your machine. Nothing about your queue lives on someone else's server.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg></div>
+        <h3>Built for catching up</h3>
+        <p>"Catch up since" dates, keyboard triage, bulk-clear and honest "you're all caught up" empty states.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== FAQ ===================== -->
+<section id="faq">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-eyebrow">FAQ</p>
+      <h2 class="section-title">Questions, answered</h2>
+    </div>
+    <div class="faq-list">
+      <details class="faq-item">
+        <summary>Does it read my whole inbox?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+        <div class="faq-body">No. Daybreak only ingests messages a sender deliberately tagged for you, plus the Jira Service Management tickets assigned to you. Everything untagged stays out of the board.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Where does my data live?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+        <div class="faq-body">On your machine. Daybreak is local-first by design. It connects to your mail and ticket accounts to fetch what is tagged, then keeps and processes it locally.</div>
+      </details>
+      <details class="faq-item">
+        <summary>What does it connect to?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+        <div class="faq-body">Outlook and Exchange email, Gmail as a read-only source, and Jira Service Management for your assigned tickets.</div>
+      </details>
+      <details class="faq-item">
+        <summary>How do people tag a message?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+        <div class="faq-body">With the Daybreak Outlook add-in. The sender picks a lane from one dropdown, optionally adds a deadline, and sends as usual. No extra steps for you.</div>
+      </details>
+      <details class="faq-item">
+        <summary>Which platforms are supported?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+        <div class="faq-body">macOS and Windows. The download above gives you the right build for your platform.</div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== CLOSING CTA ===================== -->
+<section class="closing">
+  <div class="closing-card">
+    <h2>Especially the first day back.</h2>
+    <p>Daybreak earns its keep every morning. But the day after a week away is when you'll be most glad it is there.</p>
+    <a class="btn-primary" id="downloadBtn2" href="https://github.com/paulg7516/daybreak/releases/latest" download>
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.49 2.27-1.3 3.06-.84.83-2.2 1.46-3.32 1.37-.14-1.1.43-2.27 1.2-3 .85-.81 2.28-1.42 3.42-1.43zM21.6 17.04c-.6 1.38-.89 2-1.66 3.22-1.08 1.71-2.6 3.84-4.48 3.85-1.67.02-2.1-1.09-4.37-1.08-2.27.01-2.74 1.1-4.42 1.08-1.88-.02-3.32-1.94-4.4-3.65-3.02-4.78-3.34-10.39-1.47-13.37 1.33-2.12 3.43-3.36 5.4-3.36 2.01 0 3.27 1.1 4.93 1.1 1.61 0 2.59-1.1 4.92-1.1 1.76 0 3.62.96 4.95 2.62-4.35 2.38-3.64 8.59.07 10.59z"/></svg>
+      Download Daybreak
+    </a>
+    <p class="hero-meta"><span>macOS and Windows</span><span class="dot">&middot;</span><span>Local-first</span></p>
+  </div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="footer">
+  <div class="container footer-inner">
+    <a class="footer-brand" href="#top">
+      <svg viewBox="0 0 120 120" aria-hidden="true"><path d="M41.6 78 A22 22 0 1 1 78.4 78 Z" fill="#2f5bea"/><line x1="16" y1="78" x2="104" y2="78" stroke="#2f5bea" stroke-width="9" stroke-linecap="round"/><line x1="36" y1="92" x2="84" y2="92" stroke="#9bb0f5" stroke-width="9" stroke-linecap="round"/></svg>
+      Daybreak
+    </a>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="https://github.com/paulg7516/daybreak">GitHub</a>
+      <a href="https://github.com/paulg7516/daybreak/releases/latest">Download</a>
+      <a href="#how">How it works</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <p class="footer-credit">&copy; <span id="footerYear">2026</span> Daybreak. Local-first.</p>
+  </div>
+</footer>
+
+<script>
+  const navEl = document.getElementById('siteNav');
+  window.addEventListener('scroll', () => {
+    navEl.classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive: true });
+
+  // Close the mobile nav after tapping a link
+  document.querySelectorAll('.nav-links a').forEach(a => {
+    a.addEventListener('click', () => { document.getElementById('navToggle').checked = false; });
+  });
+
+  function daybreakParseRelease(data) {
+    if (!data || !Array.isArray(data.assets)) return null;
+    const dmg = data.assets.find(a => a && typeof a.name === 'string' && a.name.endsWith('.dmg'));
+    const exe = data.assets.find(a => a && typeof a.name === 'string' && a.name.endsWith('.exe'));
+    return {
+      version: data.tag_name || data.name || null,
+      dmgHref: dmg ? dmg.browser_download_url : null,
+      dmgSizeMb: dmg ? Math.round(dmg.size / (1024 * 1024)) : null,
+      exeHref: exe ? exe.browser_download_url : null,
+    };
+  }
+  if (typeof module !== 'undefined') { module.exports = { daybreakParseRelease }; }
+
+  (async function patchDownload() {
+    if (typeof window === 'undefined') return;
+    const macBtns = [document.getElementById('downloadBtn'), document.getElementById('downloadBtn2')].filter(Boolean);
+    const winBtn = document.getElementById('downloadWin');
+    const vEl = document.getElementById('downloadVersion');
+    const sEl = document.getElementById('downloadSize');
+    try {
+      const res = await fetch('https://api.github.com/repos/paulg7516/daybreak/releases/latest', {
+        headers: { 'Accept': 'application/vnd.github+json' }
+      });
+      if (!res.ok) return;
+      const parsed = daybreakParseRelease(await res.json());
+      if (!parsed) return;
+      if (parsed.dmgHref) macBtns.forEach(b => b.setAttribute('href', parsed.dmgHref));
+      if (parsed.exeHref) winBtn.setAttribute('href', parsed.exeHref);
+      if (parsed.version) vEl.textContent = parsed.version;
+      if (parsed.dmgSizeMb) sEl.textContent = `~${parsed.dmgSizeMb} MB`;
+    } catch (_) {
+      // Silent fallback: keep the releases-page href and placeholder meta.
+    }
+  })();
+
+  document.getElementById('footerYear').textContent = String(new Date().getFullYear());
+</script>
+
+<!-- Privacy-friendly analytics: GoatCounter (no cookies, no consent banner needed).
+     TO ENABLE: create a free site at https://www.goatcounter.com/ (pick a code, e.g.
+     "daybreak"), then set GOATCOUNTER_CODE below. Until set, this is a no-op. -->
+<script>
+  (function () {
+    var GOATCOUNTER_CODE = ''; // <-- set to your GoatCounter code to turn tracking on
+    if (!GOATCOUNTER_CODE) return;
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://gc.zgo.at/count.js';
+    s.setAttribute('data-goatcounter', 'https://' + GOATCOUNTER_CODE + '.goatcounter.com/count');
+    document.head.appendChild(s);
+  })();
+</script>
+</body>
+</html>
