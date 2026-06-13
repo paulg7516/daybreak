@@ -1,15 +1,11 @@
 // src/renderer/components/ItemRow.tsx
 import { ExternalLink, X } from 'lucide-react';
-import type { Lane } from '../../model/item';
+import { LANE_LABELS, LANE_ORDER, type Lane } from '../../model/item';
 import type { TriageRow } from '../../app/view-model';
 import { UrgencyBadge } from './UrgencyBadge';
 
-const LANE_OPTIONS: { value: Lane; label: string }[] = [
-  { value: 'respond', label: 'Respond' },
-  { value: 'approve', label: 'Approve' },
-  { value: 'review', label: 'Review' },
-  { value: 'fyi', label: 'FYI' },
-];
+// Single source of truth: the rerank dropdown mirrors the lane labels in the model.
+const LANE_OPTIONS: { value: Lane; label: string }[] = LANE_ORDER.map((value) => ({ value, label: LANE_LABELS[value] }));
 
 function relTime(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });

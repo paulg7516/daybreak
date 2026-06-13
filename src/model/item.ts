@@ -16,9 +16,9 @@ export const LANE_ORDER: Lane[] = ['respond', 'approve', 'review', 'fyi'];
 // Default display labels; the user can rename lanes in Settings (the underlying
 // lane id / sender tag is fixed).
 export const LANE_LABELS: Record<Lane, string> = {
-  respond: 'Respond',
-  approve: 'Approve / Decide',
-  review: 'Review',
+  respond: 'Needs your reply',
+  approve: 'Needs your decision',
+  review: 'Needs your review',
   fyi: 'FYI',
 };
 
