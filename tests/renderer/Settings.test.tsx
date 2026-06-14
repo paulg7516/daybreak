@@ -16,21 +16,27 @@ function renderSettings(onSaveLaneConfig = vi.fn()) {
       onSaveJira={async () => {}}
       onTestJira={async () => ({ ok: true, displayName: 'X' })}
       onClearJiraToken={noop}
+      mailStatus={{ provider: 'gmail', connected: false, account: null, graphConfigured: false }}
+      mailBusy={false}
+      onConnectMail={noop}
+      onDisconnectMail={noop}
     />,
   );
 }
 
 describe('Settings', () => {
-  it('shows the Lanes tab by default and switches to Sources', async () => {
+  it('shows Data sources by default and switches to Lanes', async () => {
     renderSettings();
-    expect(screen.getByLabelText(/label for respond/i)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /sources/i }));
+    // Data sources is the default section; the Jira card form is visible.
     expect(screen.getByLabelText(/base url/i)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: /lanes/i }));
+    expect(screen.getByLabelText(/label for respond/i)).toBeInTheDocument();
   });
 
   it('renames a lane through the config callback', async () => {
     const onSave = vi.fn();
     renderSettings(onSave);
+    await userEvent.click(screen.getByRole('button', { name: /lanes/i }));
     const input = screen.getByLabelText(/label for respond/i);
     await userEvent.type(input, '!');
     expect(onSave).toHaveBeenCalled();

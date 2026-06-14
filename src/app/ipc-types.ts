@@ -22,6 +22,15 @@ export interface IngestEventPayload {
   message?: string;
 }
 
+// Connection status for the active mail source (Microsoft Graph or Gmail), shown
+// in Settings -> Data sources.
+export interface MailStatus {
+  provider: 'graph' | 'gmail';
+  connected: boolean;
+  account: string | null;
+  graphConfigured: boolean;
+}
+
 export interface DaybreakBridge {
   getView(): Promise<ViewResult>;
   setAwayWindow(sinceISO: string): Promise<ViewResult>;
@@ -36,5 +45,8 @@ export interface DaybreakBridge {
   setJiraConfig(input: { baseUrl: string; email: string; token?: string }): Promise<void>;
   testJiraConnection(input: { baseUrl: string; email: string; token?: string }): Promise<{ ok: true; displayName: string } | { ok: false; error: string }>;
   clearJiraToken(): Promise<void>;
+  getMailStatus(): Promise<MailStatus>;
+  connectMail(): Promise<{ ok: true; account: string } | { ok: false; error: string }>;
+  disconnectMail(): Promise<void>;
   onIngest(cb: (p: IngestEventPayload) => void): () => void;
 }

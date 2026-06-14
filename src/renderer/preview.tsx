@@ -66,6 +66,9 @@ const view: TriageView = {
   setJiraConfig: async () => {},
   testJiraConnection: async () => ({ ok: true, displayName: 'You' }),
   clearJiraToken: async () => {},
+  getMailStatus: async () => ({ provider: 'gmail', connected: true, account: 'p.gerios@gmail.com', graphConfigured: false }),
+  connectMail: async () => ({ ok: true, account: 'p.gerios@gmail.com' }),
+  disconnectMail: async () => {},
   onIngest: () => () => {},
 };
 

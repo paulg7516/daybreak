@@ -7,7 +7,7 @@ import { applyOverlay } from '../app/overlay';
 import { buildTriageView, type TriageView } from '../app/view-model';
 import { DEMO_ME, demoItems } from '../app/demo-data';
 import type { DaybreakItem } from '../model/item';
-import { getOverlay, getJiraConfig } from './store';
+import { getOverlay, getJiraConfig, setMailAccount } from './store';
 
 export type IngestPhase = 'auth' | 'fetching' | 'scoring' | 'done' | 'error';
 export interface IngestEvents {
@@ -38,6 +38,7 @@ export async function buildView(sinceISO: string, events: IngestEvents): Promise
       );
       me = ingested.me;
       items = ingested.items;
+      setMailAccount(me);
       try {
         const jsmItems = await ingestJsm(sinceISO, me, getJiraConfig() ?? undefined);
         if (jsmItems.length) items = [...items, ...jsmItems];

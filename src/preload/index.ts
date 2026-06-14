@@ -18,6 +18,9 @@ const api: DaybreakBridge = {
   setJiraConfig: (input) => ipcRenderer.invoke('daybreak:setJiraConfig', input),
   testJiraConnection: (input) => ipcRenderer.invoke('daybreak:testJiraConnection', input),
   clearJiraToken: () => ipcRenderer.invoke('daybreak:clearJiraToken'),
+  getMailStatus: () => ipcRenderer.invoke('daybreak:getMailStatus'),
+  connectMail: () => ipcRenderer.invoke('daybreak:connectMail'),
+  disconnectMail: () => ipcRenderer.invoke('daybreak:disconnectMail'),
   onIngest: (cb) => {
     const handler = (_e: unknown, p: { phase: string; message?: string }) => cb(p);
     ipcRenderer.on('daybreak:ingest', handler);

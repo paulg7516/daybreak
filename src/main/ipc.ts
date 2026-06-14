@@ -1,6 +1,7 @@
 // src/main/ipc.ts
 import { ipcMain, shell, BrowserWindow } from 'electron';
-import { getOverlay, setAwayWindow, setLastOpenedAt, clearItem, unclearItem, rerankItem, getLaneConfig, setLaneConfig, getJiraConfig, setJiraConfig } from './store';
+import { getOverlay, setAwayWindow, setLastOpenedAt, clearItem, unclearItem, rerankItem, getLaneConfig, setLaneConfig, getJiraConfig, setJiraConfig, getMailAccount, setMailAccount, clearMailAccount } from './store';
+import { getMailStatus, connectMail, disconnectMail } from '../ingest/mail-account';
 import type { LaneSetting } from '../app/lane-config';
 import { storeJiraToken, clearJiraToken, getStoredJiraToken } from '../ingest/jsm-auth';
 import { testJiraConnection } from './jira-test';
@@ -102,6 +103,24 @@ export function registerIpc(): void {
     testJiraConnection(input),
   );
   ipcMain.handle('daybreak:clearJiraToken', () => clearJiraToken());
+
+  ipcMain.handle('daybreak:getMailStatus', () => getMailStatus(getMailAccount()));
+  ipcMain.handle('daybreak:connectMail', async () => {
+    try {
+      const { address } = await connectMail((prompt) => {
+        // Gmail uses a loopback redirect we can open directly; Microsoft shows a code.
+        if (prompt.provider === 'google') void shell.openExternal(prompt.url);
+        emit('daybreak:ingest', { phase: 'auth', message: JSON.stringify(prompt) });
+      });
+      setMailAccount(address);
+      emit('daybreak:ingest', { phase: 'done' });
+      return { ok: true as const, account: address };
+    } catch (err) {
+      emit('daybreak:ingest', { phase: 'done' });
+      return { ok: false as const, error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+  ipcMain.handle('daybreak:disconnectMail', async () => { await disconnectMail(); clearMailAccount(); });
 
   ipcMain.handle('daybreak:openItem', async (_e, webLink: string) => {
     if (!webLink) return;

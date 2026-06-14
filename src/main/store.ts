@@ -17,10 +17,22 @@ import type { Lane } from '../model/item';
 // electron-store persists a single "overlay" key. Email content is never stored;
 // only the away window, last-opened time, cleared ids, re-rank overrides, and the
 // Jira connection live here.
-const store = new ElectronStore<{ overlay: Overlay }>({
+const store = new ElectronStore<{ overlay: Overlay; mailAccount?: string }>({
   name: 'daybreak-overlay',
   defaults: { overlay: emptyOverlay() },
 });
+
+// The last signed-in mail address, shown in Settings -> Data sources. Just the
+// address; tokens stay in the keychain, never here.
+export function getMailAccount(): string | null {
+  return store.get('mailAccount') ?? null;
+}
+export function setMailAccount(address: string): void {
+  store.set('mailAccount', address);
+}
+export function clearMailAccount(): void {
+  store.delete('mailAccount');
+}
 
 export function getOverlay(): Overlay {
   return { ...emptyOverlay(), ...store.get('overlay') };

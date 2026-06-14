@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays, Users, Search, Rows3, Columns3, Undo2 } from 'lucide-react';
 import { daybreak } from './bridge';
-import type { ViewResult } from '../app/ipc-types';
+import type { ViewResult, MailStatus } from '../app/ipc-types';
 import type { Lane } from '../model/item';
 import { applyLaneConfig } from '../app/view-model';
 import { defaultLaneConfig, type LaneSetting } from '../app/lane-config';
@@ -38,6 +38,8 @@ export default function App() {
   const [showCleared, setShowCleared] = useState(false);
   const [page, setPage] = useState<'board' | 'settings'>('board');
   const [jiraConfig, setJiraConfig] = useState<JiraConfigView>({ baseUrl: '', email: '', hasToken: false });
+  const [mailStatus, setMailStatus] = useState<MailStatus | null>(null);
+  const [mailBusy, setMailBusy] = useState(false);
   const [laneConfig, setLaneConfig] = useState<LaneSetting[]>(defaultLaneConfig);
   const [bySender, setBySender] = useState(false);
   const [senderFilter, setSenderFilter] = useState('');
@@ -111,7 +113,9 @@ export default function App() {
   }, []);
 
   const openSettings = useCallback(async () => {
-    setJiraConfig(await daybreak.getJiraConfig());
+    const [j, m] = await Promise.all([daybreak.getJiraConfig(), daybreak.getMailStatus()]);
+    setJiraConfig(j);
+    setMailStatus(m);
     setPage('settings');
   }, []);
 
@@ -125,6 +129,17 @@ export default function App() {
   const onClearJiraToken = useCallback(async () => {
     await daybreak.clearJiraToken();
     setJiraConfig(await daybreak.getJiraConfig());
+  }, []);
+  const onConnectMail = useCallback(async () => {
+    setMailBusy(true);
+    try { await daybreak.connectMail(); } finally {
+      setMailStatus(await daybreak.getMailStatus());
+      setMailBusy(false);
+    }
+  }, []);
+  const onDisconnectMail = useCallback(async () => {
+    await daybreak.disconnectMail();
+    setMailStatus(await daybreak.getMailStatus());
   }, []);
 
   const onOpen = useCallback((webLink: string) => { void daybreak.openItem(webLink); }, []);
@@ -297,6 +312,10 @@ export default function App() {
             onSaveJira={onSaveJira}
             onTestJira={onTestJira}
             onClearJiraToken={onClearJiraToken}
+            mailStatus={mailStatus}
+            mailBusy={mailBusy}
+            onConnectMail={onConnectMail}
+            onDisconnectMail={onDisconnectMail}
           />
         ) : (
           <div className={`px-6 pb-10 ${layout === 'columns' ? '' : 'mx-auto max-w-3xl'}`}>
