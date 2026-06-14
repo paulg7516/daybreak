@@ -11,6 +11,7 @@ import { LaneSection } from './components/LaneSection';
 import { LaneColumn } from './components/LaneColumn';
 import { KeyboardLegend } from './components/KeyboardLegend';
 import { ClearedDrawer } from './components/ClearedDrawer';
+import { ThemeToggle } from './components/ThemeToggle';
 
 type Layout = 'stacked' | 'columns';
 import { AwayWindowModal } from './components/AwayWindowModal';
@@ -260,7 +261,7 @@ export default function App() {
   return (
     <div className="flex min-h-dvh bg-bg text-ink">
       {/* persistent left nav rail - stays visible in Settings too */}
-      <nav className="sticky top-0 flex h-dvh w-14 shrink-0 flex-col items-center gap-1 border-r border-line bg-panel py-3">
+      <nav className="sticky top-0 flex h-dvh w-16 shrink-0 flex-col items-center gap-1.5 border-r border-line bg-panel py-4">
         <div className="mb-2 h-9 w-9 overflow-hidden rounded-xl shadow-lg shadow-orange-500/40" title="Daybreak">
           <svg viewBox="0 0 120 120" className="h-full w-full" aria-hidden="true">
             <rect width="120" height="120" fill="#ff6a3d" />
@@ -276,12 +277,15 @@ export default function App() {
           onClick={openSettings} className={railBtn(page === 'settings')}>
           <SettingsIcon size={19} strokeWidth={2} />
         </button>
+        <div className="mt-auto flex flex-col items-center border-t border-line/70 pt-3">
+          <ThemeToggle />
+        </div>
       </nav>
 
       <main className="min-w-0 flex-1">
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-bg/85 px-6 py-3 backdrop-blur">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-bg/85 px-7 py-4 backdrop-blur">
           <div className="flex items-baseline gap-2">
-            <span className="text-sm font-bold tracking-tight text-ink">Daybreak</span>
+            <span className="text-[15px] font-bold tracking-tight text-ink">Daybreak</span>
             <span className="text-xs text-ink-3">Declared-intent triage</span>
           </div>
           <div className="flex items-center gap-2">

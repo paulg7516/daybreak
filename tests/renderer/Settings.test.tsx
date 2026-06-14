@@ -27,8 +27,8 @@ function renderSettings(onSaveLaneConfig = vi.fn()) {
 describe('Settings', () => {
   it('shows Data sources by default and switches to Lanes', async () => {
     renderSettings();
-    // Data sources is the default section; the Jira card form is visible.
-    expect(screen.getByLabelText(/base url/i)).toBeInTheDocument();
+    // Data sources is the default section; the Microsoft 365 card is visible.
+    expect(screen.getByText('Microsoft 365')).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /lanes/i }));
     expect(screen.getByLabelText(/label for respond/i)).toBeInTheDocument();
   });
