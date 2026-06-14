@@ -3,23 +3,33 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ItemRow } from '../../src/renderer/components/ItemRow';
-import type { ScoredItemView } from '../../src/app/view-model';
+import type { TriageRow } from '../../src/app/view-model';
 
-const row: ScoredItemView = {
-  id: 'm1', subject: 'Budget sign-off', from: 'boss@co.com', receivedAt: '2026-05-30T09:00:00.000Z',
-  reasons: ['Direct ask', 'Blocked tag'], resolved: false, senderTag: 'blocked',
-  webLink: 'https://outlook.example/m1', lane: 'today', reranked: false,
+const row: TriageRow = {
+  id: 'm1',
+  subject: 'Budget sign-off',
+  from: 'boss@co.com',
+  receivedAt: '2026-05-30T09:00:00.000Z',
+  lane: 'approve',
+  urgency: 'today',
+  deadline: '2026-05-30',
+  reasons: ['sender: approve', 'due 2026-05-30'],
+  source: 'email_internal',
+  webLink: 'https://outlook.example/m1',
+  reranked: false,
 };
 
 describe('ItemRow', () => {
-  it('renders subject, sender, reasons, and the sender-tag badge', () => {
+  it('renders subject, sender, and the urgency badge', () => {
     render(<ItemRow row={row} onOpen={() => {}} onClear={() => {}} onRerank={() => {}} />);
     expect(screen.getByText('Budget sign-off')).toBeInTheDocument();
     expect(screen.getByText('boss@co.com')).toBeInTheDocument();
-    // The reasons render joined in one element: "Direct ask · Blocked tag".
-    expect(screen.getByText(/Direct ask . Blocked tag/)).toBeInTheDocument();
-    // Exact match targets the sender-tag badge only, not the "Blocked tag" reason text.
-    expect(screen.getByText('Blocked')).toBeInTheDocument();
+    expect(screen.getByText('Today')).toBeInTheDocument(); // urgency badge
+  });
+
+  it('renders no urgency badge when urgency is none', () => {
+    render(<ItemRow row={{ ...row, urgency: 'none' }} onOpen={() => {}} onClear={() => {}} onRerank={() => {}} />);
+    expect(screen.queryByText('Today')).not.toBeInTheDocument();
   });
 
   it('invokes onOpen with the webLink when Open is clicked', async () => {
@@ -34,5 +44,12 @@ describe('ItemRow', () => {
     render(<ItemRow row={row} onOpen={() => {}} onClear={onClear} onRerank={() => {}} />);
     await userEvent.click(screen.getByRole('button', { name: /clear/i }));
     expect(onClear).toHaveBeenCalledWith('m1');
+  });
+
+  it('invokes onRerank with the chosen lane', async () => {
+    const onRerank = vi.fn();
+    render(<ItemRow row={row} onOpen={() => {}} onClear={() => {}} onRerank={onRerank} />);
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: /move to lane/i }), 'respond');
+    expect(onRerank).toHaveBeenCalledWith('m1', 'respond');
   });
 });

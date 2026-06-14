@@ -12,13 +12,15 @@ beforeEach(() => {
     unclearItem: vi.fn(),
     rerankItem: vi.fn(),
     openItem: vi.fn(),
+    getLaneConfig: vi.fn().mockResolvedValue([]),
+    setLaneConfig: vi.fn(),
     onIngest: vi.fn().mockReturnValue(() => {}),
   };
 });
 
 describe('App', () => {
-  it('shows the away-window modal when no window is set', async () => {
+  it('shows the catch-up-window modal for the needsAwayWindow result', async () => {
     render(<App />);
-    expect(await screen.findByText(/welcome back/i)).toBeInTheDocument();
+    expect(await screen.findByText(/catch up since/i)).toBeInTheDocument();
   });
 });

@@ -1,71 +1,74 @@
 // tests/app/view-model.test.ts
 import { describe, it, expect } from 'vitest';
-import { buildTriageView } from '../../src/app/view-model';
+import { buildTriageView, applyLaneConfig } from '../../src/app/view-model';
+import { buildSummary } from '../../src/summary/summary';
 import type { OverlaidItem } from '../../src/app/overlay';
-import type { ScoredItem, Source, Lane } from '../../src/model/item';
-import type { Summary } from '../../src/summary/summary';
+import type { Lane, Urgency } from '../../src/model/item';
 
-function overlaid(
-  id: string,
-  source: Source,
-  lane: Lane,
-  rank: number,
-  extra: Partial<ScoredItem['item']> = {},
-): OverlaidItem {
+function o(id: string, lane: Lane, urgency: Urgency, receivedAt = '2026-06-10T10:00:00Z'): OverlaidItem {
   return {
-    scored: {
-      item: { id, source, subject: id, from: 'a@co.com', receivedAt: '2026-05-30T10:00:00.000Z', ...extra },
+    triaged: {
+      item: { id, source: 'email_internal', subject: id, from: 'a@co.com', receivedAt },
       lane,
-      rank,
-      reasons: ['because'],
-      resolved: false,
+      urgency,
+      reasons: [],
     },
     lane,
     reranked: false,
   };
 }
 
-const summary: Summary = {
-  needsTodayCount: 0, thisWeekCount: 0, fyiCount: 0, slaAtRiskCount: 0, resolvedWhileAwayCount: 0,
-};
+const meta = { me: 'me@co.com', since: '2026-06-01T00:00:00Z' };
 
 describe('buildTriageView', () => {
-  it('groups a lane by source (System, Internal, Vendor) and sorts each group by rank desc', () => {
-    const items: OverlaidItem[] = [
-      overlaid('v1', 'email_vendor', 'today', 10),
-      overlaid('i_low', 'email_internal', 'today', 20),
-      overlaid('sys', 'jsm', 'today', 99),
-      overlaid('i_high', 'email_internal', 'today', 80),
-    ];
-    const view = buildTriageView(items, summary, { me: 'me@co.com', awaySince: '2026-05-25T00:00:00.000Z' });
-    const today = view.lanes.today;
-    expect(today.total).toBe(4);
-    expect(today.groups.map((g) => g.source)).toEqual(['jsm', 'email_internal', 'email_vendor']);
-    const internal = today.groups.find((g) => g.source === 'email_internal')!;
-    expect(internal.items.map((i) => i.id)).toEqual(['i_high', 'i_low']); // rank desc
+  it('returns lanes in canonical order with totals', () => {
+    const items = [o('a', 'respond', 'none'), o('b', 'fyi', 'none'), o('c', 'approve', 'none')];
+    const view = buildTriageView(items, buildSummary(items), meta);
+    expect(view.lanes.map((l) => l.lane)).toEqual(['respond', 'approve', 'review', 'fyi']);
+    expect(view.lanes.find((l) => l.lane === 'respond')!.total).toBe(1);
+    expect(view.lanes.find((l) => l.lane === 'review')!.total).toBe(0);
   });
 
-  it('maps the X-PTO-Triage header to a senderTag and carries reasons/webLink/resolved', () => {
-    const items: OverlaidItem[] = [
-      overlaid('a', 'email_internal', 'today', 50, {
-        internetHeaders: { 'X-PTO-Triage': 'blocked' },
-        webLink: 'https://outlook.example/a',
-      }),
+  it('sorts items within a lane by urgency then recency', () => {
+    const items = [
+      o('none1', 'respond', 'none', '2026-06-10T10:00:00Z'),
+      o('overdue1', 'respond', 'overdue', '2026-06-09T10:00:00Z'),
+      o('today1', 'respond', 'today', '2026-06-08T10:00:00Z'),
     ];
-    const view = buildTriageView(items, summary, { me: 'me@co.com', awaySince: '2026-05-25T00:00:00.000Z' });
-    const row = view.lanes.today.groups[0].items[0];
-    expect(row.senderTag).toBe('blocked');
-    expect(row.reasons).toEqual(['because']);
-    expect(row.webLink).toBe('https://outlook.example/a');
-    expect(row.resolved).toBe(false);
+    const view = buildTriageView(items, buildSummary(items), meta);
+    expect(view.lanes.find((l) => l.lane === 'respond')!.items.map((i) => i.id)).toEqual([
+      'overdue1',
+      'today1',
+      'none1',
+    ]);
   });
 
-  it('counts cleared items and leaves empty lanes empty', () => {
-    const view = buildTriageView([], { ...summary }, {
-      me: 'me@co.com', awaySince: '2026-05-25T00:00:00.000Z', clearedCount: 3,
-    });
-    expect(view.lanes.today.total).toBe(0);
-    expect(view.lanes.this_week.groups).toEqual([]);
-    expect(view.clearedCount).toBe(3);
+  it('carries the urgency badge onto each row', () => {
+    const items = [o('x', 'approve', 'overdue')];
+    const view = buildTriageView(items, buildSummary(items), meta);
+    expect(view.lanes.find((l) => l.lane === 'approve')!.items[0].urgency).toBe('overdue');
+  });
+});
+
+describe('applyLaneConfig', () => {
+  const items = [o('a', 'respond', 'none'), o('b', 'fyi', 'none')];
+  const lanes = buildTriageView(items, buildSummary(items), meta).lanes;
+
+  it('reorders, relabels, and hides lanes per the config', () => {
+    const out = applyLaneConfig(lanes, [
+      { lane: 'fyi', label: 'Skim', visible: true },
+      { lane: 'respond', label: 'Reply now', visible: true },
+      { lane: 'approve', label: 'Approve', visible: false },
+      { lane: 'review', label: 'Review', visible: false },
+    ]);
+    expect(out.map((c) => [c.lane, c.label])).toEqual([
+      ['fyi', 'Skim'],
+      ['respond', 'Reply now'],
+    ]);
+    expect(out[1].items.map((i) => i.id)).toEqual(['a']);
+  });
+
+  it('falls back to all visible lanes for an empty config', () => {
+    expect(applyLaneConfig(lanes, []).map((c) => c.lane)).toEqual(['respond', 'approve', 'review', 'fyi']);
   });
 });

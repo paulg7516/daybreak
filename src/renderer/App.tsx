@@ -1,24 +1,26 @@
 // src/renderer/App.tsx
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays, Users, Search, Rows3, Columns3, Undo2 } from 'lucide-react';
 import { daybreak } from './bridge';
 import type { ViewResult } from '../app/ipc-types';
 import type { Lane } from '../model/item';
-import { SummaryHeader } from './components/SummaryHeader';
-import { Lane as LaneComponent } from './components/Lane';
+import { applyLaneConfig } from '../app/view-model';
+import { defaultLaneConfig, type LaneSetting } from '../app/lane-config';
+import { Headline } from './components/Headline';
+import { LaneSection } from './components/LaneSection';
+import { LaneColumn } from './components/LaneColumn';
+import { KeyboardLegend } from './components/KeyboardLegend';
+import { ClearedDrawer } from './components/ClearedDrawer';
+
+type Layout = 'stacked' | 'columns';
 import { AwayWindowModal } from './components/AwayWindowModal';
 import { AuthPanel, type AuthPrompt } from './components/AuthPanel';
 import { IngestStatus } from './components/IngestStatus';
-import { SetAsideBin } from './components/SetAsideBin';
 import { Settings } from './components/Settings';
 import type { JiraConfigView, JiraTestResult } from './components/JiraSettings';
-import type { Rule } from '../app/rules';
 
-const LANE_TITLES: Record<Lane, string> = {
-  today: 'Needs you today',
-  this_week: 'Time-sensitive this week',
-  fyi: 'FYI / batch-clear',
-};
+// FYI and Review collapse by default - they are skim/batch-clear lanes.
+const COLLAPSED_BY_DEFAULT: Record<Lane, boolean> = { respond: false, approve: false, review: true, fyi: true };
 
 function sinceLabel(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -30,12 +32,34 @@ export default function App() {
   const [errorMsg, setErrorMsg] = useState<string | undefined>();
   const [auth, setAuth] = useState<AuthPrompt | null>(null);
   const [awayError, setAwayError] = useState<string | null>(null);
-  const [undo, setUndo] = useState<string | null>(null);
+  const [showAway, setShowAway] = useState(false);
+  const [undo, setUndo] = useState<string[] | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
-  const [rules, setRules] = useState<Rule[]>([]);
-  const [bulkExclude, setBulkExclude] = useState(true);
+  const [showCleared, setShowCleared] = useState(false);
+  const [page, setPage] = useState<'board' | 'settings'>('board');
   const [jiraConfig, setJiraConfig] = useState<JiraConfigView>({ baseUrl: '', email: '', hasToken: false });
+  const [laneConfig, setLaneConfig] = useState<LaneSetting[]>(defaultLaneConfig);
+  const [bySender, setBySender] = useState(false);
+  const [senderFilter, setSenderFilter] = useState('');
+  const [layout, setLayout] = useState<Layout>(() => {
+    const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('daybreak.layout') : null;
+    return saved === 'columns' ? 'columns' : 'stacked';
+  });
+  const setLayoutPersisted = useCallback((l: Layout) => {
+    setLayout(l);
+    try { localStorage.setItem('daybreak.layout', l); } catch { /* ignore storage failure */ }
+  }, []);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [focusedId, setFocusedId] = useState<string | null>(null);
+  const [collapsed, setCollapsed] = useState<Record<Lane, boolean>>(() => ({ ...COLLAPSED_BY_DEFAULT }));
+  const toggleCollapse = useCallback((lane: Lane) => setCollapsed((c) => ({ ...c, [lane]: !c[lane] })), []);
+  const onToggleSelect = useCallback((id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const off = daybreak.onIngest(({ phase: p, message }) => {
@@ -52,13 +76,20 @@ export default function App() {
       }
     });
     void daybreak.getView().then(setView);
+    void daybreak.getLaneConfig().then(setLaneConfig);
     return off;
+  }, []);
+
+  const onSaveLaneConfig = useCallback((config: LaneSetting[]) => {
+    setLaneConfig(config);
+    void daybreak.setLaneConfig(config);
   }, []);
 
   useEffect(() => () => { if (undoTimer.current) clearTimeout(undoTimer.current); }, []);
 
-  const showUndo = useCallback((id: string) => {
-    setUndo(id);
+  const showUndo = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+    setUndo(ids);
     if (undoTimer.current) clearTimeout(undoTimer.current);
     undoTimer.current = setTimeout(() => setUndo(null), 5000);
   }, []);
@@ -69,7 +100,7 @@ export default function App() {
     const result = await daybreak.setAwayWindow(sinceISO);
     setPhase('idle');
     if ('error' in result) setAwayError(result.error);
-    else setView(result);
+    else { setView(result); setShowAway(false); }
   }, []);
 
   const refresh = useCallback(async () => {
@@ -79,30 +110,9 @@ export default function App() {
     setView(result);
   }, []);
 
-  const onPromote = useCallback(async (id: string, lane: Lane) => {
-    setView(await daybreak.promoteSetAside(id, lane));
-  }, []);
   const openSettings = useCallback(async () => {
-    const [r, j] = await Promise.all([daybreak.getRules(), daybreak.getJiraConfig()]);
-    setRules(r.rules);
-    setBulkExclude(r.bulkExcludeEnabled);
-    setJiraConfig(j);
-    setShowSettings(true);
-  }, []);
-  const addRuleAction = useCallback(async (rule: Rule) => {
-    const v = await daybreak.addRule(rule);
-    setRules((rs) => (rs.some((x) => x.id === rule.id) ? rs : [...rs, rule]));
-    if (!('error' in v) && !('needsAwayWindow' in v)) setView(v);
-  }, []);
-  const removeRuleAction = useCallback(async (id: string) => {
-    const v = await daybreak.removeRule(id);
-    setRules((rs) => rs.filter((x) => x.id !== id));
-    if (!('error' in v) && !('needsAwayWindow' in v)) setView(v);
-  }, []);
-  const toggleBulk = useCallback(async (enabled: boolean) => {
-    setBulkExclude(enabled);
-    const v = await daybreak.setBulkExclude(enabled);
-    if (!('error' in v) && !('needsAwayWindow' in v)) setView(v);
+    setJiraConfig(await daybreak.getJiraConfig());
+    setPage('settings');
   }, []);
 
   const onSaveJira = useCallback(async (input: { baseUrl: string; email: string; token?: string }) => {
@@ -124,39 +134,87 @@ export default function App() {
   }, []);
   const onClear = useCallback(async (id: string) => {
     await daybreak.clearItem(id);
-    showUndo(id);
+    showUndo([id]);
     setView(await daybreak.refresh());
   }, [showUndo]);
   const onUndo = useCallback(async () => {
     if (!undo) return;
     if (undoTimer.current) clearTimeout(undoTimer.current);
-    await daybreak.unclearItem(undo);
+    await Promise.all(undo.map((id) => daybreak.unclearItem(id)));
     setUndo(null);
     setView(await daybreak.refresh());
   }, [undo]);
+  const clearSelected = useCallback(async () => {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    await Promise.all(ids.map((id) => daybreak.clearItem(id)));
+    setSelected(new Set());
+    showUndo(ids);
+    setView(await daybreak.refresh());
+  }, [selected, showUndo]);
+  const onRestore = useCallback(async (id: string) => {
+    await daybreak.unclearItem(id);
+    setView(await daybreak.refresh());
+  }, []);
+  const onRestoreAll = useCallback(async (ids: string[]) => {
+    await Promise.all(ids.map((id) => daybreak.unclearItem(id)));
+    setShowCleared(false);
+    setView(await daybreak.refresh());
+  }, []);
 
-  // Full-screen takeovers (no shell): auth, settings, loading, away-window, error.
+  const board = view && !('needsAwayWindow' in view) && !('error' in view) ? view : null;
+
+  // Apply the sender filter to each lane's rows.
+  const filteredLanes = useMemo(() => {
+    if (!board) return [];
+    const q = senderFilter.trim().toLowerCase();
+    return board.lanes.map((l) => ({
+      ...l,
+      items: q ? l.items.filter((r) => r.from.toLowerCase().includes(q)) : l.items,
+    }));
+  }, [board, senderFilter]);
+
+  // Apply the user's lane config (order / rename / hide) on top of the filter.
+  const configuredLanes = useMemo(() => applyLaneConfig(filteredLanes, laneConfig), [filteredLanes, laneConfig]);
+
+  // Rows the keyboard can land on, in visual order: in stacked mode skip collapsed
+  // lanes; in columns mode all configured rows are visible.
+  const visibleRows = useMemo(
+    () => (layout === 'columns' ? configuredLanes : configuredLanes.filter((cl) => !collapsed[cl.lane])).flatMap((cl) => cl.items),
+    [configuredLanes, layout, collapsed],
+  );
+
+  // Keyboard triage: j/k (or arrows) move the cursor, e/x clear, o/Enter open,
+  // space selects, Escape clears the selection. Ignored while typing in a field.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA')) return;
+      const ids = visibleRows.map((r) => r.id);
+      if (e.key === 'Escape') { setSelected(new Set()); return; }
+      if (ids.length === 0) return;
+      const idx = focusedId ? ids.indexOf(focusedId) : -1;
+      const focusTo = (id: string | undefined) => {
+        if (!id) return;
+        setFocusedId(id);
+        document.querySelector(`[data-row-id="${id}"]`)?.scrollIntoView?.({ block: 'nearest' });
+      };
+      if (e.key === 'j' || e.key === 'ArrowDown') { e.preventDefault(); focusTo(ids[idx + 1] ?? ids[idx === -1 ? 0 : idx]); }
+      else if (e.key === 'k' || e.key === 'ArrowUp') { e.preventDefault(); focusTo(idx <= 0 ? ids[0] : ids[idx - 1]); }
+      else if ((e.key === 'e' || e.key === 'x' || e.key === 'Backspace') && focusedId) { e.preventDefault(); const nextId = ids[idx + 1] ?? ids[idx - 1]; setFocusedId(nextId ?? null); void onClear(focusedId); }
+      else if ((e.key === 'o' || e.key === 'Enter') && focusedId) { const row = visibleRows.find((r) => r.id === focusedId); if (row?.webLink) onOpen(row.webLink); }
+      else if (e.key === ' ' && focusedId) { e.preventDefault(); onToggleSelect(focusedId); }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [visibleRows, focusedId, onClear, onOpen, onToggleSelect]);
+
+  // Full-screen takeovers (no shell yet): auth, away-window, first load, fatal error.
   if (auth) {
     return (
       <div className="min-h-dvh grid place-items-center bg-bg px-6">
         <div className="w-full max-w-md"><AuthPanel {...auth} /></div>
       </div>
-    );
-  }
-  if (showSettings) {
-    return (
-      <Settings
-        rules={rules}
-        bulkExcludeEnabled={bulkExclude}
-        onAddRule={addRuleAction}
-        onRemoveRule={removeRuleAction}
-        onToggleBulk={toggleBulk}
-        jiraConfig={jiraConfig}
-        onSaveJira={onSaveJira}
-        onTestJira={onTestJira}
-        onClearJiraToken={onClearJiraToken}
-        onClose={() => setShowSettings(false)}
-      />
     );
   }
   if (view === null) {
@@ -181,10 +239,12 @@ export default function App() {
     );
   }
 
-  // Triage surface with the app shell.
+  const railBtn = (active: boolean) =>
+    `grid h-10 w-10 place-items-center rounded-xl transition-colors ${active ? 'bg-accent/15 text-accent' : 'text-ink-3 hover:bg-panel-2 hover:text-ink'}`;
+
   return (
     <div className="flex min-h-dvh bg-bg text-ink">
-      {/* slim left nav rail */}
+      {/* persistent left nav rail - stays visible in Settings too */}
       <nav className="sticky top-0 flex h-dvh w-14 shrink-0 flex-col items-center gap-1 border-r border-line bg-panel py-3">
         <div className="mb-2 h-9 w-9 overflow-hidden rounded-xl shadow-lg shadow-orange-500/40" title="Daybreak">
           <svg viewBox="0 0 120 120" className="h-full w-full" aria-hidden="true">
@@ -193,27 +253,35 @@ export default function App() {
             <path d="M41.2 67.1 A24.7 24.7 0 0 0 90.6 67.1 Z" fill="#fff" opacity="0.7" />
           </svg>
         </div>
-        <button type="button" aria-label="Triage" aria-current="page"
-          className="grid h-10 w-10 place-items-center rounded-xl bg-accent/15 text-accent">
+        <button type="button" aria-label="Board" aria-current={page === 'board' ? 'page' : undefined}
+          onClick={() => setPage('board')} className={railBtn(page === 'board')}>
           <LayoutList size={19} strokeWidth={2} />
         </button>
-        <button type="button" aria-label="Settings" onClick={openSettings}
-          className="grid h-10 w-10 place-items-center rounded-xl text-ink-3 transition-colors hover:bg-panel-2 hover:text-ink">
+        <button type="button" aria-label="Settings" aria-current={page === 'settings' ? 'page' : undefined}
+          onClick={openSettings} className={railBtn(page === 'settings')}>
           <SettingsIcon size={19} strokeWidth={2} />
         </button>
       </nav>
 
-      {/* main column */}
       <main className="min-w-0 flex-1">
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-bg/85 px-6 py-3 backdrop-blur">
           <div className="flex items-baseline gap-2">
             <span className="text-sm font-bold tracking-tight text-ink">Daybreak</span>
-            <span className="text-xs text-ink-3">Return-from-leave triage</span>
+            <span className="text-xs text-ink-3">Declared-intent triage</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs text-ink-2">
-              <CalendarDays size={13} /> Out since <span className="font-mono text-ink">{sinceLabel(view.awaySince)}</span>
-            </span>
+            <button type="button" onClick={() => setShowAway(true)}
+              className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs text-ink-2 transition-colors hover:border-ink-3 hover:text-ink"
+              title="Change the catch-up window">
+              <CalendarDays size={13} /> Catch up since <span className="font-mono text-ink">{sinceLabel(view.since)}</span>
+            </button>
+            {view.cleared.length > 0 && (
+              <button type="button" onClick={() => setShowCleared(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs font-medium text-ink-2 transition-colors hover:border-ink-3 hover:text-ink"
+                title="Restore cleared items">
+                <Undo2 size={13} /> Cleared <span className="font-mono tabular-nums">{view.cleared.length}</span>
+              </button>
+            )}
             <button type="button" onClick={refresh} aria-label="Refresh"
               className="flex items-center gap-1.5 rounded-lg border border-line-strong bg-panel px-2.5 py-1 text-xs font-medium text-ink-2 transition-colors hover:border-ink-3 hover:text-ink">
               <RefreshCw size={13} /> Refresh
@@ -221,38 +289,141 @@ export default function App() {
           </div>
         </header>
 
-        <div className="px-6 pb-8">
-          <SummaryHeader summary={view.summary} awaySince={view.awaySince} />
+        {page === 'settings' ? (
+          <Settings
+            laneConfig={laneConfig}
+            onSaveLaneConfig={onSaveLaneConfig}
+            jiraConfig={jiraConfig}
+            onSaveJira={onSaveJira}
+            onTestJira={onTestJira}
+            onClearJiraToken={onClearJiraToken}
+          />
+        ) : (
+          <div className={`px-6 pb-10 ${layout === 'columns' ? '' : 'mx-auto max-w-3xl'}`}>
+            <Headline summary={view.summary} since={view.since} />
 
-          {(phase === 'fetching' || phase === 'scoring' || phase === 'error') && (
-            <div className="mb-4"><IngestStatus phase={phase} message={errorMsg} onRetry={refresh} /></div>
-          )}
+            {(phase === 'fetching' || phase === 'scoring' || phase === 'error') && (
+              <div className="mb-4"><IngestStatus phase={phase} message={errorMsg} onRetry={refresh} /></div>
+            )}
 
-          <div className="grid items-start gap-4 lg:grid-cols-3">
-            {(['today', 'this_week', 'fyi'] as Lane[]).map((lane) => (
-              <LaneComponent
-                key={lane}
-                laneView={view.lanes[lane]}
-                title={LANE_TITLES[lane]}
-                onOpen={onOpen}
-                onClear={onClear}
-                onRerank={onRerank}
-              />
-            ))}
+            {/* group / filter bar */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 rounded-lg border border-line bg-panel px-2 py-1">
+                <Search size={13} className="text-ink-3" />
+                <input
+                  value={senderFilter}
+                  onChange={(e) => setSenderFilter(e.target.value)}
+                  placeholder="Filter by sender"
+                  aria-label="Filter by sender"
+                  className="w-40 bg-transparent text-[12px] text-ink placeholder:text-ink-3 focus:outline-none"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setBySender((v) => !v)}
+                aria-pressed={bySender}
+                className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[12px] font-medium transition-colors ${bySender ? 'border-accent/40 bg-accent/10 text-accent' : 'border-line text-ink-2 hover:text-ink'}`}
+              >
+                <Users size={13} /> Group by sender
+              </button>
+
+              {/* layout toggle: stacked board vs kanban columns */}
+              <div className="ml-auto flex items-center rounded-lg border border-line p-0.5">
+                <button
+                  type="button"
+                  aria-label="Board layout"
+                  aria-pressed={layout === 'stacked'}
+                  onClick={() => setLayoutPersisted('stacked')}
+                  className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium transition-colors ${layout === 'stacked' ? 'bg-accent/15 text-accent' : 'text-ink-3 hover:text-ink'}`}
+                >
+                  <Rows3 size={13} /> Board
+                </button>
+                <button
+                  type="button"
+                  aria-label="Columns layout"
+                  aria-pressed={layout === 'columns'}
+                  onClick={() => setLayoutPersisted('columns')}
+                  className={`flex items-center gap-1.5 rounded-md px-2 py-1 text-[12px] font-medium transition-colors ${layout === 'columns' ? 'bg-accent/15 text-accent' : 'text-ink-3 hover:text-ink'}`}
+                >
+                  <Columns3 size={13} /> Columns
+                </button>
+              </div>
+            </div>
+
+            <KeyboardLegend />
+
+            {configuredLanes.length === 0 ? (
+              <p className="rounded-xl border border-line bg-panel px-4 py-6 text-center text-[13px] text-ink-3">
+                All lanes are hidden. Show some in Settings -&gt; Lanes.
+              </p>
+            ) : layout === 'stacked' ? (
+              <div className="flex flex-col gap-3">
+                {configuredLanes.map((cl) => (
+                  <LaneSection
+                    key={cl.lane}
+                    lane={cl.lane}
+                    label={cl.label}
+                    items={cl.items}
+                    collapsed={collapsed[cl.lane]}
+                    onToggle={() => toggleCollapse(cl.lane)}
+                    bySender={bySender}
+                    selected={selected}
+                    focusedId={focusedId}
+                    onToggleSelect={onToggleSelect}
+                    onOpen={onOpen}
+                    onClear={onClear}
+                    onRerank={onRerank}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-start gap-3 overflow-x-auto pb-2">
+                {configuredLanes.map((cl) => (
+                  <LaneColumn
+                    key={cl.lane}
+                    lane={cl.lane}
+                    label={cl.label}
+                    items={cl.items}
+                    bySender={bySender}
+                    selected={selected}
+                    focusedId={focusedId}
+                    onToggleSelect={onToggleSelect}
+                    onOpen={onOpen}
+                    onClear={onClear}
+                    onRerank={onRerank}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-
-          <div className="mt-4">
-            <SetAsideBin view={view.setAside} onPromote={onPromote} />
-          </div>
-        </div>
+        )}
       </main>
 
-      {undo && (
+      {showAway && (
+        <AwayWindowModal onSubmit={submitAwayWindow} onCancel={() => { setShowAway(false); setAwayError(null); }} error={awayError} />
+      )}
+
+      {selected.size > 0 ? (
+        <div className="elev-pop fixed bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-3 rounded-xl px-4 py-2.5 text-[13px]" role="status" aria-live="polite">
+          <span className="font-medium text-ink">{selected.size} selected</span>
+          <button type="button" className="rounded-md bg-accent px-2.5 py-1 text-[12px] font-medium text-accent-ink transition-opacity hover:opacity-90" onClick={clearSelected}>Clear selected</button>
+          <button type="button" className="text-[12px] font-medium text-ink-2 hover:text-ink" onClick={() => setSelected(new Set())}>Cancel</button>
+        </div>
+      ) : undo ? (
         <div className="elev-pop fixed bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-3 rounded-xl px-4 py-2.5 text-[13px]"
           role="status" aria-live="polite">
-          <span className="text-ink">Cleared</span>
+          <span className="text-ink">{undo.length === 1 ? 'Cleared' : `${undo.length} cleared`}</span>
           <button type="button" className="font-medium text-accent hover:underline" onClick={onUndo}>Undo</button>
         </div>
+      ) : null}
+
+      {showCleared && (
+        <ClearedDrawer
+          items={view.cleared}
+          onRestore={onRestore}
+          onRestoreAll={() => onRestoreAll(view.cleared.map((c) => c.id))}
+          onClose={() => setShowCleared(false)}
+        />
       )}
     </div>
   );

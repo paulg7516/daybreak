@@ -1,28 +1,31 @@
 // tests/summary/summary.test.ts
 import { describe, it, expect } from 'vitest';
 import { buildSummary } from '../../src/summary/summary';
-import type { ScoredItem } from '../../src/model/item';
+import type { OverlaidItem } from '../../src/app/overlay';
+import type { Lane, Urgency } from '../../src/model/item';
 
-function scored(over: Partial<ScoredItem>): ScoredItem {
+function o(lane: Lane, urgency: Urgency): OverlaidItem {
   return {
-    item: { id: 'x', source: 'email_internal', subject: 's', from: 'a@b.com', receivedAt: '2026-05-30T10:00:00.000Z' },
-    lane: 'this_week', rank: 30, reasons: [], resolved: false, ...over,
+    triaged: { item: { id: `${lane}-${urgency}-${Math.round(0)}`, source: 'email_internal', subject: 's', from: 'a@co.com', receivedAt: '2026-06-10T10:00:00Z' }, lane, urgency, reasons: [] },
+    lane,
+    reranked: false,
   };
 }
 
 describe('buildSummary', () => {
-  it('counts items per lane, SLA risk, and resolved-while-away', () => {
-    const items: ScoredItem[] = [
-      scored({ lane: 'today' }),
-      scored({ lane: 'today', item: { id: 'j', source: 'jsm', subject: 's', from: 'jira', receivedAt: '2026-05-30T10:00:00.000Z', jsm: { slaStatus: 'at_risk' } } }),
-      scored({ lane: 'this_week' }),
-      scored({ lane: 'fyi', resolved: true }),
+  it('counts per lane, total, need-you and overdue', () => {
+    const items = [
+      o('respond', 'overdue'),
+      o('respond', 'none'),
+      o('approve', 'today'),
+      o('review', 'none'),
+      o('fyi', 'none'),
+      o('fyi', 'overdue'),
     ];
     const s = buildSummary(items);
-    expect(s.needsTodayCount).toBe(2);
-    expect(s.thisWeekCount).toBe(1);
-    expect(s.fyiCount).toBe(1);
-    expect(s.slaAtRiskCount).toBe(1);
-    expect(s.resolvedWhileAwayCount).toBe(1);
+    expect(s.total).toBe(6);
+    expect(s.byLane).toEqual({ respond: 2, approve: 1, review: 1, fyi: 2 });
+    expect(s.needYou).toBe(3); // respond(2) + approve(1)
+    expect(s.overdue).toBe(2);
   });
 });

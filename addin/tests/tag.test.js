@@ -16,20 +16,30 @@ describe('formatByDate', () => {
 });
 
 describe('buildTagValue', () => {
-  it('builds the three simple intents', () => {
-    expect(buildTagValue('blocked')).toBe('blocked');
-    expect(buildTagValue('whenever')).toBe('whenever');
+  it('builds the four bare intents (no deadline)', () => {
+    expect(buildTagValue('respond')).toBe('respond');
+    expect(buildTagValue('approve')).toBe('approve');
+    expect(buildTagValue('review')).toBe('review');
     expect(buildTagValue('fyi')).toBe('fyi');
   });
-  it('builds the action intent with a by-date', () => {
-    expect(buildTagValue('action', '2026-06-20')).toBe('action;by=2026-06-20');
+  it('appends ;by= for respond/approve/review when a date is given', () => {
+    expect(buildTagValue('respond', '2026-06-15')).toBe('respond;by=2026-06-15');
+    expect(buildTagValue('approve', '2026-06-15')).toBe('approve;by=2026-06-15');
+    expect(buildTagValue('review', '2026-06-15')).toBe('review;by=2026-06-15');
   });
-  it('throws on action without a valid date', () => {
-    expect(() => buildTagValue('action')).toThrow();
-    expect(() => buildTagValue('action', 'nope')).toThrow();
+  it('accepts a Date object as the deadline', () => {
+    expect(buildTagValue('respond', new Date(2026, 5, 15))).toBe('respond;by=2026-06-15');
+  });
+  it('never appends a deadline to fyi, even when a date is passed', () => {
+    expect(buildTagValue('fyi', '2026-06-15')).toBe('fyi');
+  });
+  it('ignores an invalid date and emits the bare intent', () => {
+    expect(buildTagValue('respond', 'nope')).toBe('respond');
+    expect(buildTagValue('approve', '')).toBe('approve');
   });
   it('throws on an unknown intent', () => {
     expect(() => buildTagValue('urgent')).toThrow();
+    expect(() => buildTagValue('action')).toThrow();
   });
 });
 

@@ -12,6 +12,8 @@ beforeEach(() => {
     unclearItem: vi.fn(),
     rerankItem: vi.fn(),
     openItem: vi.fn(),
+    getLaneConfig: vi.fn().mockResolvedValue([]),
+    setLaneConfig: vi.fn(),
     onIngest: vi.fn().mockReturnValue(() => {}),
   };
 });
@@ -23,6 +25,6 @@ describe('App', () => {
     expect(screen.getByText(/fetching your mail/i)).toBeInTheDocument();
     // Await the resolved view so the pending getView promise settles inside act()
     // (no unmounted-update warning at teardown).
-    expect(await screen.findByText(/welcome back/i)).toBeInTheDocument();
+    expect(await screen.findByText(/catch up since/i)).toBeInTheDocument();
   });
 });

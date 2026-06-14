@@ -15,7 +15,7 @@ function selectedIntent() {
 }
 function refreshControls() {
   const intent = selectedIntent();
-  el('dateRow').hidden = intent !== 'action';
+  el('dateRow').hidden = intent === null || intent === 'fyi';
   el('apply').disabled = intent === null;
 }
 

@@ -1,9 +1,10 @@
 // src/main/ipc.ts
 import { ipcMain, shell, BrowserWindow } from 'electron';
-import { getOverlay, setAwayWindow, clearItem, unclearItem, rerankItem, addRule, removeRule, setBulkExclude, promoteSetAside, getJiraConfig, setJiraConfig } from './store';
+import { getOverlay, setAwayWindow, setLastOpenedAt, clearItem, unclearItem, rerankItem, getLaneConfig, setLaneConfig, getJiraConfig, setJiraConfig } from './store';
+import type { LaneSetting } from '../app/lane-config';
 import { storeJiraToken, clearJiraToken, getStoredJiraToken } from '../ingest/jsm-auth';
 import { testJiraConnection } from './jira-test';
-import type { Rule } from '../app/rules';
+import { resolveCatchUpSince } from '../app/since';
 import { buildView, isDemoMode } from './ingest-runner';
 import { validateAwayWindow } from '../app/away-window';
 import type { ViewResult } from '../app/ipc-types';
@@ -13,9 +14,9 @@ function emit(channel: string, payload: unknown): void {
   for (const w of BrowserWindow.getAllWindows()) w.webContents.send(channel, payload);
 }
 
-// Guard the lane coming over IPC: a bogus value would persist into forcedInclude
-// and make the item vanish from every lane (lanes are keyed by the Lane union).
-const VALID_LANES = new Set<string>(['today', 'this_week', 'fyi']);
+// Guard the lane coming over IPC: a bogus value would persist into the re-rank
+// overlay and make the item vanish from every lane (lanes are keyed by the Lane union).
+const VALID_LANES = new Set<string>(['respond', 'approve', 'review', 'fyi']);
 
 // A default 14-day away window for demo mode, so launching with DAYBREAK_DEMO drops
 // straight into populated lanes without the away-window modal.
@@ -23,16 +24,28 @@ function demoSince(): string {
   return new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
 }
 
-// Resolves the current view as a value (never rejects): the renderer gets a
-// TriageView, needsAwayWindow, or a typed error. buildView can throw on a Graph
-// or auth failure, so it is caught here and surfaced as { error } rather than an
-// untyped IPC rejection.
-async function viewForCurrentWindow(): Promise<ViewResult> {
+// The "catch up since" boundary for this run. An explicit away window wins;
+// otherwise it is "since you last opened Daybreak", computed once per process so
+// refreshes within a session do not keep sliding the window forward to now.
+let sessionSince: string | null = null;
+function resolveSince(): string {
+  if (isDemoMode()) return demoSince();
   const overlay = getOverlay();
-  const since = overlay.awayWindow?.since ?? (isDemoMode() ? demoSince() : null);
-  if (!since) return { needsAwayWindow: true };
+  if (overlay.awayWindow?.since) return overlay.awayWindow.since;
+  if (sessionSince === null) {
+    const now = new Date().toISOString();
+    sessionSince = resolveCatchUpSince(overlay, now);
+    setLastOpenedAt(now); // so the next launch catches up since this moment
+  }
+  return sessionSince;
+}
+
+// Resolves the current view as a value (never rejects): the renderer gets a
+// TriageView or a typed error. buildView can throw on an ingest/auth failure, so
+// it is caught here and surfaced as { error } rather than an untyped IPC rejection.
+async function viewForCurrentWindow(): Promise<ViewResult> {
   try {
-    return await buildView(since, {
+    return await buildView(resolveSince(), {
       onPhase: (phase, message) => {
         // For Google's loopback sign-in, open the consent URL automatically so the
         // user does not have to copy a long URL. Microsoft's device-code prompt is
@@ -69,19 +82,12 @@ export function registerIpc(): void {
 
   ipcMain.handle('daybreak:clearItem', (_e, id: string) => { clearItem(id); });
   ipcMain.handle('daybreak:unclearItem', (_e, id: string) => { unclearItem(id); });
-  ipcMain.handle('daybreak:rerankItem', (_e, id: string, lane: Lane) => { rerankItem(id, lane); });
+  ipcMain.handle('daybreak:rerankItem', (_e, id: string, lane: Lane) => {
+    if (id && VALID_LANES.has(lane)) rerankItem(id, lane);
+  });
 
-  ipcMain.handle('daybreak:getRules', () => {
-    const o = getOverlay();
-    return { rules: o.rules, bulkExcludeEnabled: o.bulkExcludeEnabled };
-  });
-  ipcMain.handle('daybreak:addRule', (_e, rule: Rule) => { addRule(rule); return viewForCurrentWindow(); });
-  ipcMain.handle('daybreak:removeRule', (_e, id: string) => { removeRule(id); return viewForCurrentWindow(); });
-  ipcMain.handle('daybreak:setBulkExclude', (_e, enabled: boolean) => { setBulkExclude(enabled); return viewForCurrentWindow(); });
-  ipcMain.handle('daybreak:promoteSetAside', (_e, id: string, lane: Lane) => {
-    if (id && VALID_LANES.has(lane)) promoteSetAside(id, lane);
-    return viewForCurrentWindow();
-  });
+  ipcMain.handle('daybreak:getLaneConfig', () => getLaneConfig());
+  ipcMain.handle('daybreak:setLaneConfig', (_e, config: LaneSetting[]) => { setLaneConfig(config); });
 
   ipcMain.handle('daybreak:getJiraConfig', async () => {
     const j = getJiraConfig();

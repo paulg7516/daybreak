@@ -3,21 +3,21 @@ import { describe, it, expect } from 'vitest';
 import { run } from '../src/cli';
 
 describe('cli run over fixture', () => {
-  it('scores the sample backlog into the expected lanes', () => {
-    const { summary, scored } = run('fixtures/sample-backlog.json');
+  it('triages the sample backlog into declared lanes and drops untagged mail', () => {
+    const { summary, triaged } = run('fixtures/sample-backlog.json');
 
-    const lane = (id: string) => scored.find((s) => s.item.id === id)!.lane;
-    expect(lane('JSM-101')).toBe('today');   // P1 + SLA at risk, assigned to me
-    expect(lane('MAIL-1')).toBe('today');    // action;by=today
-    expect(lane('MAIL-2')).toBe('fyi');      // resolved while away
-    expect(lane('VEND-1')).toBe('today');    // security advisory
-    expect(lane('VEND-2')).toBe('fyi');      // marketing
+    const lane = (id: string) => triaged.find((t) => t.item.id === id)?.lane;
+    expect(lane('JSM-101')).toBe('respond'); // assigned P1, SLA breached
+    expect(lane('MAIL-1')).toBe('respond');  // respond intent
+    expect(lane('MAIL-2')).toBe('approve');  // approve intent
+    expect(lane('MAIL-3')).toBe('fyi');      // fyi intent
+    expect(lane('MAIL-UNTAGGED')).toBeUndefined(); // untagged -> not on the board
 
-    expect(summary.needsTodayCount).toBe(3);
-    expect(summary.resolvedWhileAwayCount).toBe(1);
-    expect(summary.slaAtRiskCount).toBe(1);
+    expect(summary.total).toBe(4);
+    expect(summary.needYou).toBe(3);  // respond(2) + approve(1)
+    expect(summary.overdue).toBe(1);  // JSM SLA breached
 
-    // sorted today-first
-    expect(scored[0].lane).toBe('today');
+    // sorted respond-first
+    expect(triaged[0].lane).toBe('respond');
   });
 });

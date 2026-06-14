@@ -1,9 +1,9 @@
 // tests/model/item.test.ts
 import { describe, it, expect } from 'vitest';
-import type { DaybreakItem, ScoringContext, ScoredItem } from '../../src/model/item';
+import { LANE_ORDER, type DaybreakItem, type TriageContext, type TriagedItem } from '../../src/model/item';
 
 describe('data model', () => {
-  it('constructs a minimal JSM item and a scored item', () => {
+  it('constructs a JSM item and a triaged item', () => {
     const item: DaybreakItem = {
       id: 'JSM-1',
       source: 'jsm',
@@ -12,20 +12,18 @@ describe('data model', () => {
       receivedAt: '2026-05-30T09:00:00.000Z',
       jsm: { assignee: 'me@company.com', priority: 'P1', slaStatus: 'at_risk', state: 'open' },
     };
-    const ctx: ScoringContext = {
+    const ctx: TriageContext = {
       me: 'me@company.com',
-      awaySince: '2026-05-25T00:00:00.000Z',
+      since: '2026-05-25T00:00:00.000Z',
       now: '2026-06-08T08:00:00.000Z',
     };
-    const scored: ScoredItem = {
-      item,
-      lane: 'today',
-      rank: 95,
-      reasons: ['assigned to you'],
-      resolved: false,
-    };
-    expect(scored.item.id).toBe('JSM-1');
+    const triaged: TriagedItem = { item, lane: 'respond', urgency: 'today', reasons: ['assigned ticket'] };
+    expect(triaged.item.id).toBe('JSM-1');
     expect(ctx.me).toBe('me@company.com');
-    expect(scored.lane).toBe('today');
+    expect(triaged.lane).toBe('respond');
+  });
+
+  it('lists lanes most-actionable first', () => {
+    expect(LANE_ORDER).toEqual(['respond', 'approve', 'review', 'fyi']);
   });
 });
