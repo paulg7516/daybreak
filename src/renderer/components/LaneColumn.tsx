@@ -34,7 +34,7 @@ export function LaneColumn({
     <ItemRow key={row.id} row={row} selected={selected.has(row.id)} focused={focusedId === row.id} onToggleSelect={onToggleSelect} onOpen={onOpen} onClear={onClear} onRerank={onRerank} />
   );
   return (
-    <section className="elev-panel flex w-72 shrink-0 flex-col overflow-hidden rounded-xl">
+    <section className="elev-panel flex min-w-[15rem] flex-1 flex-col overflow-hidden rounded-xl">
       <div className={`h-[3px] w-full ${meta.rail}`} aria-hidden="true" />
       <div className="flex items-center justify-between gap-2 border-b border-line px-3.5 py-2.5">
         <div className="flex items-center gap-2">
