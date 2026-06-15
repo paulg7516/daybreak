@@ -36,6 +36,9 @@ export default function App({ initialPage = 'board', initialAway = false }: { in
   const [showAway, setShowAway] = useState(initialAway);
   const [undo, setUndo] = useState<string[] | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refreshingRef = useRef(false);
+  const lastRefreshRef = useRef(0);
+  const backgroundRef = useRef(false); // suppress the ingest banner for auto-sync
   const [showCleared, setShowCleared] = useState(false);
   const [page, setPage] = useState<'board' | 'settings'>(initialPage);
   const [jiraConfig, setJiraConfig] = useState<JiraConfigView>({ baseUrl: '', email: '', hasToken: false });
@@ -69,13 +72,12 @@ export default function App({ initialPage = 'board', initialAway = false }: { in
       if (p === 'auth' && message) {
         try { setAuth(JSON.parse(message)); } catch { /* ignore malformed auth payload */ }
       } else if (p === 'fetching' || p === 'scoring') {
-        setPhase(p);
+        if (!backgroundRef.current) setPhase(p);
       } else if (p === 'done') {
         setPhase('idle');
         setAuth(null);
       } else if (p === 'error') {
-        setPhase('error');
-        setErrorMsg(message);
+        if (!backgroundRef.current) { setPhase('error'); setErrorMsg(message); }
       }
     });
     void daybreak.getView().then(setView);
@@ -119,6 +121,47 @@ export default function App({ initialPage = 'board', initialAway = false }: { in
     setPhase('idle');
     setView(result);
   }, []);
+
+  // Background refresh: update the board without the ingest banner (used by the
+  // auto-sync below). Auth prompts still surface; a transient fetch error stays
+  // quiet so the board keeps its last good view until the next try.
+  const silentRefresh = useCallback(async (minGapMs = 0) => {
+    if (refreshingRef.current) return;
+    if (minGapMs && Date.now() - lastRefreshRef.current < minGapMs) return;
+    refreshingRef.current = true;
+    backgroundRef.current = true;
+    try {
+      const result = await daybreak.refresh();
+      if (!('error' in result)) setView(result);
+      lastRefreshRef.current = Date.now();
+    } finally {
+      refreshingRef.current = false;
+      backgroundRef.current = false;
+    }
+  }, []);
+
+  // Auto-sync: refresh the moment the window regains focus (throttled), and poll
+  // every 3 minutes while the window is visible. Polling pauses when it is hidden.
+  useEffect(() => {
+    const POLL_MS = 3 * 60 * 1000;
+    const FOCUS_GAP_MS = 20 * 1000;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const startPoll = () => { if (timer === null) timer = setInterval(() => void silentRefresh(), POLL_MS); };
+    const stopPoll = () => { if (timer !== null) { clearInterval(timer); timer = null; } };
+    const onFocus = () => { void silentRefresh(FOCUS_GAP_MS); };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') { void silentRefresh(FOCUS_GAP_MS); startPoll(); }
+      else stopPoll();
+    };
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    if (document.visibilityState === 'visible') startPoll();
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+      stopPoll();
+    };
+  }, [silentRefresh]);
 
   const openSettings = useCallback(async () => {
     const [j, m] = await Promise.all([daybreak.getJiraConfig(), daybreak.getMailStatus()]);
