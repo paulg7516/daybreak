@@ -8,10 +8,12 @@ import { CalendarDays } from 'lucide-react';
 export function AwayWindowModal({
   onSubmit,
   onCancel,
+  onClear,
   error,
 }: {
   onSubmit: (sinceISO: string) => void;
   onCancel?: () => void;
+  onClear?: () => void;
   error: string | null;
 }) {
   const [date, setDate] = useState('');
@@ -22,9 +24,9 @@ export function AwayWindowModal({
           <CalendarDays size={24} strokeWidth={2.25} />
         </div>
 
-        <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-ink">Catch up since</h1>
+        <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-ink">Filter by date</h1>
         <p className="mt-1.5 text-[13px] text-ink-2">
-          Pick a date to see everything tagged for you since then. By default Daybreak picks up where you last left off.
+          Show only what was tagged on or after this date. By default Daybreak shows everything still open.
         </p>
 
         <label className="mt-5 block text-[13px] font-medium text-ink" htmlFor="since">Since</label>
@@ -38,6 +40,12 @@ export function AwayWindowModal({
 
         {error && <p className="mt-2.5 text-[13px] text-today">{error}</p>}
 
+        {onClear && (
+          <button type="button" onClick={onClear} className="mt-3 text-[13px] font-medium text-ink-2 transition-colors hover:text-ink">
+            Show everything instead
+          </button>
+        )}
+
         <div className="mt-5 flex items-center gap-2">
           <button
             type="button"
@@ -45,7 +53,7 @@ export function AwayWindowModal({
             onClick={() => onSubmit(new Date(`${date}T00:00:00`).toISOString())}
             className="flex-1 rounded-lg bg-accent px-4 py-2.5 text-[13px] font-medium text-accent-ink transition-opacity hover:opacity-90 disabled:opacity-40"
           >
-            Apply window
+            Apply filter
           </button>
           {onCancel && (
             <button type="button" onClick={onCancel} className="rounded-lg border border-line px-4 py-2.5 text-[13px] font-medium text-ink-2 transition-colors hover:text-ink">

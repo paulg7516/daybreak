@@ -23,7 +23,7 @@ export function isDemoMode(): boolean {
 // tickets, so only deliberately-routed items reach the lanes. The overlay (cleared
 // / re-rank) is read fresh so corrections survive re-ingest. In demo mode the fetch
 // and auth are skipped and sample items are triaged instead.
-export async function buildView(sinceISO: string, events: IngestEvents): Promise<TriageView> {
+export async function buildView(sinceISO: string, events: IngestEvents, filterSince: string | null = null): Promise<TriageView> {
   try {
     events.onPhase('fetching');
     const now = new Date().toISOString();
@@ -59,7 +59,7 @@ export async function buildView(sinceISO: string, events: IngestEvents): Promise
       .map((t) => ({ id: t.item.id, subject: t.item.subject, from: t.item.from, receivedAt: t.item.receivedAt }));
 
     events.onPhase('done');
-    return buildTriageView(overlaid, summary, { me, since: sinceISO }, cleared);
+    return buildTriageView(overlaid, summary, { me, since: sinceISO, filterSince }, cleared);
   } catch (err) {
     events.onPhase('error', err instanceof Error ? err.message : String(err));
     throw err;

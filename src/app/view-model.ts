@@ -40,6 +40,7 @@ export interface ClearedRow {
 export interface TriageView {
   me: string;
   since: string;
+  filterSince: string | null; // active date filter, or null when showing all open
   summary: Summary;
   lanes: LaneView[]; // ordered by LANE_ORDER
   cleared: ClearedRow[];
@@ -48,6 +49,7 @@ export interface TriageView {
 export interface ViewMeta {
   me: string;
   since: string;
+  filterSince?: string | null;
 }
 
 const URGENCY_RANK: Record<Urgency, number> = { overdue: 3, today: 2, this_week: 1, none: 0 };
@@ -91,6 +93,7 @@ export function buildTriageView(
   return {
     me: meta.me,
     since: meta.since,
+    filterSince: meta.filterSince ?? null,
     summary,
     lanes: LANE_ORDER.map((lane) => buildLane(lane, items)),
     cleared,

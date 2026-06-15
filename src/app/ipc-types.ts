@@ -9,11 +9,9 @@ import type { LaneSetting } from './lane-config';
 // The result of asking main for the current view. A discriminated union so the
 // renderer can pattern-match instead of try/catch around the IPC call:
 // - a TriageView to render,
-// - needsAwayWindow when the user has not set a catch-up window yet,
 // - error with a user-facing message when ingest/validation failed.
 export type ViewResult =
   | TriageView
-  | { needsAwayWindow: true }
   | { error: string };
 
 // A progress/auth event pushed on the daybreak:ingest channel during a refresh.
@@ -34,6 +32,7 @@ export interface MailStatus {
 export interface DaybreakBridge {
   getView(): Promise<ViewResult>;
   setAwayWindow(sinceISO: string): Promise<ViewResult>;
+  clearAwayWindow(): Promise<ViewResult>;
   refresh(): Promise<ViewResult>;
   clearItem(id: string): Promise<void>;
   unclearItem(id: string): Promise<void>;

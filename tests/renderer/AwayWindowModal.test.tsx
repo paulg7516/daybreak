@@ -9,7 +9,7 @@ describe('AwayWindowModal', () => {
     const onSubmit = vi.fn();
     render(<AwayWindowModal onSubmit={onSubmit} error={null} />);
     await userEvent.type(screen.getByLabelText(/^since$/i), '2026-05-25');
-    await userEvent.click(screen.getByRole('button', { name: /apply window/i }));
+    await userEvent.click(screen.getByRole('button', { name: /apply filter/i }));
     expect(onSubmit).toHaveBeenCalledTimes(1);
     // Local midnight of the chosen date, expressed in UTC. Recomputed the same way
     // so the assertion holds in any timezone (not hardcoded to a UTC date prefix).

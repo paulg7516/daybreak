@@ -5,8 +5,21 @@ import App from '../../src/renderer/App';
 
 beforeEach(() => {
   (window as unknown as { daybreak: unknown }).daybreak = {
-    getView: vi.fn().mockResolvedValue({ needsAwayWindow: true }),
+    getView: vi.fn().mockResolvedValue({
+      me: 'you@co.com',
+      since: '2026-06-04T00:00:00.000Z',
+      filterSince: null,
+      summary: { total: 0, needYou: 0, overdue: 0, byLane: { respond: 0, approve: 0, review: 0, fyi: 0 } },
+      lanes: [
+        { lane: 'respond', total: 0, items: [] },
+        { lane: 'approve', total: 0, items: [] },
+        { lane: 'review', total: 0, items: [] },
+        { lane: 'fyi', total: 0, items: [] },
+      ],
+      cleared: [],
+    }),
     setAwayWindow: vi.fn(),
+    clearAwayWindow: vi.fn(),
     refresh: vi.fn(),
     clearItem: vi.fn(),
     unclearItem: vi.fn(),
@@ -19,8 +32,8 @@ beforeEach(() => {
 });
 
 describe('App', () => {
-  it('shows the catch-up-window modal for the needsAwayWindow result', async () => {
+  it('renders the board with an off-by-default date filter', async () => {
     render(<App />);
-    expect(await screen.findByText(/catch up since/i)).toBeInTheDocument();
+    expect(await screen.findByText(/filter by date/i)).toBeInTheDocument();
   });
 });

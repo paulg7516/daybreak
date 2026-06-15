@@ -8,6 +8,7 @@ import type { TriageView } from '../../src/app/view-model';
 const view: TriageView = {
   me: 'you@co.com',
   since: '2026-06-04T00:00:00.000Z',
+  filterSince: null,
   summary: { total: 1, needYou: 1, overdue: 0, byLane: { respond: 1, approve: 0, review: 0, fyi: 0 } },
   lanes: [
     { lane: 'respond', total: 1, items: [{ id: 'r1', subject: 'Answer me', from: 'a@co.com', receivedAt: '2026-06-10T09:00:00Z', lane: 'respond', urgency: 'none', reasons: [], source: 'email_internal', reranked: false }] },

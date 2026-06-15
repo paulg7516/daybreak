@@ -34,6 +34,10 @@ export function setLastOpenedAt(o: Overlay, nowISO: string): Overlay {
   return { ...o, lastOpenedAt: nowISO };
 }
 
+export function clearAwayWindow(o: Overlay): Overlay {
+  return { ...o, awayWindow: null };
+}
+
 export function clearItem(o: Overlay, id: string): Overlay {
   return { ...o, cleared: { ...o.cleared, [id]: true } };
 }

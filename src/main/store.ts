@@ -3,6 +3,7 @@ import ElectronStore from 'electron-store';
 import {
   emptyOverlay,
   setAwayWindow as setAwayWindowR,
+  clearAwayWindow as clearAwayWindowR,
   setLastOpenedAt as setLastOpenedAtR,
   clearItem as clearItemR,
   unclearItem as unclearItemR,
@@ -45,6 +46,10 @@ function update(next: Overlay): Overlay {
 
 export function setAwayWindow(sinceISO: string, nowISO: string): Overlay {
   return update(setAwayWindowR(getOverlay(), sinceISO, nowISO));
+}
+
+export function clearAwayWindow(): Overlay {
+  return update(clearAwayWindowR(getOverlay()));
 }
 
 export function setLastOpenedAt(nowISO: string): Overlay {

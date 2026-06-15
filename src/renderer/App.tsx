@@ -1,6 +1,6 @@
 // src/renderer/App.tsx
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays, Users, Search, Rows3, Columns3, Undo2 } from 'lucide-react';
+import { LayoutList, Settings as SettingsIcon, RefreshCw, CalendarDays, Users, Search, Rows3, Columns3, Undo2, X } from 'lucide-react';
 import { daybreak } from './bridge';
 import type { ViewResult, MailStatus } from '../app/ipc-types';
 import type { Lane } from '../model/item';
@@ -106,6 +106,13 @@ export default function App({ initialPage = 'board', initialAway = false }: { in
     else { setView(result); setShowAway(false); }
   }, []);
 
+  const onClearFilter = useCallback(async () => {
+    setPhase('fetching');
+    const result = await daybreak.clearAwayWindow();
+    setPhase('idle');
+    setView(result);
+  }, []);
+
   const refresh = useCallback(async () => {
     setPhase('fetching');
     const result = await daybreak.refresh();
@@ -178,7 +185,7 @@ export default function App({ initialPage = 'board', initialAway = false }: { in
     setView(await daybreak.refresh());
   }, []);
 
-  const board = view && !('needsAwayWindow' in view) && !('error' in view) ? view : null;
+  const board = view && !('error' in view) ? view : null;
 
   // Apply the sender filter to each lane's rows.
   const filteredLanes = useMemo(() => {
@@ -242,9 +249,6 @@ export default function App({ initialPage = 'board', initialAway = false }: { in
       </div>
     );
   }
-  if ('needsAwayWindow' in view) {
-    return <AwayWindowModal onSubmit={submitAwayWindow} error={awayError} />;
-  }
   if ('error' in view) {
     return (
       <div className="min-h-dvh grid place-items-center bg-bg px-6">
@@ -288,11 +292,23 @@ export default function App({ initialPage = 'board', initialAway = false }: { in
             <span className="text-[15px] font-bold tracking-tight text-ink">Daybreak</span>
           </div>
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setShowAway(true)}
-              className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs text-ink-2 transition-colors hover:border-ink-3 hover:text-ink"
-              title="Change the catch-up window">
-              <CalendarDays size={13} /> Catch up since <span className="font-mono text-ink">{sinceLabel(view.since)}</span>
-            </button>
+            {view.filterSince ? (
+              <div className="flex items-center gap-0.5 rounded-lg border border-accent/40 bg-accent/10 pl-1 text-xs text-accent">
+                <button type="button" onClick={() => setShowAway(true)} title="Change the date filter"
+                  className="flex items-center gap-1.5 px-1.5 py-1 font-medium">
+                  <CalendarDays size={13} /> Since <span className="font-mono">{sinceLabel(view.filterSince)}</span>
+                </button>
+                <button type="button" onClick={onClearFilter} aria-label="Show everything (clear date filter)" title="Show everything"
+                  className="mr-0.5 grid h-6 w-6 place-items-center rounded transition-colors hover:bg-accent/20">
+                  <X size={13} />
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setShowAway(true)} title="Filter by date"
+                className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs text-ink-2 transition-colors hover:border-ink-3 hover:text-ink">
+                <CalendarDays size={13} /> Filter by date
+              </button>
+            )}
             {view.cleared.length > 0 && (
               <button type="button" onClick={() => setShowCleared(true)}
                 className="flex items-center gap-1.5 rounded-lg border border-line px-2.5 py-1 text-xs font-medium text-ink-2 transition-colors hover:border-ink-3 hover:text-ink"
@@ -322,7 +338,7 @@ export default function App({ initialPage = 'board', initialAway = false }: { in
           />
         ) : (
           <div className={`px-6 pb-10 ${layout === 'columns' ? '' : 'mx-auto max-w-3xl'}`}>
-            <Headline summary={view.summary} since={view.since} />
+            <Headline summary={view.summary} />
 
             {(phase === 'fetching' || phase === 'scoring' || phase === 'error') && (
               <div className="mb-4"><IngestStatus phase={phase} message={errorMsg} onRetry={refresh} /></div>
@@ -422,7 +438,12 @@ export default function App({ initialPage = 'board', initialAway = false }: { in
       </main>
 
       {showAway && (
-        <AwayWindowModal onSubmit={submitAwayWindow} onCancel={() => { setShowAway(false); setAwayError(null); }} error={awayError} />
+        <AwayWindowModal
+          onSubmit={submitAwayWindow}
+          onCancel={() => { setShowAway(false); setAwayError(null); }}
+          onClear={view.filterSince ? () => { setShowAway(false); void onClearFilter(); } : undefined}
+          error={awayError}
+        />
       )}
 
       {selected.size > 0 ? (

@@ -7,6 +7,7 @@ import type { DaybreakBridge } from '../app/ipc-types';
 const api: DaybreakBridge = {
   getView: () => ipcRenderer.invoke('daybreak:getView'),
   setAwayWindow: (s) => ipcRenderer.invoke('daybreak:setAwayWindow', s),
+  clearAwayWindow: () => ipcRenderer.invoke('daybreak:clearAwayWindow'),
   refresh: () => ipcRenderer.invoke('daybreak:refresh'),
   clearItem: (id) => ipcRenderer.invoke('daybreak:clearItem', id),
   unclearItem: (id) => ipcRenderer.invoke('daybreak:unclearItem', id),

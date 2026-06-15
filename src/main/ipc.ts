@@ -1,6 +1,6 @@
 // src/main/ipc.ts
 import { ipcMain, shell, BrowserWindow } from 'electron';
-import { getOverlay, setAwayWindow, setLastOpenedAt, clearItem, unclearItem, rerankItem, getLaneConfig, setLaneConfig, getJiraConfig, setJiraConfig, getMailAccount, setMailAccount, clearMailAccount } from './store';
+import { getOverlay, setAwayWindow, clearAwayWindow, clearItem, unclearItem, rerankItem, getLaneConfig, setLaneConfig, getJiraConfig, setJiraConfig, getMailAccount, setMailAccount, clearMailAccount } from './store';
 import { getMailStatus, connectMail, disconnectMail } from '../ingest/mail-account';
 import type { LaneSetting } from '../app/lane-config';
 import { storeJiraToken, clearJiraToken, getStoredJiraToken } from '../ingest/jsm-auth';
@@ -25,20 +25,16 @@ function demoSince(): string {
   return new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
 }
 
-// The "catch up since" boundary for this run. An explicit away window wins;
-// otherwise it is "since you last opened Daybreak", computed once per process so
-// refreshes within a session do not keep sliding the window forward to now.
-let sessionSince: string | null = null;
+// The board shows everything still open by default, so this is just the *fetch*
+// boundary: a one-year window unless the user set an explicit date filter.
 function resolveSince(): string {
   if (isDemoMode()) return demoSince();
-  const overlay = getOverlay();
-  if (overlay.awayWindow?.since) return overlay.awayWindow.since;
-  if (sessionSince === null) {
-    const now = new Date().toISOString();
-    sessionSince = resolveCatchUpSince(overlay, now);
-    setLastOpenedAt(now); // so the next launch catches up since this moment
-  }
-  return sessionSince;
+  return resolveCatchUpSince(getOverlay(), new Date().toISOString());
+}
+// The active date filter (null = showing everything open), surfaced to the renderer.
+function activeFilter(): string | null {
+  if (isDemoMode()) return null;
+  return getOverlay().awayWindow?.since ?? null;
 }
 
 // Resolves the current view as a value (never rejects): the renderer gets a
@@ -61,7 +57,7 @@ async function viewForCurrentWindow(): Promise<ViewResult> {
         }
         emit('daybreak:ingest', { phase, message });
       },
-    });
+    }, activeFilter());
   } catch (err) {
     return { error: err instanceof Error ? err.message : String(err) };
   }
@@ -76,6 +72,11 @@ export function registerIpc(): void {
     const check = validateAwayWindow(sinceISO, new Date().toISOString());
     if (!check.ok) return { error: check.reason };
     setAwayWindow(sinceISO, new Date().toISOString());
+    return viewForCurrentWindow();
+  });
+
+  ipcMain.handle('daybreak:clearAwayWindow', (): Promise<ViewResult> | ViewResult => {
+    clearAwayWindow();
     return viewForCurrentWindow();
   });
 

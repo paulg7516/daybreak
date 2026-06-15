@@ -49,6 +49,7 @@ const lanes: LaneView[] = [
 const view: TriageView = {
   me: 'you@company.com',
   since: '2026-06-04T00:00:00.000Z',
+  filterSince: null,
   summary: { total: 7, needYou: 4, overdue: 2, byLane: { respond: 2, approve: 2, review: 1, fyi: 2 } },
   lanes,
   cleared: [],
@@ -57,6 +58,7 @@ const view: TriageView = {
 (window as unknown as { daybreak: unknown }).daybreak = {
   getView: async () => view,
   setAwayWindow: async () => view,
+  clearAwayWindow: async () => view,
   refresh: async () => view,
   clearItem: async () => {},
   unclearItem: async () => {},
@@ -77,6 +79,7 @@ const view: TriageView = {
 const _q = new URLSearchParams(location.search);
 try { if (_q.get('layout') === 'columns') localStorage.setItem('daybreak.layout', 'columns'); else localStorage.setItem('daybreak.layout', 'stacked'); } catch { /* ignore */ }
 try { if (_q.get('theme')) localStorage.setItem('daybreak-theme', _q.get('theme')!); } catch { /* ignore */ }
+if (_q.get('filter')) view.filterSince = '2026-06-03T00:00:00.000Z';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
