@@ -27,17 +27,17 @@ function sinceLabel(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-export default function App() {
+export default function App({ initialPage = 'board', initialAway = false }: { initialPage?: 'board' | 'settings'; initialAway?: boolean } = {}) {
   const [view, setView] = useState<ViewResult | null>(null);
   const [phase, setPhase] = useState<'idle' | 'fetching' | 'scoring' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState<string | undefined>();
   const [auth, setAuth] = useState<AuthPrompt | null>(null);
   const [awayError, setAwayError] = useState<string | null>(null);
-  const [showAway, setShowAway] = useState(false);
+  const [showAway, setShowAway] = useState(initialAway);
   const [undo, setUndo] = useState<string[] | null>(null);
   const undoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [showCleared, setShowCleared] = useState(false);
-  const [page, setPage] = useState<'board' | 'settings'>('board');
+  const [page, setPage] = useState<'board' | 'settings'>(initialPage);
   const [jiraConfig, setJiraConfig] = useState<JiraConfigView>({ baseUrl: '', email: '', hasToken: false });
   const [mailStatus, setMailStatus] = useState<MailStatus | null>(null);
   const [mailBusy, setMailBusy] = useState(false);
@@ -262,11 +262,11 @@ export default function App() {
     <div className="flex min-h-dvh bg-bg text-ink">
       {/* persistent left nav rail - stays visible in Settings too */}
       <nav className="sticky top-0 flex h-dvh w-16 shrink-0 flex-col items-center gap-1.5 border-r border-line bg-panel py-4">
-        <div className="mb-2 h-9 w-9 overflow-hidden rounded-xl shadow-lg shadow-orange-500/40" title="Daybreak">
+        <div className="mb-2 h-9 w-9 overflow-hidden rounded-xl" title="Daybreak">
           <svg viewBox="0 0 120 120" className="h-full w-full" aria-hidden="true">
             <rect width="120" height="120" fill="#ff6a3d" />
-            <path d="M34.1 60 A24.7 24.7 0 0 1 83.5 60 Z" fill="#fff" />
-            <path d="M41.2 67.1 A24.7 24.7 0 0 0 90.6 67.1 Z" fill="#fff" opacity="0.7" />
+            <path d="M38 60 A21 21 0 0 1 80 60 Z" fill="#fff" />
+            <path d="M44 66 A21 21 0 0 0 86 66 Z" fill="#fff" opacity="0.7" />
           </svg>
         </div>
         <button type="button" aria-label="Board" aria-current={page === 'board' ? 'page' : undefined}
@@ -286,7 +286,6 @@ export default function App() {
         <header className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-bg/85 px-7 py-4 backdrop-blur">
           <div className="flex items-baseline gap-2">
             <span className="text-[15px] font-bold tracking-tight text-ink">Daybreak</span>
-            <span className="text-xs text-ink-3">Declared-intent triage</span>
           </div>
           <div className="flex items-center gap-2">
             <button type="button" onClick={() => setShowAway(true)}

@@ -11,6 +11,7 @@ export interface TriageRow {
   id: string;
   subject: string;
   from: string;
+  fromName?: string;
   receivedAt: string;
   lane: Lane;
   urgency: Urgency;
@@ -57,6 +58,7 @@ function toRow(o: OverlaidItem): TriageRow {
     id: t.item.id,
     subject: t.item.subject,
     from: t.item.from,
+    fromName: t.item.fromName,
     receivedAt: t.item.receivedAt,
     lane: o.lane,
     urgency: t.urgency,

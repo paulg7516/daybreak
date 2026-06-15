@@ -40,6 +40,7 @@ export interface DaybreakItem {
   source: Source;
   subject: string;
   from: string;
+  fromName?: string; // sender display name, when the source provides one
   receivedAt: string; // ISO timestamp
   // email fields
   toRecipients?: string[];

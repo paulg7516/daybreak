@@ -21,6 +21,7 @@ export function graphMessageToItem(msg: GraphMessage, internalDomains: string[])
     source: classifySource(from, internalDomains),
     subject: msg.subject ?? '',
     from,
+    fromName: msg.from?.emailAddress.name,
     receivedAt: msg.receivedDateTime,
     toRecipients: (msg.toRecipients ?? []).map((r) => r.emailAddress.address),
     ccRecipients: (msg.ccRecipients ?? []).map((r) => r.emailAddress.address),

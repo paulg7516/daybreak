@@ -6,6 +6,13 @@ import type { GmailHeader, GmailMessage } from './gmail-types';
 // Extract the bare address from an RFC 5322 field value, e.g.
 // "The Boss <boss@company.com>" -> "boss@company.com". Gmail returns the full
 // formatted header, unlike Graph which gives a clean address object.
+// "Dana Whitfield <dana@co.com>" -> "Dana Whitfield"; bare address -> undefined.
+export function parseDisplayName(value: string): string | undefined {
+  const m = value.match(/^\s*"?([^"<]+?)"?\s*</);
+  const name = m ? m[1].trim() : '';
+  return name || undefined;
+}
+
 export function parseAddress(value: string): string {
   const angled = value.match(/<([^>]+)>/);
   return (angled ? angled[1] : value).trim();
@@ -50,6 +57,7 @@ export function gmailMessageToItem(msg: GmailMessage, internalDomains: string[])
     source: classifySource(from, internalDomains),
     subject: get(headers, 'Subject') ?? '',
     from,
+    fromName: parseDisplayName(get(headers, 'From') ?? ''),
     receivedAt,
     toRecipients: parseAddressList(get(headers, 'To')),
     ccRecipients: parseAddressList(get(headers, 'Cc')),

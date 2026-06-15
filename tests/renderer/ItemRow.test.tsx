@@ -9,6 +9,7 @@ const row: TriageRow = {
   id: 'm1',
   subject: 'Budget sign-off',
   from: 'boss@co.com',
+  fromName: 'Dana Boss',
   receivedAt: '2026-05-30T09:00:00.000Z',
   lane: 'approve',
   urgency: 'today',
@@ -23,8 +24,9 @@ describe('ItemRow', () => {
   it('renders subject, sender, and the urgency badge', () => {
     render(<ItemRow row={row} onOpen={() => {}} onClear={() => {}} onRerank={() => {}} />);
     expect(screen.getByText('Budget sign-off')).toBeInTheDocument();
-    expect(screen.getByText('boss@co.com')).toBeInTheDocument();
+    expect(screen.getByText('Dana Boss')).toBeInTheDocument();
     expect(screen.getByText('Today')).toBeInTheDocument(); // urgency badge
+    expect(screen.getByText('due 2026-05-30')).toBeInTheDocument(); // reason, sans the internal "sender:" tag
   });
 
   it('renders no urgency badge when urgency is none', () => {
@@ -32,17 +34,17 @@ describe('ItemRow', () => {
     expect(screen.queryByText('Today')).not.toBeInTheDocument();
   });
 
-  it('invokes onOpen with the webLink when Open is clicked', async () => {
+  it('opens the item when the row is clicked', async () => {
     const onOpen = vi.fn();
-    render(<ItemRow row={row} onOpen={onOpen} onClear={() => {}} onRerank={() => {}} />);
-    await userEvent.click(screen.getByRole('button', { name: /open/i }));
+    const { container } = render(<ItemRow row={row} onOpen={onOpen} onClear={() => {}} onRerank={() => {}} />);
+    await userEvent.click(container.querySelector('[data-row-id="m1"]')!);
     expect(onOpen).toHaveBeenCalledWith('https://outlook.example/m1');
   });
 
-  it('invokes onClear with the id when Clear is clicked', async () => {
+  it('invokes onClear with the id when Done is clicked', async () => {
     const onClear = vi.fn();
     render(<ItemRow row={row} onOpen={() => {}} onClear={onClear} onRerank={() => {}} />);
-    await userEvent.click(screen.getByRole('button', { name: /clear/i }));
+    await userEvent.click(screen.getByRole('button', { name: /done/i }));
     expect(onClear).toHaveBeenCalledWith('m1');
   });
 

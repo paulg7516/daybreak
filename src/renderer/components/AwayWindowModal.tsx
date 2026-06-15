@@ -18,7 +18,7 @@ export function AwayWindowModal({
   return (
     <div className="fixed inset-0 z-30 grid place-items-center bg-black/50 px-6" onClick={onCancel}>
       <div className="elev-pop w-full max-w-md rounded-2xl p-7" onClick={(e) => e.stopPropagation()}>
-        <div className="mb-5 grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-amber-400 via-rose-500 to-violet-600 text-white shadow-lg shadow-rose-500/40">
+        <div className="mb-5 grid h-12 w-12 place-items-center rounded-xl bg-accent text-accent-ink">
           <CalendarDays size={24} strokeWidth={2.25} />
         </div>
 

@@ -56,10 +56,13 @@ export function LaneSection({
         aria-expanded={!collapsed}
         className="flex w-full items-center justify-between gap-2 px-3.5 py-2.5 text-left transition-colors hover:bg-panel-2"
       >
-        <div className="flex items-center gap-2">
-          {collapsed ? <ChevronRight size={14} className="text-ink-3" /> : <ChevronDown size={14} className="text-ink-3" />}
-          {meta.icon}
-          <h2 className="text-[13px] font-semibold tracking-[-0.01em] text-ink">{label ?? meta.title}</h2>
+        <div className="flex min-w-0 items-start gap-2">
+          <span className="mt-0.5 shrink-0">{collapsed ? <ChevronRight size={14} className="text-ink-3" /> : <ChevronDown size={14} className="text-ink-3" />}</span>
+          <span className="mt-0.5 shrink-0">{meta.icon}</span>
+          <div className="min-w-0">
+            <h2 className="truncate text-[13px] font-semibold tracking-[-0.01em] text-ink">{label ?? meta.title}</h2>
+            <p className="mt-0.5 truncate text-[11px] leading-tight text-ink-3">{meta.desc}</p>
+          </div>
         </div>
         <span className="rounded-full border border-line bg-panel-2 px-2 py-px font-mono text-[12px] font-semibold tabular-nums text-ink-2">{items.length}</span>
       </button>

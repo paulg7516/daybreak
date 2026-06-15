@@ -39,6 +39,7 @@ export function jsmIssueToItem(issue: JiraIssue, me: string, baseUrl: string): D
     source: 'jsm',
     subject: f.summary ?? '',
     from: f.reporter?.displayName ?? 'JSM',
+    fromName: f.reporter?.displayName,
     receivedAt: f.updated ?? f.created ?? '',
     webLink: `${baseUrl}/browse/${issue.key}`,
     jsm: {

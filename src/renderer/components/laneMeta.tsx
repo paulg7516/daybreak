@@ -14,11 +14,36 @@ export function groupRowsBySender(items: TriageRow[]): { sender: string; rows: T
   return [...map.entries()].map(([sender, rows]) => ({ sender, rows }));
 }
 
-// Shared per-lane styling (title, rail colour, icon) so the stacked and column
-// layouts render lanes identically.
-export const LANE_META: Record<Lane, { title: string; rail: string; icon: React.ReactNode }> = {
-  respond: { title: 'Respond', rail: 'bg-today', icon: <Reply size={14} strokeWidth={2} className="text-today" /> },
-  approve: { title: 'Approve / Decide', rail: 'bg-week', icon: <Stamp size={14} strokeWidth={2} className="text-week" /> },
-  review: { title: 'Review', rail: 'bg-accent', icon: <Eye size={14} strokeWidth={2} className="text-accent" /> },
-  fyi: { title: 'FYI', rail: 'bg-fyi', icon: <Inbox size={14} strokeWidth={2} className="text-fyi" /> },
+// Shared per-lane styling so the stacked + column layouts render identically:
+// title, one-line descriptor, rail colour, icon. Actions (open / done) are uniform
+// across lanes - the lane is the category, not a different verb - so they live on the
+// row, not here.
+export const LANE_META: Record<
+  Lane,
+  { title: string; desc: string; rail: string; icon: React.ReactNode }
+> = {
+  respond: {
+    title: 'Needs your reply',
+    desc: 'People waiting on your answer',
+    rail: 'bg-today',
+    icon: <Reply size={14} strokeWidth={2} className="text-today" />,
+  },
+  approve: {
+    title: 'Needs your decision',
+    desc: 'Sign-offs and decisions for you',
+    rail: 'bg-week',
+    icon: <Stamp size={14} strokeWidth={2} className="text-week" />,
+  },
+  review: {
+    title: 'Needs your review',
+    desc: 'Worth a look when you can',
+    rail: 'bg-accent',
+    icon: <Eye size={14} strokeWidth={2} className="text-accent" />,
+  },
+  fyi: {
+    title: 'FYI',
+    desc: 'No action needed, just so you know',
+    rail: 'bg-fyi',
+    icon: <Inbox size={14} strokeWidth={2} className="text-fyi" />,
+  },
 };

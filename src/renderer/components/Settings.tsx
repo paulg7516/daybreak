@@ -1,16 +1,13 @@
 // src/renderer/components/Settings.tsx
-import { useState } from 'react';
-import { Settings as SettingsIcon, Database, Rows3 } from 'lucide-react';
 import type { LaneSetting } from '../../app/lane-config';
 import type { MailStatus } from '../../app/ipc-types';
 import { LanesSettings } from './LanesSettings';
 import { DataSources } from './DataSources';
 import type { JiraConfigView, JiraTestResult } from './JiraSettings';
 
-type Section = 'sources' | 'lanes';
-
-// Settings renders inside the app shell (the left nav rail stays visible). A small
-// SaaS-style sidebar splits Data sources (integration cards) from Lanes.
+// Settings renders inside the app shell (the left nav rail stays visible). With only
+// two short sections, a sidebar is more chrome than content - so both live on one
+// scrolling page: Data sources, then Lanes.
 export function Settings({
   laneConfig,
   onSaveLaneConfig,
@@ -34,51 +31,30 @@ export function Settings({
   onConnectMail: () => void;
   onDisconnectMail: () => void;
 }) {
-  const [section, setSection] = useState<Section>('sources');
-
-  const navItem = (s: Section, label: string, Icon: typeof Database) => (
-    <button
-      type="button"
-      onClick={() => setSection(s)}
-      aria-current={section === s ? 'page' : undefined}
-      className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors ${
-        section === s ? 'bg-accent/15 text-accent' : 'text-ink-2 hover:bg-panel-2 hover:text-ink'
-      }`}
-    >
-      <Icon size={15} strokeWidth={2} />
-      {label}
-    </button>
-  );
-
   return (
-    <div className="mx-auto flex max-w-3xl gap-7 px-6 py-7">
-      <nav className="w-44 shrink-0" aria-label="Settings sections">
-        <div className="mb-4 flex items-center gap-2 px-1">
-          <SettingsIcon size={15} strokeWidth={2} className="text-ink-3" />
-          <h1 className="text-[15px] font-semibold tracking-[-0.01em]">Settings</h1>
-        </div>
-        <div className="space-y-0.5">
-          {navItem('sources', 'Data sources', Database)}
-          {navItem('lanes', 'Lanes', Rows3)}
-        </div>
-      </nav>
+    <div className="mx-auto max-w-2xl px-6 py-8">
+      <h1 className="text-[20px] font-semibold tracking-[-0.02em] text-ink">Settings</h1>
 
-      <div className="min-w-0 flex-1">
-        {section === 'sources' ? (
-          <DataSources
-            mail={mailStatus}
-            busy={mailBusy}
-            onConnectMail={onConnectMail}
-            onDisconnectMail={onDisconnectMail}
-            jiraConfig={jiraConfig}
-            onSaveJira={onSaveJira}
-            onTestJira={onTestJira}
-            onClearJiraToken={onClearJiraToken}
-          />
-        ) : (
-          <LanesSettings config={laneConfig} onChange={onSaveLaneConfig} />
-        )}
-      </div>
+      <section className="mt-7">
+        <DataSources
+          mail={mailStatus}
+          busy={mailBusy}
+          onConnectMail={onConnectMail}
+          onDisconnectMail={onDisconnectMail}
+          jiraConfig={jiraConfig}
+          onSaveJira={onSaveJira}
+          onTestJira={onTestJira}
+          onClearJiraToken={onClearJiraToken}
+        />
+      </section>
+
+      <section className="mt-10 border-t border-line pt-8">
+        <h2 className="text-[16px] font-semibold tracking-[-0.01em] text-ink">Lanes</h2>
+        <p className="mb-4 mt-1.5 text-[13px] leading-relaxed text-ink-2">
+          Rename, hide, or reorder the lanes on your board. Hidden lanes still receive their items, they just are not shown.
+        </p>
+        <LanesSettings config={laneConfig} onChange={onSaveLaneConfig} />
+      </section>
     </div>
   );
 }

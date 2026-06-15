@@ -4,9 +4,12 @@ productName: Daybreak
 directories:
   output: release
 files:
-  - dist/**/*
+  # ship only the app - not the dev preview builds (dist/preview, dist/spreview)
+  - dist/main/**/*
+  - dist/renderer/**/*
   - package.json
 mac:
+  icon: build/icon.icns
   category: public.app-category.productivity
   target:
     - target: dmg

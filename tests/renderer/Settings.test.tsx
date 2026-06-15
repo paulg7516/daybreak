@@ -25,18 +25,15 @@ function renderSettings(onSaveLaneConfig = vi.fn()) {
 }
 
 describe('Settings', () => {
-  it('shows Data sources by default and switches to Lanes', async () => {
+  it('shows Data sources and Lanes together on one page', async () => {
     renderSettings();
-    // Data sources is the default section; the Microsoft 365 card is visible.
     expect(screen.getByText('Microsoft 365')).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /lanes/i }));
     expect(screen.getByLabelText(/label for respond/i)).toBeInTheDocument();
   });
 
   it('renames a lane through the config callback', async () => {
     const onSave = vi.fn();
     renderSettings(onSave);
-    await userEvent.click(screen.getByRole('button', { name: /lanes/i }));
     const input = screen.getByLabelText(/label for respond/i);
     await userEvent.type(input, '!');
     expect(onSave).toHaveBeenCalled();
