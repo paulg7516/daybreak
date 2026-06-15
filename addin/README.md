@@ -39,7 +39,7 @@ the production URLs (rewritten by the Action).
 ## Verify (manual)
 
 - Compose a new message TO yourself. Open the Daybreak button in the compose ribbon.
-- Pick "Action needed", choose a date, leave bcc empty, click Apply -> status shows "Tagged. Send when ready."
+- Pick "Needs your decision", choose a date, leave bcc empty, click Apply -> the form is replaced by a green "Tagged for their queue" card summarizing the tag.
 - Send it. In the received copy, view the message source/headers and confirm `X-PTO-Triage: action;by=YYYY-MM-DD` is present.
 - Run the recipient side: `npm run ingest -- --since <a date before the send>` (or the desktop app) and confirm the message is tagged/placed by the rule.
 - Repeat with a bcc address: confirm the bcc recipient receives the message and the header.
