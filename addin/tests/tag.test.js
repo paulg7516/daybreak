@@ -1,6 +1,6 @@
 // addin/tests/tag.test.js
 import { describe, it, expect } from 'vitest';
-import { buildTagValue, formatByDate, validateBccAddress } from '../src/tag.js';
+import { buildTagValue, formatByDate, parseTagValue, validateBccAddress } from '../src/tag.js';
 
 describe('formatByDate', () => {
   it('passes a valid YYYY-MM-DD string through', () => {
@@ -51,5 +51,24 @@ describe('validateBccAddress', () => {
     expect(validateBccAddress('sarah')).toBe(false);
     expect(validateBccAddress('')).toBe(false);
     expect(validateBccAddress('a@b')).toBe(false);
+  });
+});
+
+describe('parseTagValue', () => {
+  it('parses a canonical intent with a deadline', () => {
+    expect(parseTagValue('approve;by=2026-06-20')).toEqual({ intent: 'approve', by: '2026-06-20' });
+  });
+  it('parses a bare intent (no date)', () => {
+    expect(parseTagValue('respond')).toEqual({ intent: 'respond', by: null });
+  });
+  it('maps legacy intent values to canonical lanes', () => {
+    expect(parseTagValue('action;by=2026-06-20')).toEqual({ intent: 'approve', by: '2026-06-20' });
+    expect(parseTagValue('blocked')).toEqual({ intent: 'respond', by: null });
+    expect(parseTagValue('whenever')).toEqual({ intent: 'review', by: null });
+  });
+  it('drops a date on fyi and rejects non-tags', () => {
+    expect(parseTagValue('fyi;by=2026-06-20')).toEqual({ intent: 'fyi', by: null });
+    expect(parseTagValue('nonsense')).toBeNull();
+    expect(parseTagValue('')).toBeNull();
   });
 });
