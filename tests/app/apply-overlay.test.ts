@@ -14,26 +14,26 @@ function triaged(id: string, lane: Lane): TriagedItem {
 
 describe('applyOverlay', () => {
   it('passes items through unchanged with an empty overlay', () => {
-    const out = applyOverlay([triaged('a', 'respond'), triaged('b', 'fyi')], emptyOverlay());
+    const out = applyOverlay([triaged('a', 'input'), triaged('b', 'fyi')], emptyOverlay());
     expect(out.map((o) => [o.triaged.item.id, o.lane, o.reranked])).toEqual([
-      ['a', 'respond', false],
+      ['a', 'input', false],
       ['b', 'fyi', false],
     ]);
   });
 
   it('drops cleared items', () => {
-    const out = applyOverlay([triaged('a', 'respond'), triaged('b', 'fyi')], clearItem(emptyOverlay(), 'a'));
+    const out = applyOverlay([triaged('a', 'input'), triaged('b', 'fyi')], clearItem(emptyOverlay(), 'a'));
     expect(out.map((o) => o.triaged.item.id)).toEqual(['b']);
   });
 
   it('applies a re-rank override and flags it', () => {
-    const out = applyOverlay([triaged('a', 'fyi')], rerankItem(emptyOverlay(), 'a', 'respond'));
-    expect(out[0].lane).toBe('respond');
+    const out = applyOverlay([triaged('a', 'fyi')], rerankItem(emptyOverlay(), 'a', 'input'));
+    expect(out[0].lane).toBe('input');
     expect(out[0].reranked).toBe(true);
   });
 
   it('an override equal to the triaged lane is not flagged as reranked', () => {
-    const out = applyOverlay([triaged('a', 'respond')], rerankItem(emptyOverlay(), 'a', 'respond'));
+    const out = applyOverlay([triaged('a', 'input')], rerankItem(emptyOverlay(), 'a', 'input'));
     expect(out[0].reranked).toBe(false);
   });
 });

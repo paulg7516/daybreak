@@ -27,7 +27,7 @@ function triageJsm(item: DaybreakItem, ctx: TriageContext): TriagedItem | null {
   const reasons = ['assigned ticket'];
   if (jsm.priority) reasons.push(`priority ${jsm.priority}`);
   if (jsm.slaStatus === 'breached' || jsm.slaStatus === 'at_risk') reasons.push(`SLA ${jsm.slaStatus}`);
-  return { item, lane: 'respond', urgency, reasons };
+  return { item, lane: 'input', urgency, reasons };
 }
 
 // Triage one item to its declared lane, or null if it should not appear on the

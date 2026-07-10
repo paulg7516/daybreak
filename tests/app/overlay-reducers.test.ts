@@ -40,6 +40,6 @@ describe('overlay reducers', () => {
   });
 
   it('rerankItem records an overridden lane', () => {
-    expect(rerankItem(emptyOverlay(), 'm1', 'approve').rerank).toEqual({ m1: 'approve' });
+    expect(rerankItem(emptyOverlay(), 'm1', 'decision').rerank).toEqual({ m1: 'decision' });
   });
 });

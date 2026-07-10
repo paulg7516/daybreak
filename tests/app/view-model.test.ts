@@ -22,21 +22,21 @@ const meta = { me: 'me@co.com', since: '2026-06-01T00:00:00Z' };
 
 describe('buildTriageView', () => {
   it('returns lanes in canonical order with totals', () => {
-    const items = [o('a', 'respond', 'none'), o('b', 'fyi', 'none'), o('c', 'approve', 'none')];
+    const items = [o('a', 'input', 'none'), o('b', 'fyi', 'none')];
     const view = buildTriageView(items, buildSummary(items), meta);
-    expect(view.lanes.map((l) => l.lane)).toEqual(['respond', 'approve', 'review', 'fyi']);
-    expect(view.lanes.find((l) => l.lane === 'respond')!.total).toBe(1);
-    expect(view.lanes.find((l) => l.lane === 'review')!.total).toBe(0);
+    expect(view.lanes.map((l) => l.lane)).toEqual(['decision', 'input', 'fyi']);
+    expect(view.lanes.find((l) => l.lane === 'input')!.total).toBe(1);
+    expect(view.lanes.find((l) => l.lane === 'decision')!.total).toBe(0);
   });
 
   it('sorts items within a lane by urgency then recency', () => {
     const items = [
-      o('none1', 'respond', 'none', '2026-06-10T10:00:00Z'),
-      o('overdue1', 'respond', 'overdue', '2026-06-09T10:00:00Z'),
-      o('today1', 'respond', 'today', '2026-06-08T10:00:00Z'),
+      o('none1', 'input', 'none', '2026-06-10T10:00:00Z'),
+      o('overdue1', 'input', 'overdue', '2026-06-09T10:00:00Z'),
+      o('today1', 'input', 'today', '2026-06-08T10:00:00Z'),
     ];
     const view = buildTriageView(items, buildSummary(items), meta);
-    expect(view.lanes.find((l) => l.lane === 'respond')!.items.map((i) => i.id)).toEqual([
+    expect(view.lanes.find((l) => l.lane === 'input')!.items.map((i) => i.id)).toEqual([
       'overdue1',
       'today1',
       'none1',
@@ -44,31 +44,30 @@ describe('buildTriageView', () => {
   });
 
   it('carries the urgency badge onto each row', () => {
-    const items = [o('x', 'approve', 'overdue')];
+    const items = [o('x', 'decision', 'overdue')];
     const view = buildTriageView(items, buildSummary(items), meta);
-    expect(view.lanes.find((l) => l.lane === 'approve')!.items[0].urgency).toBe('overdue');
+    expect(view.lanes.find((l) => l.lane === 'decision')!.items[0].urgency).toBe('overdue');
   });
 });
 
 describe('applyLaneConfig', () => {
-  const items = [o('a', 'respond', 'none'), o('b', 'fyi', 'none')];
+  const items = [o('a', 'input', 'none'), o('b', 'fyi', 'none')];
   const lanes = buildTriageView(items, buildSummary(items), meta).lanes;
 
   it('reorders, relabels, and hides lanes per the config', () => {
     const out = applyLaneConfig(lanes, [
       { lane: 'fyi', label: 'Skim', visible: true },
-      { lane: 'respond', label: 'Reply now', visible: true },
-      { lane: 'approve', label: 'Approve', visible: false },
-      { lane: 'review', label: 'Review', visible: false },
+      { lane: 'input', label: 'Reply now', visible: true },
+      { lane: 'decision', label: 'Approve', visible: false },
     ]);
     expect(out.map((c) => [c.lane, c.label])).toEqual([
       ['fyi', 'Skim'],
-      ['respond', 'Reply now'],
+      ['input', 'Reply now'],
     ]);
     expect(out[1].items.map((i) => i.id)).toEqual(['a']);
   });
 
   it('falls back to all visible lanes for an empty config', () => {
-    expect(applyLaneConfig(lanes, []).map((c) => c.lane)).toEqual(['respond', 'approve', 'review', 'fyi']);
+    expect(applyLaneConfig(lanes, []).map((c) => c.lane)).toEqual(['decision', 'input', 'fyi']);
   });
 });

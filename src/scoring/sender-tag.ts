@@ -9,17 +9,20 @@ export interface DeclaredIntent {
 const HEADER = 'x-pto-triage';
 
 // Map a raw X-PTO-Triage tag value to a lane. Accepts the current vocabulary
-// (respond/approve/review/fyi) and the legacy expectation axis so any in-flight
-// mail tagged by an older add-in still classifies.
+// (decision/input/fyi) plus legacy tags from older add-ins so mail already in
+// flight still classifies: the retired respond/review lanes fold into 'input',
+// and the retired approve lane into 'decision'.
 const TAG_TO_LANE: Record<string, Lane> = {
-  respond: 'respond',
-  approve: 'approve',
-  review: 'review',
+  decision: 'decision',
+  input: 'input',
   fyi: 'fyi',
-  // legacy aliases
-  blocked: 'respond',
-  action: 'approve',
-  whenever: 'review',
+  // legacy aliases (retired lanes + older expectation axis)
+  approve: 'decision',
+  action: 'decision',
+  respond: 'input',
+  review: 'input',
+  blocked: 'input',
+  whenever: 'input',
 };
 
 // Parse the sender's declared intent from the email headers. Returns null when the

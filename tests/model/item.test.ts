@@ -17,13 +17,13 @@ describe('data model', () => {
       since: '2026-05-25T00:00:00.000Z',
       now: '2026-06-08T08:00:00.000Z',
     };
-    const triaged: TriagedItem = { item, lane: 'respond', urgency: 'today', reasons: ['assigned ticket'] };
+    const triaged: TriagedItem = { item, lane: 'input', urgency: 'today', reasons: ['assigned ticket'] };
     expect(triaged.item.id).toBe('JSM-1');
     expect(ctx.me).toBe('me@company.com');
-    expect(triaged.lane).toBe('respond');
+    expect(triaged.lane).toBe('input');
   });
 
-  it('lists lanes most-actionable first', () => {
-    expect(LANE_ORDER).toEqual(['respond', 'approve', 'review', 'fyi']);
+  it('lists lanes highest-obligation first', () => {
+    expect(LANE_ORDER).toEqual(['decision', 'input', 'fyi']);
   });
 });

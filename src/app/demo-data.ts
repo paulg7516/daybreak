@@ -2,7 +2,7 @@
 // Sample backlog for DAYBREAK_DEMO mode: declared-intent items fed through the real
 // triage so the board can be seen and clicked without Microsoft Graph, Gmail, or any
 // credentials. Every email here is tagged (untagged mail would not appear), so the
-// demo exercises all four lanes and the urgency badges. No network, no keychain.
+// demo exercises all three lanes and the urgency badges. No network, no keychain.
 import type { DaybreakItem } from '../model/item';
 
 export const DEMO_ME = 'you@company.com';
@@ -27,48 +27,48 @@ export function demoItems(nowISO: string): DaybreakItem[] {
       webLink: 'https://jira.example.com/browse/INC-4821',
     },
     {
-      id: 'demo-respond-1',
+      id: 'demo-input-1',
       source: 'email_internal',
       subject: 'Quick question on the staging rollout',
       from: 'peer@company.com',
       receivedAt: daysAgo(nowISO, 1),
       toRecipients: [DEMO_ME],
       bodyText: 'Do we cut staging over tonight or wait for the review?',
-      internetHeaders: { 'X-PTO-Triage': `respond;by=${dateInDays(nowISO, 0)}` },
-      webLink: 'https://outlook.example.com/owa/?ItemID=demo-respond-1',
+      internetHeaders: { 'X-PTO-Triage': 'input' },
+      webLink: 'https://outlook.example.com/owa/?ItemID=demo-input-1',
     },
     {
-      id: 'demo-approve-1',
+      id: 'demo-decision-1',
       source: 'email_internal',
       subject: 'Sign-off needed on the Q3 forecast',
       from: 'cfo@company.com',
       receivedAt: daysAgo(nowISO, 3),
       toRecipients: [DEMO_ME],
       bodyText: 'I am blocked until you approve the numbers.',
-      internetHeaders: { 'X-PTO-Triage': `approve;by=${dateInDays(nowISO, -1)}` },
-      webLink: 'https://outlook.example.com/owa/?ItemID=demo-approve-1',
+      internetHeaders: { 'X-PTO-Triage': `decision;by=${dateInDays(nowISO, -1)}` },
+      webLink: 'https://outlook.example.com/owa/?ItemID=demo-decision-1',
     },
     {
-      id: 'demo-approve-2',
+      id: 'demo-decision-2',
       source: 'email_internal',
       subject: 'Approve the new onboarding flow when you can',
       from: 'design-lead@company.com',
       receivedAt: daysAgo(nowISO, 2),
       toRecipients: [DEMO_ME],
       bodyText: 'No rush, but it needs your sign-off before launch.',
-      internetHeaders: { 'X-PTO-Triage': 'approve' },
-      webLink: 'https://outlook.example.com/owa/?ItemID=demo-approve-2',
+      internetHeaders: { 'X-PTO-Triage': 'decision' },
+      webLink: 'https://outlook.example.com/owa/?ItemID=demo-decision-2',
     },
     {
-      id: 'demo-review-1',
+      id: 'demo-input-2',
       source: 'email_internal',
       subject: 'Vendor contract redlines for a look',
       from: 'legal@company.com',
       receivedAt: daysAgo(nowISO, 4),
       toRecipients: [DEMO_ME],
       bodyText: 'When you are back, please skim the redlined sections.',
-      internetHeaders: { 'X-PTO-Triage': `review;by=${dateInDays(nowISO, 4)}` },
-      webLink: 'https://outlook.example.com/owa/?ItemID=demo-review-1',
+      internetHeaders: { 'X-PTO-Triage': 'input' },
+      webLink: 'https://outlook.example.com/owa/?ItemID=demo-input-2',
     },
     {
       id: 'demo-fyi-1',

@@ -6,13 +6,13 @@ import type { OverlaidItem } from '../app/overlay';
 // after the overlay (cleared removed, re-ranks applied) so it matches the lanes.
 export interface Summary {
   total: number;
-  needYou: number; // respond + approve (the lanes that ask something of you)
+  needYou: number; // decision + input (the lanes that ask something of you)
   overdue: number;
   byLane: Record<Lane, number>;
 }
 
 export function buildSummary(items: OverlaidItem[]): Summary {
-  const byLane: Record<Lane, number> = { respond: 0, approve: 0, review: 0, fyi: 0 };
+  const byLane: Record<Lane, number> = { decision: 0, input: 0, fyi: 0 };
   let overdue = 0;
   for (const o of items) {
     byLane[o.lane] += 1;
@@ -20,7 +20,7 @@ export function buildSummary(items: OverlaidItem[]): Summary {
   }
   return {
     total: items.length,
-    needYou: byLane.respond + byLane.approve,
+    needYou: byLane.decision + byLane.input,
     overdue,
     byLane,
   };

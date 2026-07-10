@@ -28,16 +28,16 @@ describe('Settings', () => {
   it('shows Data sources and Lanes together on one page', async () => {
     renderSettings();
     expect(screen.getByText('Microsoft 365')).toBeInTheDocument();
-    expect(screen.getByLabelText(/label for respond/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/label for decision/i)).toBeInTheDocument();
   });
 
   it('renames a lane through the config callback', async () => {
     const onSave = vi.fn();
     renderSettings(onSave);
-    const input = screen.getByLabelText(/label for respond/i);
+    const input = screen.getByLabelText(/label for decision/i);
     await userEvent.type(input, '!');
     expect(onSave).toHaveBeenCalled();
     const last = onSave.mock.calls.at(-1)![0];
-    expect(last[0].label).toBe('Needs your reply!');
+    expect(last[0].label).toBe('Needs your decision!');
   });
 });

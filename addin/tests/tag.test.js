@@ -16,30 +16,28 @@ describe('formatByDate', () => {
 });
 
 describe('buildTagValue', () => {
-  it('builds the four bare intents (no deadline)', () => {
-    expect(buildTagValue('respond')).toBe('respond');
-    expect(buildTagValue('approve')).toBe('approve');
-    expect(buildTagValue('review')).toBe('review');
+  it('builds the three bare intents (no deadline)', () => {
+    expect(buildTagValue('decision')).toBe('decision');
+    expect(buildTagValue('input')).toBe('input');
     expect(buildTagValue('fyi')).toBe('fyi');
   });
-  it('appends ;by= for respond/approve/review when a date is given', () => {
-    expect(buildTagValue('respond', '2026-06-15')).toBe('respond;by=2026-06-15');
-    expect(buildTagValue('approve', '2026-06-15')).toBe('approve;by=2026-06-15');
-    expect(buildTagValue('review', '2026-06-15')).toBe('review;by=2026-06-15');
+  it('appends ;by= for decision/input when a date is given', () => {
+    expect(buildTagValue('decision', '2026-06-15')).toBe('decision;by=2026-06-15');
+    expect(buildTagValue('input', '2026-06-15')).toBe('input;by=2026-06-15');
   });
   it('accepts a Date object as the deadline', () => {
-    expect(buildTagValue('respond', new Date(2026, 5, 15))).toBe('respond;by=2026-06-15');
+    expect(buildTagValue('decision', new Date(2026, 5, 15))).toBe('decision;by=2026-06-15');
   });
   it('never appends a deadline to fyi, even when a date is passed', () => {
     expect(buildTagValue('fyi', '2026-06-15')).toBe('fyi');
   });
   it('ignores an invalid date and emits the bare intent', () => {
-    expect(buildTagValue('respond', 'nope')).toBe('respond');
-    expect(buildTagValue('approve', '')).toBe('approve');
+    expect(buildTagValue('decision', 'nope')).toBe('decision');
+    expect(buildTagValue('input', '')).toBe('input');
   });
-  it('throws on an unknown intent', () => {
+  it('throws on an unknown or retired intent', () => {
     expect(() => buildTagValue('urgent')).toThrow();
-    expect(() => buildTagValue('action')).toThrow();
+    expect(() => buildTagValue('approve')).toThrow();
   });
 });
 
@@ -56,15 +54,16 @@ describe('validateBccAddress', () => {
 
 describe('parseTagValue', () => {
   it('parses a canonical intent with a deadline', () => {
-    expect(parseTagValue('approve;by=2026-06-20')).toEqual({ intent: 'approve', by: '2026-06-20' });
+    expect(parseTagValue('decision;by=2026-06-20')).toEqual({ intent: 'decision', by: '2026-06-20' });
   });
   it('parses a bare intent (no date)', () => {
-    expect(parseTagValue('respond')).toEqual({ intent: 'respond', by: null });
+    expect(parseTagValue('input')).toEqual({ intent: 'input', by: null });
   });
-  it('maps legacy intent values to canonical lanes', () => {
-    expect(parseTagValue('action;by=2026-06-20')).toEqual({ intent: 'approve', by: '2026-06-20' });
-    expect(parseTagValue('blocked')).toEqual({ intent: 'respond', by: null });
-    expect(parseTagValue('whenever')).toEqual({ intent: 'review', by: null });
+  it('folds legacy intent values into the current lanes', () => {
+    expect(parseTagValue('approve;by=2026-06-20')).toEqual({ intent: 'decision', by: '2026-06-20' });
+    expect(parseTagValue('respond')).toEqual({ intent: 'input', by: null });
+    expect(parseTagValue('review')).toEqual({ intent: 'input', by: null });
+    expect(parseTagValue('whenever')).toEqual({ intent: 'input', by: null });
   });
   it('drops a date on fyi and rejects non-tags', () => {
     expect(parseTagValue('fyi;by=2026-06-20')).toEqual({ intent: 'fyi', by: null });

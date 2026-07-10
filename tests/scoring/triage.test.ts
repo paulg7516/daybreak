@@ -19,9 +19,8 @@ function email(id: string, tag: string | undefined, extra: Partial<DaybreakItem>
 
 describe('triageItem - email', () => {
   it('routes each declared intent to its lane', () => {
-    expect(triageItem(email('a', 'respond'), ctx)?.lane).toBe('respond');
-    expect(triageItem(email('b', 'approve'), ctx)?.lane).toBe('approve');
-    expect(triageItem(email('c', 'review'), ctx)?.lane).toBe('review');
+    expect(triageItem(email('a', 'input'), ctx)?.lane).toBe('input');
+    expect(triageItem(email('b', 'decision'), ctx)?.lane).toBe('decision');
     expect(triageItem(email('d', 'fyi'), ctx)?.lane).toBe('fyi');
   });
 
@@ -30,14 +29,14 @@ describe('triageItem - email', () => {
   });
 
   it('derives urgency and deadline from the declared by= date', () => {
-    const t = triageItem(email('f', 'approve;by=2026-06-12'), ctx);
-    expect(t?.lane).toBe('approve');
+    const t = triageItem(email('f', 'decision;by=2026-06-12'), ctx);
+    expect(t?.lane).toBe('decision');
     expect(t?.deadline).toBe('2026-06-12');
     expect(t?.urgency).toBe('this_week');
   });
 
   it('has urgency none when no deadline is declared', () => {
-    expect(triageItem(email('g', 'respond'), ctx)?.urgency).toBe('none');
+    expect(triageItem(email('g', 'input'), ctx)?.urgency).toBe('none');
   });
 });
 
@@ -46,9 +45,9 @@ describe('triageItem - JSM', () => {
     return { id, source: 'jsm', subject: id, from: 'jira@co.com', receivedAt: '2026-06-10T09:00:00Z', jsm };
   }
 
-  it('routes an open assigned ticket to respond', () => {
+  it('routes an open assigned ticket to input', () => {
     const t = triageItem(ticket('t1', { assignee: 'me@co.com', state: 'open', priority: 'P2' }), ctx);
-    expect(t?.lane).toBe('respond');
+    expect(t?.lane).toBe('input');
   });
 
   it('maps SLA to urgency', () => {
@@ -67,11 +66,11 @@ describe('triageAll', () => {
     const items = [
       email('fyi1', 'fyi'),
       email('untagged', undefined),
-      email('respond-soon', 'respond;by=2026-06-11'), // today
-      email('respond-none', 'respond'),               // none
-      email('approve1', 'approve'),
+      email('input-soon', 'input;by=2026-06-11'), // today
+      email('input-none', 'input'),               // none
+      email('decision1', 'decision'),
     ];
     const out = triageAll(items, ctx);
-    expect(out.map((t) => t.item.id)).toEqual(['respond-soon', 'respond-none', 'approve1', 'fyi1']);
+    expect(out.map((t) => t.item.id)).toEqual(['decision1', 'input-soon', 'input-none', 'fyi1']);
   });
 });

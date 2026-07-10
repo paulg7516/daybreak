@@ -9,25 +9,25 @@ describe('parseDeclaredIntent', () => {
   });
 
   it('maps each intent to its lane, case-insensitively', () => {
-    expect(parseDeclaredIntent({ 'x-pto-triage': 'respond' })).toEqual({ lane: 'respond' });
-    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'APPROVE' })).toEqual({ lane: 'approve' });
-    expect(parseDeclaredIntent({ 'X-Pto-Triage': 'review' })).toEqual({ lane: 'review' });
-    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'fyi' })).toEqual({ lane: 'fyi' });
+    expect(parseDeclaredIntent({ 'x-pto-triage': 'input' })).toEqual({ lane: 'input' });
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'DECISION' })).toEqual({ lane: 'decision' });
+    expect(parseDeclaredIntent({ 'X-Pto-Triage': 'fyi' })).toEqual({ lane: 'fyi' });
   });
 
   it('reads an optional by= deadline on actionable intents', () => {
-    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'approve;by=2026-06-20' }))
-      .toEqual({ lane: 'approve', deadline: '2026-06-20' });
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'decision;by=2026-06-20' }))
+      .toEqual({ lane: 'decision', deadline: '2026-06-20' });
   });
 
   it('never attaches a deadline to fyi', () => {
     expect(parseDeclaredIntent({ 'X-PTO-Triage': 'fyi;by=2026-06-20' })).toEqual({ lane: 'fyi' });
   });
 
-  it('aliases the legacy expectation vocabulary', () => {
-    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'blocked' })).toEqual({ lane: 'respond' });
-    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'action;by=2026-06-20' })).toEqual({ lane: 'approve', deadline: '2026-06-20' });
-    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'whenever' })).toEqual({ lane: 'review' });
+  it('folds the legacy intent vocabulary into the current lanes', () => {
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'respond' })).toEqual({ lane: 'input' });
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'review' })).toEqual({ lane: 'input' });
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'approve;by=2026-06-20' })).toEqual({ lane: 'decision', deadline: '2026-06-20' });
+    expect(parseDeclaredIntent({ 'X-PTO-Triage': 'whenever' })).toEqual({ lane: 'input' });
   });
 
   it('returns null for an unknown value', () => {

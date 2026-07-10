@@ -3,22 +3,23 @@ export type Source = 'jsm' | 'email_internal' | 'email_vendor';
 
 // The lane IS the sender's declared intent (or, for JSM, the ticket's derived
 // action-type). There is no inference: an email's lane comes straight from the
-// X-PTO-Triage tag the sender set via the add-in.
-export type Lane = 'respond' | 'approve' | 'review' | 'fyi';
+// X-PTO-Triage tag the sender set via the add-in. Three lanes: 'decision' (you're
+// the approver/gate), 'input' (a question or feedback they need back), 'fyi'.
+export type Lane = 'decision' | 'input' | 'fyi';
 
 // Urgency is a separate axis from the lane: a badge + sort key derived from a
 // declared deadline (email) or SLA/priority (JSM). It never decides the lane.
 export type Urgency = 'overdue' | 'today' | 'this_week' | 'none';
 
-// Display order of lanes on the board, most-actionable first.
-export const LANE_ORDER: Lane[] = ['respond', 'approve', 'review', 'fyi'];
+// Display order of lanes on the board, highest-obligation first (you're blocking
+// someone), then general input, then awareness-only.
+export const LANE_ORDER: Lane[] = ['decision', 'input', 'fyi'];
 
 // Default display labels; the user can rename lanes in Settings (the underlying
 // lane id / sender tag is fixed).
 export const LANE_LABELS: Record<Lane, string> = {
-  respond: 'Needs your reply',
-  approve: 'Needs your decision',
-  review: 'Needs your review',
+  decision: 'Needs your decision',
+  input: 'Needs your input',
   fyi: 'FYI',
 };
 

@@ -29,16 +29,14 @@ function lane(l: Lane, items: TriageRow[]): LaneView {
 }
 
 const lanes: LaneView[] = [
-  lane('respond', [
-    row('s1', 'respond', 'jsm', 'INC-4821 - Payments API returning 500s', 'jira@company.com', 'Jira Service Management', '2026-06-09T09:00:00.000Z', 'overdue', ['assigned ticket', 'priority P1', 'SLA breached']),
-    row('e1', 'respond', 'email_internal', 'Quick question on the staging rollout', 'peer@company.com', 'Sam Okafor', '2026-06-10T09:00:00.000Z', 'today', ['sender: respond', 'due 2026-06-11']),
+  lane('decision', [
+    row('e2', 'decision', 'email_internal', 'Sign-off needed on the Q3 forecast', 'cfo@company.com', 'Dana Whitfield', '2026-06-08T09:00:00.000Z', 'overdue', ['sender: decision', 'due 2026-06-10']),
+    row('e3', 'decision', 'email_internal', 'Approve the new onboarding flow when you can', 'design-lead@company.com', 'Riya Kapoor', '2026-06-09T09:00:00.000Z', 'none', ['sender: decision']),
   ]),
-  lane('approve', [
-    row('e2', 'approve', 'email_internal', 'Sign-off needed on the Q3 forecast', 'cfo@company.com', 'Dana Whitfield', '2026-06-08T09:00:00.000Z', 'overdue', ['sender: approve', 'due 2026-06-10']),
-    row('e3', 'approve', 'email_internal', 'Approve the new onboarding flow when you can', 'design-lead@company.com', 'Riya Kapoor', '2026-06-09T09:00:00.000Z', 'none', ['sender: approve']),
-  ]),
-  lane('review', [
-    row('e4', 'review', 'email_internal', 'Vendor contract redlines for a look', 'legal@company.com', 'Marcus Cole', '2026-06-07T09:00:00.000Z', 'this_week', ['sender: review', 'due 2026-06-15']),
+  lane('input', [
+    row('s1', 'input', 'jsm', 'INC-4821 - Payments API returning 500s', 'jira@company.com', 'Jira Service Management', '2026-06-09T09:00:00.000Z', 'overdue', ['assigned ticket', 'priority P1', 'SLA breached']),
+    row('e1', 'input', 'email_internal', 'Quick question on the staging rollout', 'peer@company.com', 'Sam Okafor', '2026-06-10T09:00:00.000Z', 'none', ['sender: input']),
+    row('e4', 'input', 'email_internal', 'Vendor contract redlines for a look', 'legal@company.com', 'Marcus Cole', '2026-06-07T09:00:00.000Z', 'none', ['sender: input']),
   ]),
   lane('fyi', [
     row('e5', 'fyi', 'email_internal', "Notes from Tuesday's planning", 'pm@company.com', 'Priya Nair', '2026-06-09T09:00:00.000Z', 'none', ['sender: fyi']),
@@ -50,7 +48,7 @@ const view: TriageView = {
   me: 'you@company.com',
   since: '2026-06-04T00:00:00.000Z',
   filterSince: null,
-  summary: { total: 7, needYou: 4, overdue: 2, byLane: { respond: 2, approve: 2, review: 1, fyi: 2 } },
+  summary: { total: 7, needYou: 5, overdue: 2, byLane: { decision: 2, input: 3, fyi: 2 } },
   lanes,
   cleared: [],
 };

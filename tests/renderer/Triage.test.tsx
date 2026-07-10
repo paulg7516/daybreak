@@ -9,14 +9,13 @@ const view: TriageView = {
   me: 'you@co.com',
   since: '2026-06-04T00:00:00.000Z',
   filterSince: null,
-  summary: { total: 2, needYou: 2, overdue: 0, byLane: { respond: 2, approve: 0, review: 0, fyi: 0 } },
+  summary: { total: 2, needYou: 2, overdue: 0, byLane: { decision: 0, input: 2, fyi: 0 } },
   lanes: [
-    { lane: 'respond', total: 2, items: [
-      { id: 'r1', subject: 'Answer me', from: 'a@co.com', receivedAt: '2026-06-10T09:00:00Z', lane: 'respond', urgency: 'none', reasons: [], source: 'email_internal', reranked: false },
-      { id: 'r2', subject: 'And me', from: 'b@co.com', receivedAt: '2026-06-09T09:00:00Z', lane: 'respond', urgency: 'none', reasons: [], source: 'email_internal', reranked: false },
+    { lane: 'decision', total: 0, items: [] },
+    { lane: 'input', total: 2, items: [
+      { id: 'r1', subject: 'Answer me', from: 'a@co.com', receivedAt: '2026-06-10T09:00:00Z', lane: 'input', urgency: 'none', reasons: [], source: 'email_internal', reranked: false },
+      { id: 'r2', subject: 'And me', from: 'b@co.com', receivedAt: '2026-06-09T09:00:00Z', lane: 'input', urgency: 'none', reasons: [], source: 'email_internal', reranked: false },
     ] },
-    { lane: 'approve', total: 0, items: [] },
-    { lane: 'review', total: 0, items: [] },
     { lane: 'fyi', total: 0, items: [] },
   ],
   cleared: [],

@@ -11,10 +11,10 @@ const row: TriageRow = {
   from: 'boss@co.com',
   fromName: 'Dana Boss',
   receivedAt: '2026-05-30T09:00:00.000Z',
-  lane: 'approve',
+  lane: 'decision',
   urgency: 'today',
   deadline: '2026-05-30',
-  reasons: ['sender: approve', 'due 2026-05-30'],
+  reasons: ['sender: decision', 'due 2026-05-30'],
   source: 'email_internal',
   webLink: 'https://outlook.example/m1',
   reranked: false,
@@ -51,7 +51,7 @@ describe('ItemRow', () => {
   it('invokes onRerank with the chosen lane', async () => {
     const onRerank = vi.fn();
     render(<ItemRow row={row} onOpen={() => {}} onClear={() => {}} onRerank={onRerank} />);
-    await userEvent.selectOptions(screen.getByRole('combobox', { name: /move to lane/i }), 'respond');
-    expect(onRerank).toHaveBeenCalledWith('m1', 'respond');
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: /move to lane/i }), 'input');
+    expect(onRerank).toHaveBeenCalledWith('m1', 'input');
   });
 });

@@ -1,5 +1,5 @@
 // src/renderer/components/laneMeta.tsx
-import { Reply, Stamp, Eye, Inbox } from 'lucide-react';
+import { Reply, Stamp, Inbox } from 'lucide-react';
 import type { Lane } from '../../model/item';
 import type { TriageRow } from '../../app/view-model';
 
@@ -22,23 +22,17 @@ export const LANE_META: Record<
   Lane,
   { title: string; desc: string; rail: string; icon: React.ReactNode }
 > = {
-  respond: {
-    title: 'Needs your reply',
-    desc: 'People waiting on your answer',
-    rail: 'bg-today',
-    icon: <Reply size={14} strokeWidth={2} className="text-today" />,
-  },
-  approve: {
+  decision: {
     title: 'Needs your decision',
-    desc: 'Sign-offs and decisions for you',
+    desc: 'Approvals and sign-offs waiting on you',
     rail: 'bg-week',
     icon: <Stamp size={14} strokeWidth={2} className="text-week" />,
   },
-  review: {
-    title: 'Needs your review',
-    desc: 'Worth a look when you can',
-    rail: 'bg-accent',
-    icon: <Eye size={14} strokeWidth={2} className="text-accent" />,
+  input: {
+    title: 'Needs your input',
+    desc: 'Questions and feedback waiting on you',
+    rail: 'bg-today',
+    icon: <Reply size={14} strokeWidth={2} className="text-today" />,
   },
   fyi: {
     title: 'FYI',

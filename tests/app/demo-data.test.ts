@@ -14,14 +14,13 @@ describe('demo backlog', () => {
     expect(triaged.length).toBe(demoItems(NOW).length);
   });
 
-  it('populates all four lanes', () => {
+  it('populates all three lanes', () => {
     const triaged = triageAll(demoItems(NOW), { me: DEMO_ME, since: NOW, now: NOW });
     const overlaid = applyOverlay(triaged, emptyOverlay());
     const view = buildTriageView(overlaid, buildSummary(overlaid), { me: DEMO_ME, since: NOW });
     const byLane = Object.fromEntries(view.lanes.map((l) => [l.lane, l.total]));
-    expect(byLane.respond).toBeGreaterThan(0);
-    expect(byLane.approve).toBeGreaterThan(0);
-    expect(byLane.review).toBeGreaterThan(0);
+    expect(byLane.decision).toBeGreaterThan(0);
+    expect(byLane.input).toBeGreaterThan(0);
     expect(byLane.fyi).toBeGreaterThan(0);
   });
 

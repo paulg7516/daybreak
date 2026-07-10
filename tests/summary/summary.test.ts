@@ -15,17 +15,17 @@ function o(lane: Lane, urgency: Urgency): OverlaidItem {
 describe('buildSummary', () => {
   it('counts per lane, total, need-you and overdue', () => {
     const items = [
-      o('respond', 'overdue'),
-      o('respond', 'none'),
-      o('approve', 'today'),
-      o('review', 'none'),
+      o('input', 'overdue'),
+      o('input', 'none'),
+      o('decision', 'today'),
+      o('input', 'none'),
       o('fyi', 'none'),
       o('fyi', 'overdue'),
     ];
     const s = buildSummary(items);
     expect(s.total).toBe(6);
-    expect(s.byLane).toEqual({ respond: 2, approve: 1, review: 1, fyi: 2 });
-    expect(s.needYou).toBe(3); // respond(2) + approve(1)
+    expect(s.byLane).toEqual({ decision: 1, input: 3, fyi: 2 });
+    expect(s.needYou).toBe(4); // decision(1) + input(3)
     expect(s.overdue).toBe(2);
   });
 });

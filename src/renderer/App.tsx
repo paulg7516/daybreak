@@ -20,8 +20,8 @@ import { IngestStatus } from './components/IngestStatus';
 import { Settings } from './components/Settings';
 import type { JiraConfigView, JiraTestResult } from './components/JiraSettings';
 
-// FYI and Review collapse by default - they are skim/batch-clear lanes.
-const COLLAPSED_BY_DEFAULT: Record<Lane, boolean> = { respond: false, approve: false, review: true, fyi: true };
+// FYI collapses by default - it is the skim/batch-clear lane.
+const COLLAPSED_BY_DEFAULT: Record<Lane, boolean> = { decision: false, input: false, fyi: true };
 
 function sinceLabel(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
