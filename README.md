@@ -7,6 +7,27 @@ optional deadline) - right in the Outlook compose pane. On the receiving end, a 
 side panel shows **your queue**: only the messages people deliberately tagged for you,
 grouped by lane and surfaced by urgency. No inbox re-creation, no inference, no noise.
 
+## Deploy it to your organization
+
+Daybreak is a hosted Microsoft 365 add-in - there's no installer or download. An admin
+adds it in a few clicks:
+
+1. Sign in to the **Microsoft 365 admin center** (`admin.microsoft.com`).
+2. Go to **Settings → Integrated apps → Upload custom apps**.
+3. Choose **Provide link to a manifest file** and paste the manifest link:
+   `https://paulg7516.github.io/daybreak-addin/manifest.xml`
+4. Assign it to users or groups and **Deploy**.
+
+It then appears in Outlook (new Outlook and Outlook on the web) for everyone in scope: the
+**Tag this email** button when composing, and the pinned **queue** when reading. Because
+you linked the manifest (instead of uploading a file), future updates roll out
+automatically.
+
+> Reading real tagged mail needs an Entra (Azure AD) app registration with a Single-page
+> redirect `brk-multihub://paulg7516.github.io` and delegated **`Mail.Read`**, with its
+> client ID set in `addin/src/graph.js` (`CLIENT_ID`). Until that's set, the queue shows
+> preview data.
+
 ## Scope
 
 Daybreak is **Outlook-only**. Everything lives in `addin/`:
@@ -33,7 +54,7 @@ npm run validate:manifest # validate the Office manifest
 The add-in is plain HTML/CSS/JS with no build step. To preview the queue locally,
 serve `addin/src/` and open `queue.html` (it renders mock data when `CLIENT_ID` is empty).
 
-## Deploy
+## Publishing the add-in (maintainers)
 
 Copy `addin/` (manifest + `src/` + `assets/`) into the `paulg7516/daybreak-addin` repo and
 push - a GitHub Action rewrites the `localhost:3000` URLs to the Pages origin, validates,
