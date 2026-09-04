@@ -3,16 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Daybreak - What needs you, first</title>
-<meta name="description" content="A desktop app for every catch-up - after deep work, a day of meetings, or time away. Senders tag what they need from you; Daybreak sorts it into clear lanes with urgency badges. Email and Jira Service Management, processed on your machine.">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://api.github.com https://*.goatcounter.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>Daybreak - the Outlook queue for what people need from you</title>
+<meta name="description" content="Daybreak is a Microsoft Outlook add-in. Senders tag what they need - a decision, your input, or an FYI - and you get one clean queue of only what's waiting on you. No inbox to dig through, no separate app.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://gc.zgo.at; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.goatcounter.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><rect x='8' y='8' width='104' height='104' rx='26' fill='%23ff6a3d'/><path d='M38 60 A21 21 0 0 1 80 60 Z' fill='%23fff'/><path d='M44 66 A21 21 0 0 0 86 66 Z' fill='%23fff' opacity='.7'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* Light page surface - from the Daybreak app's own light tokens */
     --bg: #f6f8fb;
     --surface: #ffffff;
     --surface-2: #fbfcfe;
@@ -21,39 +20,30 @@
     --ink-3: #8b96a8;
     --border: #e6eaf0;
     --border-strong: #d6dce6;
-    /* One restrained accent. No gradient. */
     --accent: #ff6a3d;
     --accent-hover: #e55428;
     --accent-soft: #fff1ec;
-    /* Status colours, used only inside the product visual */
-    --today: #e5484d;
-    --week: #f0a020;
-    --fyi: #6b7686;
-    --good: #15a06b;
 
-    /* Dark inset tokens (the product board) - the app's dark theme */
-    --d-bg: #080b12;
-    --d-surface: #0f141d;
-    --d-surface-2: #121825;
-    --d-line: #1d2533;
-    --d-line-strong: #2a3344;
-    --d-text: #e8edf5;
-    --d-text-2: #9aa6b8;
-    --d-text-3: #687385;
-    --d-primary: #5b82ff;
-    --d-today: #ff6166;   --d-today-tint: #2a1416;
-    --d-week: #ffb648;    --d-week-tint: #2a2113;
-    --d-fyi: #8893a4;     --d-fyi-tint: #161c27;
-    --d-good: #2bd49a;
+    /* Dark tokens for the Outlook mockup + Daybreak pane (the real app palette) */
+    --d-bg: #0f141d;
+    --d-mail: #0b0f17;
+    --d-surface: #171c27;
+    --d-surface-2: #1a2230;
+    --d-line: #232c3b;
+    --d-line-2: #151c28;
+    --d-text: #eef1f7;
+    --d-text-2: #9aa4b6;
+    --d-text-3: #5f6a7e;
+    --d-today: #ff5f63;   --d-today-tint: rgba(255,95,99,.16);
+    --d-week: #ffb23e;    --d-week-tint: rgba(255,178,62,.16);
 
     --maxw: 1120px;
     --pad-x: clamp(20px, 5vw, 48px);
     --section-y: clamp(64px, 9vw, 110px);
     --radius: 12px;
-    --radius-sm: 9px;
     --shadow: 0 1px 2px rgba(16,23,41,.06), 0 1px 3px rgba(16,23,41,.05);
     --shadow-md: 0 12px 30px -14px rgba(16,23,41,.20);
-    --shadow-lg: 0 24px 60px -24px rgba(16,23,41,.30), 0 8px 24px -12px rgba(16,23,41,.14);
+    --shadow-lg: 0 30px 70px -28px rgba(16,23,41,.34), 0 10px 26px -14px rgba(16,23,41,.16);
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
     --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -64,345 +54,190 @@
   section[id] { scroll-margin-top: calc(-1 * var(--section-y)); }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
     .btn-primary:hover, .step:hover { transform: none; }
   }
   html, body { margin: 0; padding: 0; overflow-x: hidden; }
-  body {
-    font-family: var(--font);
-    color: var(--ink);
-    background: var(--bg);
-    font-size: 16px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+  body { font-family: var(--font); color: var(--ink); background: var(--bg); font-size: 16px; line-height: 1.6; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
   a { color: inherit; text-decoration: none; }
   img, svg { display: block; max-width: 100%; }
   button { font: inherit; cursor: pointer; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
-
-  .container {
-    max-width: var(--maxw);
-    margin: 0 auto;
-    padding-left: var(--pad-x);
-    padding-right: var(--pad-x);
-  }
+  .container { max-width: var(--maxw); margin: 0 auto; padding-left: var(--pad-x); padding-right: var(--pad-x); }
 
   /* ---------- Nav ---------- */
-  .nav {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: rgba(246, 248, 251, 0.72);
-    backdrop-filter: saturate(180%) blur(14px);
-    -webkit-backdrop-filter: saturate(180%) blur(14px);
-    border-bottom: 1px solid transparent;
-    transition: border-color 200ms ease;
-  }
+  .nav { position: sticky; top: 0; z-index: 50; background: rgba(246,248,251,0.72); backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px); border-bottom: 1px solid transparent; transition: border-color 200ms ease; }
   .nav.scrolled { border-bottom-color: var(--border); }
-  .nav-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 14px;
-    padding-bottom: 14px;
-    position: relative;
-  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; position: relative; }
   .nav-brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; letter-spacing: -0.01em; }
   .nav-mark { width: 26px; height: 26px; }
   .nav-wordmark { font-size: 18px; }
   .nav-links { display: flex; align-items: center; gap: 28px; font-size: 14px; color: var(--ink-2); }
   .nav-links a.link:hover { color: var(--ink); }
-  .nav-cta {
-    background: var(--accent);
-    color: #fff !important;
-    padding: 8px 16px;
-    border-radius: 999px;
-    font-weight: 500;
-    transition: background 180ms ease;
-  }
+  .nav-cta { background: var(--accent); color: #fff !important; padding: 8px 16px; border-radius: 999px; font-weight: 500; transition: background 180ms ease; }
   .nav-cta:hover { background: var(--accent-hover); }
   .nav-toggle, .nav-burger { display: none; }
-
   @media (max-width: 768px) {
-    .nav-burger {
-      display: inline-flex; flex-direction: column; justify-content: space-between;
-      width: 22px; height: 16px; cursor: pointer;
-    }
+    .nav-burger { display: inline-flex; flex-direction: column; justify-content: space-between; width: 22px; height: 16px; cursor: pointer; }
     .nav-burger span { display: block; height: 2px; background: var(--ink); border-radius: 2px; transition: transform 200ms ease, opacity 200ms ease; }
-    .nav-links {
-      position: absolute; top: 100%; left: 0; right: 0;
-      flex-direction: column; gap: 0; align-items: stretch;
-      background: rgba(255, 255, 255, 0.97);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid var(--border);
-      padding: 8px var(--pad-x) 18px;
-      max-height: 0; overflow: hidden; transition: max-height 240ms ease;
-    }
+    .nav-links { position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; gap: 0; align-items: stretch; background: rgba(255,255,255,0.97); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border); padding: 8px var(--pad-x) 18px; max-height: 0; overflow: hidden; transition: max-height 240ms ease; }
     .nav-links a.link { padding: 12px 0; font-size: 15px; }
     .nav-links .nav-cta { margin-top: 8px; text-align: center; }
-    .nav-toggle:checked ~ .nav-links { max-height: 320px; }
+    .nav-toggle:checked ~ .nav-links { max-height: 340px; }
     .nav-toggle:checked ~ .nav-burger span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
     .nav-toggle:checked ~ .nav-burger span:nth-child(2) { opacity: 0; }
     .nav-toggle:checked ~ .nav-burger span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
   }
 
   /* ---------- Hero ---------- */
-  .hero {
-    padding-top: clamp(52px, 8vw, 92px);
-    padding-bottom: var(--section-y);
-    text-align: center;
-    overflow: hidden;
-    position: relative;
-  }
-  /* One cohesive cool wash so the page is not paper-flat. Sober, ~9% peak. */
-  .hero::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: radial-gradient(ellipse 72% 56% at 50% -8%, rgba(255, 106, 61, 0.09), transparent 64%);
-    pointer-events: none; z-index: 0;
-  }
+  .hero { padding-top: clamp(48px, 8vw, 88px); padding-bottom: var(--section-y); text-align: center; overflow: hidden; position: relative; }
+  .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 72% 56% at 50% -8%, rgba(255,106,61,0.10), transparent 64%); pointer-events: none; z-index: 0; }
   .hero > * { position: relative; z-index: 1; }
   .hero-inner { display: flex; flex-direction: column; align-items: center; }
-  .eyebrow {
-    display: inline-flex; align-items: center; gap: 7px;
-    font-size: 12px; font-weight: 600; letter-spacing: 0.08em;
-    text-transform: uppercase; color: var(--accent);
-    background: var(--accent-soft); border: 1px solid #ffd9cb;
-    padding: 6px 13px 6px 11px; border-radius: 999px; margin: 0 0 26px;
-  }
+  .eyebrow { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); border: 1px solid #ffd9cb; padding: 6px 13px 6px 11px; border-radius: 999px; margin: 0 0 26px; }
   .eyebrow::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-  .hero-title {
-    font-size: clamp(36px, 6.2vw, 70px);
-    line-height: 1.05; letter-spacing: -0.038em; font-weight: 600;
-    margin: 0 0 22px; max-width: 880px; width: 100%;
-  }
+  .hero-title { font-size: clamp(30px, 6vw, 66px); line-height: 1.06; letter-spacing: -0.036em; font-weight: 600; margin: 0 0 22px; max-width: 860px; width: 100%; overflow-wrap: break-word; }
   .hero-title .soft { color: var(--ink-3); }
-  .hero-sub { max-width: 600px; width: 100%; color: var(--ink-2); font-size: clamp(16px, 1.5vw, 19px); margin: 0 0 36px; }
-  .hero-cta { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+  .hero-sub { max-width: 620px; width: 100%; color: var(--ink-2); font-size: clamp(16px, 1.5vw, 19px); margin: 0 0 34px; }
+  .hero-cta { display: flex; flex-direction: column; align-items: center; gap: 15px; }
   .btn-row { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-  .btn-primary {
-    display: inline-flex; align-items: center; gap: 9px;
-    background: var(--accent); color: #fff !important;
-    padding: 15px 26px; border-radius: 999px; font-weight: 500; font-size: 16px;
-    box-shadow: 0 10px 26px -10px rgba(255, 106, 61, 0.55);
-    transition: background 220ms var(--ease), transform 220ms var(--ease), box-shadow 220ms var(--ease);
-  }
-  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 18px 36px -12px rgba(255, 106, 61, 0.6); }
-  .btn-secondary {
-    display: inline-flex; align-items: center; gap: 9px;
-    background: var(--surface); color: var(--ink) !important;
-    padding: 15px 24px; border-radius: 999px; font-weight: 500; font-size: 16px;
-    border: 1px solid var(--border-strong);
-    transition: border-color 180ms ease, transform 180ms ease;
-  }
+  .btn-primary { display: inline-flex; align-items: center; gap: 9px; background: var(--accent); color: #fff !important; padding: 15px 26px; border-radius: 999px; font-weight: 500; font-size: 16px; box-shadow: 0 10px 26px -10px rgba(255,106,61,0.55); transition: background 220ms var(--ease), transform 220ms var(--ease), box-shadow 220ms var(--ease); }
+  .btn-primary:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 18px 36px -12px rgba(255,106,61,0.6); }
+  .btn-secondary { display: inline-flex; align-items: center; gap: 9px; background: var(--surface); color: var(--ink) !important; padding: 15px 24px; border-radius: 999px; font-weight: 500; font-size: 16px; border: 1px solid var(--border-strong); transition: border-color 180ms ease, transform 180ms ease; }
   .btn-secondary:hover { border-color: var(--ink-3); transform: translateY(-1px); }
   .btn-primary svg, .btn-secondary svg { width: 18px; height: 18px; }
-  .hero-meta {
-    font-family: var(--font-mono); font-size: 13px; color: var(--ink-3);
-    margin: 0; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;
-  }
+  .hero-meta { font-family: var(--font-mono); font-size: 13px; color: var(--ink-3); margin: 0; display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
   .hero-meta .dot { opacity: 0.5; }
 
-  /* ---------- Hero: laptop with the animated triage walkthrough ---------- */
-  .laptop { width: min(900px, 100%); margin: clamp(40px, 6vw, 68px) auto 0; }
-  .laptop-screen {
-    aspect-ratio: 16 / 10;
-    background: linear-gradient(180deg, #262b35 0%, #14171f 100%);
-    border-radius: 16px 16px 6px 6px;
-    padding: 10px;
-    box-shadow: var(--shadow-lg), 0 0 120px -28px rgba(255, 106, 61, 0.34);
-    position: relative; overflow: hidden;
-  }
-  .laptop-content {
-    width: 100%; height: 100%;
-    background: var(--d-bg);
-    border-radius: 8px 8px 2px 2px;
-    overflow: hidden; position: relative;
-    display: flex; flex-direction: column; text-align: left;
-  }
-  /* soft coral underglow that breathes once per scene - draws the eye, on-brand */
-  .laptop-content::after {
-    content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
-    box-shadow: inset 0 -60px 80px -60px rgba(255, 106, 61, 0); z-index: 8;
-    animation: glowSync 12s ease-in-out infinite;
-  }
-  @keyframes glowSync {
-    0%, 33%, 66%, 100% { box-shadow: inset 0 -60px 80px -60px rgba(255, 106, 61, 0); }
-    10%, 43%, 80% { box-shadow: inset 0 -70px 90px -55px rgba(255, 106, 61, 0.30); }
-  }
-  .laptop-base {
-    height: 13px; width: 112%; margin: 0 0 0 -6%;
-    background: linear-gradient(180deg, #20242e 0%, #0f1219 100%);
-    border-radius: 0 0 14px 14px;
-    box-shadow: 0 24px 46px -22px rgba(0,0,0,.6);
-  }
-  .laptop-base::after {
-    content: ''; display: block; width: 92px; height: 6px; margin: 0 auto;
-    background: #0a0c12; border-radius: 0 0 7px 7px;
-  }
-  /* constant app title bar (does not cross-fade) */
-  .win-bar {
-    display: flex; align-items: center; gap: 14px;
-    padding: 11px 15px; background: var(--d-surface);
-    border-bottom: 1px solid var(--d-line); flex: none;
-  }
+  /* ---------- Hero visual: an Outlook window with the Daybreak pane ---------- */
+  .appwin { width: min(940px, 100%); margin: clamp(40px, 6vw, 66px) auto 0; }
+  .appwin-frame { border-radius: 14px; overflow: hidden; background: #202632; box-shadow: var(--shadow-lg), 0 0 120px -30px rgba(255,106,61,0.32); }
+  .appwin-bar { display: flex; align-items: center; gap: 13px; padding: 11px 15px; background: #262c38; border-bottom: 1px solid #313a49; }
   .win-dots { display: inline-flex; gap: 7px; }
   .win-dots i { width: 11px; height: 11px; border-radius: 50%; display: block; }
   .win-dots i:nth-child(1) { background: #ff5f57; }
   .win-dots i:nth-child(2) { background: #febc2e; }
   .win-dots i:nth-child(3) { background: #28c840; }
-  .win-title { display: inline-flex; align-items: center; gap: 7px; color: var(--d-text-2); font-size: 12.5px; font-weight: 500; }
-  .win-title svg { width: 15px; height: 15px; }
+  .win-title { display: inline-flex; align-items: center; gap: 8px; color: #c3cad6; font-size: 12.5px; font-weight: 500; }
+  .win-title .ol { width: 15px; height: 15px; border-radius: 3px; background: linear-gradient(135deg,#2b6fd6,#1b4fa0); display: inline-block; position: relative; }
+  .win-title .ol::after { content: 'O'; position: absolute; inset: 0; color: #fff; font-size: 10px; font-weight: 700; display: grid; place-items: center; }
 
-  /* the cross-fading scene stage */
-  .stage { position: relative; flex: 1; min-height: 0; }
-  .scene {
-    position: absolute; inset: 0; opacity: 0;
-    padding: 16px; overflow: hidden;
-    animation: sceneCycle 12s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-  }
-  .scene-1 { animation-delay: 0s; }
-  .scene-2 { animation-delay: 4s; }
-  .scene-3 { animation-delay: 8s; }
-  /* Each scene shows ~3.5s with a ~0.5s cross-fade + gentle rise; the title bar
-     stays put so it reads as one app working through the queue. */
-  @keyframes sceneCycle {
-    0%   { opacity: 0; transform: translateY(7px); }
-    5%   { opacity: 1; transform: translateY(0); }
-    29%  { opacity: 1; transform: translateY(0); }
-    38%  { opacity: 0; transform: translateY(-7px); }
+  .stage { position: relative; min-height: 460px; overflow: hidden; text-align: left; }
+  .osc { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 302px; opacity: 0; animation: oscCycle 11s var(--ease) infinite; }
+  .osc-1 { animation-delay: 0s; }
+  .osc-2 { animation-delay: 5.5s; }
+  @keyframes oscCycle {
+    0% { opacity: 0; transform: translateY(7px); }
+    4% { opacity: 1; transform: none; }
+    45% { opacity: 1; transform: none; }
+    50% { opacity: 0; transform: translateY(-7px); }
     100% { opacity: 0; transform: translateY(-7px); }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .laptop-content::after { animation: none; }
-    .scene { animation: none; opacity: 0; transform: none; }
-    .scene-1 { opacity: 1; }
-  }
+  @media (prefers-reduced-motion: reduce) { .osc { animation: none; opacity: 0; } .osc-2 { opacity: 1; } }
 
-  .board-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 2px 4px 14px; flex-wrap: wrap; }
-  .board-headline { color: var(--d-text); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
-  .board-headline b { color: var(--d-today); font-weight: 600; }
-  .board-headline.clear b { color: var(--accent); }
-  .board-since { color: var(--d-text-3); font-size: 12px; font-family: var(--font-mono); }
+  /* Outlook mail area (left) */
+  .osc-mail { background: var(--d-mail); padding: 18px 20px; display: flex; flex-direction: column; gap: 13px; min-width: 0; }
+  .mail-tb { display: flex; align-items: center; justify-content: space-between; }
+  .mail-tb .lbl { color: var(--d-text-2); font-size: 12.5px; font-weight: 600; }
+  .mail-send { display: inline-flex; align-items: center; gap: 6px; background: #2b6fd6; color: #fff; font-size: 12px; font-weight: 600; padding: 5px 13px; border-radius: 6px; }
+  .field { border-bottom: 1px solid var(--d-line); padding-bottom: 9px; color: var(--d-text); font-size: 13.5px; }
+  .field .fl { color: var(--d-text-3); font-size: 12px; display: inline-block; width: 58px; }
+  .from-row { display: flex; align-items: center; gap: 11px; }
+  .from-row .av2 { width: 34px; height: 34px; border-radius: 50%; background: #6a4bd6; color: #fff; font-size: 12px; font-weight: 600; display: grid; place-items: center; }
+  .from-row b { color: var(--d-text); font-size: 14px; display: block; }
+  .from-row span { color: var(--d-text-3); font-size: 12px; }
+  .body-lines { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+  .body-lines i { height: 9px; border-radius: 5px; background: #172130; display: block; }
+  .subj-lg { color: var(--d-text); font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
 
-  .lane { border-top: 1px solid var(--d-line); }
-  .lane:first-of-type { border-top: 0; }
-  .lane-head {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 4px 10px; color: var(--d-text-2);
-    font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-  }
-  .lane-head .count {
-    margin-left: 2px; color: var(--d-text-3); font-weight: 500; letter-spacing: 0;
-    background: var(--d-surface-2); border: 1px solid var(--d-line); border-radius: 999px;
-    font-size: 11px; padding: 1px 8px;
-  }
-  .lane-head .chev { margin-left: auto; color: var(--d-text-3); }
-  .lane-head .chev svg { width: 16px; height: 16px; }
-  .lane-head .cleared { margin-left: auto; color: #2bd49a; font-size: 11px; font-weight: 500; letter-spacing: 0; text-transform: none; display: inline-flex; align-items: center; gap: 5px; }
-  .lane-head .cleared svg { width: 13px; height: 13px; }
+  /* Daybreak pane (right) - matches the real add-in */
+  .osc-panel { background: var(--d-bg); border-left: 1px solid #05080d; border-top: 3px solid var(--accent); display: flex; flex-direction: column; min-width: 0; }
+  .db-head { padding: 13px 15px 11px; }
+  .db-head .pin { float: right; color: var(--d-text-3); }
+  .db-head .pin svg { width: 15px; height: 15px; }
+  .db-head h4 { margin: 0; color: var(--d-text); font-size: 14px; font-weight: 700; }
+  .db-head p { margin: 1px 0 0; color: var(--d-text-2); font-size: 11.5px; }
 
-  .item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 12px; margin-bottom: 7px;
-    background: var(--d-surface); border: 1px solid var(--d-line); border-radius: 10px;
-  }
-  .item.done { opacity: .55; }
-  .item.done .item-subj { text-decoration: line-through; color: var(--d-text-3); }
-  .item-main { min-width: 0; flex: 1; }
-  .item-subj { color: var(--d-text); font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .item-meta { color: var(--d-text-3); font-size: 12px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .src { color: var(--d-text-2); font-family: var(--font-mono); font-size: 11px; }
-  .badge {
-    flex: none; font-size: 11px; font-weight: 600; letter-spacing: 0.01em;
-    padding: 3px 9px; border-radius: 999px; white-space: nowrap;
-  }
-  .badge.overdue { color: var(--d-today); background: var(--d-today-tint); border: 1px solid rgba(255,97,102,.35); }
-  .badge.today   { color: var(--d-today); background: transparent; border: 1px solid rgba(255,97,102,.4); }
-  .badge.week    { color: var(--d-week); background: var(--d-week-tint); border: 1px solid rgba(255,182,72,.3); }
-  .badge.done    { color: #2bd49a; background: rgba(43,212,154,.12); border: 1px solid rgba(43,212,154,.3); }
+  /* compose: tag options */
+  .db-fieldset { margin: 0 15px 12px; padding: 12px 13px; border: 1px solid var(--d-line); border-radius: 10px; }
+  .db-fieldset > .q { color: var(--d-text-2); font-size: 11.5px; margin-bottom: 10px; }
+  .topt { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; color: var(--d-text); font-size: 13px; }
+  .topt .radio { width: 15px; height: 15px; border-radius: 50%; border: 1.5px solid var(--d-text-3); flex: none; margin-top: 1px; }
+  .topt em { color: var(--d-text-3); font-style: normal; }
+  .topt.sel .radio { border-color: var(--accent); box-shadow: inset 0 0 0 3px var(--accent); }
+  .topt.sel { color: #fff; }
+  .db-apply { margin: 2px 15px 0; text-align: center; background: var(--accent); color: #fff; font-size: 12.5px; font-weight: 600; padding: 9px; border-radius: 8px; animation: applyPulse 11s ease-in-out infinite; }
+  @keyframes applyPulse { 0%,20%,100%{ box-shadow: 0 0 0 0 rgba(255,106,61,0); } 8%,14%{ box-shadow: 0 0 0 5px rgba(255,106,61,.18); } }
 
-  /* all-caught-up scene */
-  .allclear { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 13px; text-align: center; }
-  .ac-mark { width: 54px; height: 54px; border-radius: 16px; display: grid; place-items: center; background: rgba(255,106,61,.14); border: 1px solid rgba(255,106,61,.32); color: var(--accent); }
-  .ac-mark svg { width: 28px; height: 28px; }
-  .allclear h3 { color: var(--d-text); font-size: 18px; font-weight: 600; letter-spacing: -.02em; margin: 0; }
-  .allclear p { color: var(--d-text-2); font-size: 13px; max-width: 300px; margin: 0; line-height: 1.5; }
+  /* queue: lanes */
+  .q-lane { padding: 0 15px; }
+  .q-lh { display: flex; align-items: center; gap: 9px; padding: 13px 0 8px; border-bottom: 1px solid var(--d-line); color: var(--d-text); font-size: 12px; font-weight: 700; }
+  .q-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--d-text-3); flex: none; }
+  .q-ct { margin-left: auto; font-size: 11px; color: var(--d-text-2); background: var(--d-bg); border: 1px solid #2a3446; border-radius: 999px; padding: 1px 8px; }
+  .q-row { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid var(--d-line-2); }
+  .q-av { width: 25px; height: 25px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 9.5px; font-weight: 600; color: #cfd6e2; background: #212b3a; border: 1px solid #2b3546; margin-top: 1px; }
+  .q-bd { min-width: 0; flex: 1; }
+  .q-subj { display: flex; align-items: baseline; gap: 7px; color: var(--d-text); font-size: 12.5px; font-weight: 500; }
+  .q-subj .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .q-chip { margin-left: auto; flex: none; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: 1px 6px; border-radius: 5px; }
+  .q-chip.week { color: var(--d-week); background: var(--d-week-tint); }
+  .q-meta { color: var(--d-text-2); font-size: 10.5px; margin-top: 2px; }
+  .q-meta .due { color: var(--d-text-3); }
+  .q-row.arrive { animation: arrive 11s ease-in-out infinite; }
+  .q-row.arrive { animation-delay: 5.5s; }
+  @keyframes arrive { 0%,3%{ background: rgba(255,106,61,.13); } 14%,100%{ background: transparent; } }
 
   /* ---------- Generic section ---------- */
   section { padding-top: var(--section-y); padding-bottom: var(--section-y); }
-  .section-head { max-width: 640px; margin: 0 auto 56px; text-align: center; }
+  .section-head { max-width: 660px; margin: 0 auto 56px; text-align: center; }
   .section-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: 0.13em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
   .section-title { font-size: clamp(28px, 3.6vw, 40px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 600; margin: 0 0 14px; }
   .section-sub { color: var(--ink-2); font-size: clamp(15px, 1.4vw, 18px); margin: 0; }
 
   /* ---------- How it works ---------- */
   .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-  .step {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 28px 26px; box-shadow: var(--shadow);
-    transition: transform 260ms var(--ease), box-shadow 260ms var(--ease), border-color 260ms var(--ease);
-  }
+  .step { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 26px; box-shadow: var(--shadow); transition: transform 260ms var(--ease), box-shadow 260ms var(--ease), border-color 260ms var(--ease); }
   .step:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: #ffd9cb; }
-  .step-num {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 30px; height: 30px; border-radius: 8px;
-    background: var(--accent-soft); color: var(--accent);
-    font-weight: 600; font-size: 14px; margin-bottom: 18px;
-  }
+  .step-num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); font-weight: 600; font-size: 14px; margin-bottom: 18px; }
   .step h3 { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 8px; }
   .step p { color: var(--ink-2); font-size: 14.5px; margin: 0; }
   .step .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
-  .step .tag {
-    font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px;
-    background: var(--surface-2); border: 1px solid var(--border); color: var(--ink-2);
-  }
+  .step .tag { font-size: 11.5px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--ink-2); }
 
-  /* ---------- Features ---------- */
+  /* ---------- Why (features) ---------- */
   .features { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 26px; }
   .feature { padding: 4px 2px; }
-  .feature-ico {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 40px; height: 40px; border-radius: 10px;
-    background: var(--accent-soft); color: var(--accent); margin-bottom: 16px;
-  }
+  .feature-ico { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); margin-bottom: 16px; }
   .feature-ico svg { width: 21px; height: 21px; }
   .feature h3 { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 6px; }
   .feature p { color: var(--ink-2); font-size: 14.5px; margin: 0; }
+
+  /* ---------- Lanes strip ---------- */
+  .lanes-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; max-width: 900px; margin: 0 auto; }
+  .lane-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 22px; box-shadow: var(--shadow); }
+  .lane-card .lane-name { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; margin-bottom: 7px; }
+  .lane-card .ld { width: 9px; height: 9px; border-radius: 50%; }
+  .lane-card p { color: var(--ink-2); font-size: 14px; margin: 0; }
 
   /* ---------- FAQ ---------- */
   .faq-list { max-width: 760px; margin: 0 auto; }
   .faq-item { border-top: 1px solid var(--border); }
   .faq-item:last-child { border-bottom: 1px solid var(--border); }
-  .faq-item summary {
-    display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    padding: 22px 4px; cursor: pointer; list-style: none;
-    font-size: 17px; font-weight: 600; letter-spacing: -0.01em;
-  }
+  .faq-item summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 4px; cursor: pointer; list-style: none; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
   .faq-item summary::-webkit-details-marker { display: none; }
   .faq-item summary .pm { color: var(--ink-3); transition: transform 200ms ease; flex: none; }
   .faq-item summary .pm svg { width: 20px; height: 20px; }
   .faq-item[open] summary .pm { transform: rotate(45deg); }
-  .faq-item .faq-body { padding: 0 4px 22px; color: var(--ink-2); font-size: 15.5px; max-width: 660px; }
+  .faq-item .faq-body { padding: 0 4px 22px; color: var(--ink-2); font-size: 15.5px; max-width: 680px; }
 
   /* ---------- Closing CTA ---------- */
   .closing { text-align: center; }
-  .closing-card {
-    background: var(--ink); color: #fff;
-    border-radius: 20px; padding: clamp(40px, 6vw, 64px) var(--pad-x);
-    max-width: var(--maxw); margin: 0 auto; position: relative; overflow: hidden;
-  }
-  .closing-card::before {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse 50% 70% at 50% 0%, rgba(255, 106, 61, 0.22), transparent 60%);
-    pointer-events: none;
-  }
+  .closing-card { background: var(--ink); color: #fff; border-radius: 20px; padding: clamp(40px, 6vw, 64px) var(--pad-x); max-width: var(--maxw); margin: 0 auto; position: relative; overflow: hidden; }
+  .closing-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 50% 70% at 50% 0%, rgba(255,106,61,0.22), transparent 60%); pointer-events: none; }
   .closing-card > * { position: relative; }
   .closing-card h2 { font-size: clamp(26px, 3.4vw, 38px); line-height: 1.12; letter-spacing: -0.025em; font-weight: 600; margin: 0 0 14px; }
-  .closing-card p { color: rgba(255,255,255,.66); font-size: 16px; margin: 0 0 30px; }
+  .closing-card p { color: rgba(255,255,255,.66); font-size: 16px; margin: 0 auto 30px; max-width: 520px; }
   .closing-card .btn-primary { background: #fff; color: var(--ink) !important; }
   .closing-card .btn-primary:hover { background: #fff1ec; }
   .closing-card .hero-meta { color: rgba(255,255,255,.5); margin-top: 18px; display: flex; justify-content: center; }
@@ -417,15 +252,13 @@
   .footer-credit { color: var(--ink-3); font-size: 13px; }
 
   @media (max-width: 860px) {
-    .steps { grid-template-columns: 1fr; }
+    .steps, .lanes-strip { grid-template-columns: 1fr; }
     .feature-grid { grid-template-columns: repeat(2, 1fr); }
   }
-  @media (max-width: 600px) {
-    /* let the laptop grow taller so the dense board isn't clipped on phones */
-    .laptop-screen { aspect-ratio: auto; }
-    .stage { min-height: 440px; }
-    .scene { padding: 14px 12px; }
-    .item-subj { font-size: 12.5px; }
+  @media (max-width: 640px) {
+    .osc { grid-template-columns: 1fr; }
+    .osc-mail { display: none; }
+    .stage { min-height: 430px; }
   }
   @media (max-width: 560px) {
     .feature-grid { grid-template-columns: 1fr; }
@@ -440,20 +273,15 @@
 <header class="nav" id="siteNav">
   <div class="container nav-inner">
     <a class="nav-brand" href="#top" aria-label="Daybreak home">
-      <svg class="nav-mark" viewBox="0 0 120 120" aria-hidden="true">
-        <rect x="8" y="8" width="104" height="104" rx="26" fill="#ff6a3d"/>
-        <path d="M38 60 A21 21 0 0 1 80 60 Z" fill="#fff"/>
-        <path d="M44 66 A21 21 0 0 0 86 66 Z" fill="#fff" opacity=".7"/>
-        
-      </svg>
+      <svg class="nav-mark" viewBox="0 0 120 120" aria-hidden="true"><rect x="8" y="8" width="104" height="104" rx="26" fill="#ff6a3d"/><path d="M38 60 A21 21 0 0 1 80 60 Z" fill="#fff"/><path d="M44 66 A21 21 0 0 0 86 66 Z" fill="#fff" opacity=".7"/></svg>
       <span class="nav-wordmark">Daybreak</span>
     </a>
     <input type="checkbox" id="navToggle" class="nav-toggle" aria-label="Toggle navigation">
     <nav class="nav-links" aria-label="Primary">
       <a class="link" href="#how">How it works</a>
-      <a class="link" href="#features">Features</a>
+      <a class="link" href="#why">Why Daybreak</a>
       <a class="link" href="#faq">FAQ</a>
-      <a class="nav-cta" id="navDownload" href="https://github.com/paulg7516/daybreak/releases/latest">Download</a>
+      <a class="nav-cta" href="#get">Get it for your team</a>
     </nav>
     <label for="navToggle" class="nav-burger" aria-hidden="true"><span></span><span></span><span></span></label>
   </div>
@@ -462,93 +290,78 @@
 <!-- ===================== HERO ===================== -->
 <section class="hero" id="top">
   <div class="container hero-inner">
-    <p class="eyebrow">For when you step away</p>
-    <h1 class="hero-title">What needs you, first.<br><span class="soft">Everything else can wait.</span></h1>
+    <p class="eyebrow">A Microsoft Outlook add-in</p>
+    <h1 class="hero-title">What people need from you.<br><span class="soft">One clean queue, inside Outlook.</span></h1>
     <p class="hero-sub">
-      Daybreak is a desktop app for every time you step back to your inbox - after deep
-      work, a day of meetings, or a week off. Anyone who needs something from you tags
-      what it is, so you get a short, sorted list instead of a thousand unread.
+      Senders tag each message - a decision, your input, or an FYI - so you open one short,
+      sorted list of what's actually waiting on you. No inbox to dig through. No separate app.
     </p>
     <div class="hero-cta">
       <div class="btn-row">
-        <a class="btn-primary" id="downloadBtn" href="https://github.com/paulg7516/daybreak/releases/latest" download>
-          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.49 2.27-1.3 3.06-.84.83-2.2 1.46-3.32 1.37-.14-1.1.43-2.27 1.2-3 .85-.81 2.28-1.42 3.42-1.43zM21.6 17.04c-.6 1.38-.89 2-1.66 3.22-1.08 1.71-2.6 3.84-4.48 3.85-1.67.02-2.1-1.09-4.37-1.08-2.27.01-2.74 1.1-4.42 1.08-1.88-.02-3.32-1.94-4.4-3.65-3.02-4.78-3.34-10.39-1.47-13.37 1.33-2.12 3.43-3.36 5.4-3.36 2.01 0 3.27 1.1 4.93 1.1 1.61 0 2.59-1.1 4.92-1.1 1.76 0 3.62.96 4.95 2.62-4.35 2.38-3.64 8.59.07 10.59z"/></svg>
-          Download for macOS
-        </a>
+        <a class="btn-primary" href="#get">Get it for your team</a>
+        <a class="btn-secondary" href="#how">See how it works</a>
       </div>
       <p class="hero-meta">
-        <span id="downloadVersion">v1.0</span>
+        <span>Deployed by your Microsoft 365 admin</span>
         <span class="dot">&middot;</span>
-        <span id="downloadSize">~180 MB</span>
-        <span class="dot">&middot;</span>
-        <span>your data stays on your machine</span>
+        <span>nothing to download</span>
       </p>
     </div>
 
-    <!-- Animated triage walkthrough: the catch-up arc inside a laptop -->
-    <div class="laptop">
-      <div class="laptop-screen">
-        <div class="laptop-content">
-          <div class="win-bar">
-            <span class="win-dots"><i></i><i></i><i></i></span>
-            <span class="win-title">
-              <svg viewBox="0 0 120 120" aria-hidden="true"><rect x="8" y="8" width="104" height="104" rx="26" fill="#ff6a3d"/><path d="M38 60 A21 21 0 0 1 80 60 Z" fill="#fff"/><path d="M44 66 A21 21 0 0 0 86 66 Z" fill="#fff" opacity=".7"/></svg>
-              Daybreak
-            </span>
+    <!-- Animated demo: an Outlook window where you tag an email, then it lands in the queue -->
+    <div class="appwin">
+      <div class="appwin-frame">
+        <div class="appwin-bar">
+          <span class="win-dots"><i></i><i></i><i></i></span>
+          <span class="win-title"><span class="ol" aria-hidden="true"></span> Outlook</span>
+        </div>
+        <div class="stage" role="img" aria-label="Inside Outlook: a colleague tags an email 'Needs your decision', and it appears at the top of your Daybreak queue.">
+
+          <!-- Scene 1: sender tags the email -->
+          <div class="osc osc-1">
+            <div class="osc-mail">
+              <div class="mail-tb"><span class="lbl">New message</span><span class="mail-send">Send</span></div>
+              <div class="field"><span class="fl">To</span> Alex Rivera</div>
+              <div class="field"><span class="fl">Subject</span> Q3 forecast - your sign-off</div>
+              <div class="body-lines"><i></i><i></i><i style="width:64%"></i></div>
+            </div>
+            <div class="osc-panel">
+              <div class="db-head"><span class="pin" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg></span><h4>Tag this email</h4><p>Tell them what you need</p></div>
+              <div class="db-fieldset">
+                <div class="q">What do you need from them?</div>
+                <div class="topt sel"><span class="radio"></span><span><b>Needs your decision</b> <em>by a date</em></span></div>
+                <div class="topt"><span class="radio"></span><span>Needs your input</span></div>
+                <div class="topt"><span class="radio"></span><span>FYI &middot; no reply needed</span></div>
+              </div>
+              <div class="db-apply">Apply to this message</div>
+            </div>
           </div>
 
-          <div class="stage" role="img" aria-label="Daybreak working the morning's queue from a full board down to all caught up">
-
-            <!-- Scene 1: the pile you come back to -->
-            <div class="scene scene-1">
-              <div class="board-head">
-                <span class="board-headline">8 need you <b>&middot; 2 overdue</b></span>
-                <span class="board-since">Catch up since Mon, Jun 2</span>
-              </div>
-              <div class="lane">
-                <div class="lane-head">Needs your reply <span class="count">3</span></div>
-                <div class="item"><div class="item-main"><div class="item-subj">Re: Q3 budget sign-off needed before close</div><div class="item-meta">Dana Whitfield</div></div><span class="badge overdue">Overdue</span></div>
-                <div class="item"><div class="item-main"><div class="item-subj">Can you confirm the vendor SOW wording?</div><div class="item-meta">Marcus Lee</div></div><span class="badge today">Today</span></div>
-                <div class="item"><div class="item-main"><div class="item-subj">Customer escalation: ACME login failures</div><div class="item-meta"><span class="src">JSM &middot; INC-2841</span></div></div><span class="badge today">Today</span></div>
-              </div>
-              <div class="lane">
-                <div class="lane-head">Needs your decision <span class="count">2</span></div>
-                <div class="item"><div class="item-main"><div class="item-subj">Access request: production database (read)</div><div class="item-meta"><span class="src">JSM &middot; REQ-1190</span></div></div><span class="badge week">This week</span></div>
-              </div>
-              <div class="lane"><div class="lane-head">Needs your review <span class="count">5</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span></div></div>
+          <!-- Scene 2: it lands in the recipient's queue -->
+          <div class="osc osc-2">
+            <div class="osc-mail">
+              <div class="subj-lg">Q3 forecast - your sign-off</div>
+              <div class="from-row"><span class="av2">AR</span><div><b>Alex Rivera</b><span>to you</span></div></div>
+              <div class="body-lines"><i></i><i style="width:88%"></i><i style="width:72%"></i><i style="width:44%"></i></div>
             </div>
-
-            <!-- Scene 2: you work it down -->
-            <div class="scene scene-2">
-              <div class="board-head">
-                <span class="board-headline clear">3 need you <b>&middot; 0 overdue</b></span>
-                <span class="board-since">Catch up since Mon, Jun 2</span>
+            <div class="osc-panel">
+              <div class="db-head"><h4>Your queue</h4><p>What's waiting on you</p></div>
+              <div class="q-lane">
+                <div class="q-lh"><span class="q-dot"></span>Needs your decision<span class="q-ct">1</span></div>
+                <div class="q-row arrive"><span class="q-av">AR</span><div class="q-bd"><div class="q-subj"><span class="t">Q3 forecast - your sign-off</span><span class="q-chip week">This week</span></div><div class="q-meta">Alex Rivera &middot; <span class="due">due Fri</span></div></div></div>
               </div>
-              <div class="lane">
-                <div class="lane-head">Needs your reply <span class="count">1</span><span class="cleared"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>2 cleared</span></div>
-                <div class="item done"><div class="item-main"><div class="item-subj">Re: Q3 budget sign-off needed before close</div><div class="item-meta">Dana Whitfield</div></div><span class="badge done">Done</span></div>
-                <div class="item"><div class="item-main"><div class="item-subj">Can you confirm the vendor SOW wording?</div><div class="item-meta">Marcus Lee</div></div><span class="badge today">Today</span></div>
+              <div class="q-lane">
+                <div class="q-lh"><span class="q-dot"></span>Needs your input<span class="q-ct">2</span></div>
+                <div class="q-row"><span class="q-av">SO</span><div class="q-bd"><div class="q-subj"><span class="t">Quick question on the staging rollout</span></div><div class="q-meta">Sam Okafor</div></div></div>
               </div>
-              <div class="lane">
-                <div class="lane-head">Needs your decision <span class="count">2</span></div>
-                <div class="item"><div class="item-main"><div class="item-subj">Time-off request: Priya Nair (Aug 4 to 8)</div><div class="item-meta">Priya Nair</div></div><span class="badge week">This week</span></div>
-                <div class="item"><div class="item-main"><div class="item-subj">Access request: production database (read)</div><div class="item-meta"><span class="src">JSM &middot; REQ-1190</span></div></div><span class="badge week">This week</span></div>
+              <div class="q-lane">
+                <div class="q-lh"><span class="q-dot"></span>FYI<span class="q-ct">1</span></div>
               </div>
             </div>
-
-            <!-- Scene 3: all caught up -->
-            <div class="scene scene-3">
-              <div class="allclear">
-                <span class="ac-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
-                <h3>You're all caught up</h3>
-                <p>Everything that needed you is handled. The rest can wait. Back to your day.</p>
-              </div>
-            </div>
-
           </div>
+
         </div>
       </div>
-      <div class="laptop-base"></div>
     </div>
   </div>
 </section>
@@ -558,75 +371,99 @@
   <div class="container">
     <div class="section-head">
       <p class="section-eyebrow">How it works</p>
-      <h2 class="section-title">The sender decides. You just triage.</h2>
-      <p class="section-sub">No guessing at what matters from subject lines. Importance is declared at the source, then sorted for you.</p>
+      <h2 class="section-title">The sender says what they need. You just clear it.</h2>
+      <p class="section-sub">No guessing from subject lines, no AI ranking to second-guess. What's being asked of you is declared at the source, then sorted for you.</p>
     </div>
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
-        <h3>Senders tag at the source</h3>
-        <p>In Outlook, a colleague marks what they need from you and an optional deadline. The tag travels with the message.</p>
-        <div class="tags"><span class="tag">Reply</span><span class="tag">Decision</span><span class="tag">Review</span><span class="tag">FYI</span></div>
+        <h3>Someone tags it, in Outlook</h3>
+        <p>When a colleague emails you, they open Daybreak in the compose window and mark what they need - with an optional deadline. The tag travels with the message.</p>
+        <div class="tags"><span class="tag">Decision</span><span class="tag">Input</span><span class="tag">FYI</span></div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <h3>Daybreak gathers what is addressed to you</h3>
-        <p>Tagged mail plus your Jira Service Management tickets. Untagged noise never enters the board, and everything is processed locally.</p>
+        <h3>It lands in your queue</h3>
+        <p>Only tagged messages show up, grouped by what's being asked of you. No inference, no noise - nothing you weren't tagged on.</p>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <h3>You come back to lanes, not a pile</h3>
-        <p>Items sort by action type. Urgency badges float Overdue and Today to the top. "Catch up since" defaults to your last visit.</p>
+        <h3>You clear it in a click</h3>
+        <p>Sorted by urgency. Open the email right in Outlook, mark it done, move on. The queue lives in a pinned side panel, always a click away.</p>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===================== FEATURES ===================== -->
-<section class="features" id="features">
+<!-- ===================== WHY ===================== -->
+<section class="features" id="why">
   <div class="container">
     <div class="section-head">
-      <p class="section-eyebrow">Features</p>
-      <h2 class="section-title">A companion board, not another inbox</h2>
-      <p class="section-sub">Daybreak only holds what was deliberately routed to you. That is the whole point.</p>
+      <p class="section-eyebrow">Why Daybreak</p>
+      <h2 class="section-title">Not another inbox. A shortlist of what actually needs you.</h2>
     </div>
     <div class="feature-grid">
       <div class="feature">
         <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg></div>
-        <h3>Declared intent, no guessing</h3>
-        <p>The sender's tag is the lane. No recipient-side inference, no scoring you have to second-guess.</p>
+        <h3>Declared, not guessed</h3>
+        <p>Focused Inbox and AI guess what matters. Daybreak knows - because the sender told it. No false positives, nothing important buried.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M2 9h14"/><path d="M16 4v16"/></svg></div>
+        <h3>Lives in Outlook</h3>
+        <p>A pinned side panel, not another app to install, check and forget. Tag when you send, triage when you read - all in one place.</p>
       </div>
       <div class="feature">
         <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/></svg></div>
-        <h3>Four clear lanes</h3>
-        <p>Needs your reply, your decision, your review, or just FYI. Every item lands in exactly one, so you always know the next action.</p>
-      </div>
-      <div class="feature">
-        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
-        <h3>Urgency at a glance</h3>
-        <p>Overdue, Today and This week badges, derived from sender deadlines and ticket SLAs.</p>
-      </div>
-      <div class="feature">
-        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg></div>
-        <h3>Email and JSM together</h3>
-        <p>Outlook and Exchange mail beside your Jira Service Management tickets. Gmail read-only too.</p>
+        <h3>Three clear lanes</h3>
+        <p>Decision, Input, FYI. Every item lands in exactly one, so you always know the next move - and urgency badges float what's due to the top.</p>
       </div>
       <div class="feature">
         <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
-        <h3>Private by default</h3>
-        <p>Your mail and tickets are processed on your machine. Nothing about your queue lives on someone else's server.</p>
+        <h3>Your queue is yours</h3>
+        <p>Everyone sees only their own tagged mail, read straight from Microsoft 365. Daybreak runs with no server - nothing about your queue is stored anywhere.</p>
       </div>
       <div class="feature">
-        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/></svg></div>
-        <h3>Built for catching up</h3>
-        <p>"Catch up since" dates, keyboard triage, bulk-clear and honest "you're all caught up" empty states.</p>
+        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h3>Open, done, gone</h3>
+        <p>Click a row to open the real email in Outlook. Mark it done and it leaves the queue. When it's empty, it just says so - honestly.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="M4 12H2"/><path d="m6.3 7.8-2.9-2.9"/><path d="M12 18a6 6 0 0 0 0-12"/></svg></div>
+        <h3>One admin deploy</h3>
+        <p>Your Microsoft 365 admin rolls it out once. Everyone gets the tag button and their own queue - no per-person installs, no downloads.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LANES ===================== -->
+<section id="lanes">
+  <div class="container">
+    <div class="section-head">
+      <p class="section-eyebrow">The three lanes</p>
+      <h2 class="section-title">Every ask is one of three things</h2>
+      <p class="section-sub">Urgency is a separate badge - Overdue, Today, This week - so the lane always answers "what kind of ask," never "how loud."</p>
+    </div>
+    <div class="lanes-strip">
+      <div class="lane-card">
+        <span class="lane-name"><span class="ld" style="background:#8b8ef7"></span>Needs your decision</span>
+        <p>You're the one who signs off. Approvals and go/no-go calls that someone is blocked on.</p>
+      </div>
+      <div class="lane-card">
+        <span class="lane-name"><span class="ld" style="background:#46b6e8"></span>Needs your input</span>
+        <p>A question or feedback they need back from you. Something to answer, not just approve.</p>
+      </div>
+      <div class="lane-card">
+        <span class="lane-name"><span class="ld" style="background:#8b95a8"></span>FYI</span>
+        <p>Awareness only. Worth seeing, nothing owed - so it never crowds out what does need you.</p>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ===================== FAQ ===================== -->
-<section id="faq">
+<section id="faq" class="features">
   <div class="container">
     <div class="section-head">
       <p class="section-eyebrow">FAQ</p>
@@ -635,38 +472,38 @@
     <div class="faq-list">
       <details class="faq-item">
         <summary>Does it read my whole inbox?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
-        <div class="faq-body">No. Daybreak only ingests messages a sender deliberately tagged for you, plus the Jira Service Management tickets assigned to you. Everything untagged stays out of the board.</div>
+        <div class="faq-body">No. Daybreak only surfaces messages a sender deliberately tagged for you. Everything else stays out of the queue entirely.</div>
       </details>
       <details class="faq-item">
-        <summary>Where does my data live?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
-        <div class="faq-body">On your machine. It connects to your mail and ticket accounts to fetch what is tagged, then keeps and processes everything locally.</div>
+        <summary>Where does my data go?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+        <div class="faq-body">Nowhere. Daybreak has no server. It reads your tagged mail directly from Microsoft 365, inside Outlook, and shows it to you - nothing is copied out or stored.</div>
       </details>
       <details class="faq-item">
-        <summary>What does it connect to?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
-        <div class="faq-body">Outlook and Exchange email, Gmail as a read-only source, and Jira Service Management for your assigned tickets.</div>
+        <summary>How do I get it?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+        <div class="faq-body">Your Microsoft 365 admin deploys it to your organization from the admin center. After that it just appears in Outlook for everyone in scope - there's nothing to download or install yourself.</div>
       </details>
       <details class="faq-item">
         <summary>How do people tag a message?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
-        <div class="faq-body">With the Daybreak Outlook add-in. The sender picks a lane from one dropdown, optionally adds a deadline, and sends as usual. No extra steps for you.</div>
+        <div class="faq-body">One dropdown in the Outlook compose window. The sender picks Decision, Input, or FYI, optionally adds a deadline, and sends as usual - no extra steps for you.</div>
       </details>
       <details class="faq-item">
-        <summary>Which platforms are supported?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
-        <div class="faq-body">macOS today, with a Windows build on the way. The download above gives you the macOS app.</div>
+        <summary>Which version of Outlook?<span class="pm"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></span></summary>
+        <div class="faq-body">The new Outlook for Windows and Mac, and Outlook on the web. It shows up as a pinned side panel you can keep open beside your mail.</div>
       </details>
     </div>
   </div>
 </section>
 
 <!-- ===================== CLOSING CTA ===================== -->
-<section class="closing">
+<section class="closing" id="get">
   <div class="closing-card">
-    <h2>Especially the first day back.</h2>
-    <p>Daybreak earns its keep every morning. But the day after a week away is when you'll be most glad it is there.</p>
-    <a class="btn-primary" id="downloadBtn2" href="https://github.com/paulg7516/daybreak/releases/latest" download>
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.365 1.43c0 1.14-.49 2.27-1.3 3.06-.84.83-2.2 1.46-3.32 1.37-.14-1.1.43-2.27 1.2-3 .85-.81 2.28-1.42 3.42-1.43zM21.6 17.04c-.6 1.38-.89 2-1.66 3.22-1.08 1.71-2.6 3.84-4.48 3.85-1.67.02-2.1-1.09-4.37-1.08-2.27.01-2.74 1.1-4.42 1.08-1.88-.02-3.32-1.94-4.4-3.65-3.02-4.78-3.34-10.39-1.47-13.37 1.33-2.12 3.43-3.36 5.4-3.36 2.01 0 3.27 1.1 4.93 1.1 1.61 0 2.59-1.1 4.92-1.1 1.76 0 3.62.96 4.95 2.62-4.35 2.38-3.64 8.59.07 10.59z"/></svg>
-      Download Daybreak
+    <h2>Bring it to your team.</h2>
+    <p>Daybreak is a Microsoft 365 add-in. Your admin deploys it once, and everyone gets the tag button and their own queue - no installs, no downloads, no server.</p>
+    <a class="btn-primary" href="https://github.com/paulg7516/daybreak">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49v-1.7c-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.57 2.36 1.12 2.94.85.09-.66.35-1.12.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.7 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.4.2 2.44.1 2.7.64.72 1.03 1.63 1.03 2.75 0 3.93-2.35 4.8-4.58 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>
+      See it on GitHub
     </a>
-    <p class="hero-meta"><span>For macOS</span></p>
+    <p class="hero-meta"><span>Deployed via the Microsoft 365 admin center</span></p>
   </div>
 </section>
 
@@ -678,10 +515,10 @@
       Daybreak
     </a>
     <nav class="footer-links" aria-label="Footer">
-      <a href="https://github.com/paulg7516/daybreak">GitHub</a>
-      <a href="https://github.com/paulg7516/daybreak/releases/latest">Download</a>
       <a href="#how">How it works</a>
+      <a href="#why">Why Daybreak</a>
       <a href="#faq">FAQ</a>
+      <a href="https://github.com/paulg7516/daybreak">GitHub</a>
     </nav>
     <p class="footer-credit">&copy; <span id="footerYear">2026</span> Daybreak.</p>
   </div>
@@ -689,61 +526,20 @@
 
 <script>
   const navEl = document.getElementById('siteNav');
-  window.addEventListener('scroll', () => {
-    navEl.classList.toggle('scrolled', window.scrollY > 8);
-  }, { passive: true });
-
-  // Close the mobile nav after tapping a link
+  window.addEventListener('scroll', () => { navEl.classList.toggle('scrolled', window.scrollY > 8); }, { passive: true });
   document.querySelectorAll('.nav-links a').forEach(a => {
     a.addEventListener('click', () => { document.getElementById('navToggle').checked = false; });
   });
-
-  function daybreakParseRelease(data) {
-    if (!data || !Array.isArray(data.assets)) return null;
-    const dmg = data.assets.find(a => a && typeof a.name === 'string' && a.name.endsWith('.dmg'));
-    const exe = data.assets.find(a => a && typeof a.name === 'string' && a.name.endsWith('.exe'));
-    return {
-      version: data.tag_name || data.name || null,
-      dmgHref: dmg ? dmg.browser_download_url : null,
-      dmgSizeMb: dmg ? Math.round(dmg.size / (1024 * 1024)) : null,
-      exeHref: exe ? exe.browser_download_url : null,
-    };
-  }
-  if (typeof module !== 'undefined') { module.exports = { daybreakParseRelease }; }
-
-  (async function patchDownload() {
-    if (typeof window === 'undefined') return;
-    const macBtns = [document.getElementById('downloadBtn'), document.getElementById('downloadBtn2')].filter(Boolean);
-    const vEl = document.getElementById('downloadVersion');
-    const sEl = document.getElementById('downloadSize');
-    try {
-      const res = await fetch('https://api.github.com/repos/paulg7516/daybreak/releases/latest', {
-        headers: { 'Accept': 'application/vnd.github+json' }
-      });
-      if (!res.ok) return;
-      const parsed = daybreakParseRelease(await res.json());
-      if (!parsed) return;
-      if (parsed.dmgHref) macBtns.forEach(b => b.setAttribute('href', parsed.dmgHref));
-      if (parsed.version) vEl.textContent = parsed.version;
-      if (parsed.dmgSizeMb) sEl.textContent = `~${parsed.dmgSizeMb} MB`;
-    } catch (_) {
-      // Silent fallback: keep the releases-page href and placeholder meta.
-    }
-  })();
-
   document.getElementById('footerYear').textContent = String(new Date().getFullYear());
 </script>
 
-<!-- Privacy-friendly analytics: GoatCounter (no cookies, no consent banner needed).
-     TO ENABLE: create a free site at https://www.goatcounter.com/ (pick a code, e.g.
-     "daybreak"), then set GOATCOUNTER_CODE below. Until set, this is a no-op. -->
+<!-- Privacy-friendly analytics: GoatCounter (no cookies). Set the code to enable; no-op until then. -->
 <script>
   (function () {
-    var GOATCOUNTER_CODE = ''; // <-- set to your GoatCounter code to turn tracking on
+    var GOATCOUNTER_CODE = '';
     if (!GOATCOUNTER_CODE) return;
     var s = document.createElement('script');
-    s.async = true;
-    s.src = 'https://gc.zgo.at/count.js';
+    s.async = true; s.src = 'https://gc.zgo.at/count.js';
     s.setAttribute('data-goatcounter', 'https://' + GOATCOUNTER_CODE + '.goatcounter.com/count');
     document.head.appendChild(s);
   })();
