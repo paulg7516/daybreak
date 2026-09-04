@@ -234,6 +234,13 @@
   .lane-card .ld { width: 9px; height: 9px; border-radius: 50%; }
   .lane-card p { color: var(--ink-2); font-size: 14px; margin: 0; }
 
+  /* ---------- Away / return-from-leave ---------- */
+  .away-card { max-width: 800px; margin: 0 auto; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: clamp(38px, 5vw, 60px) var(--pad-x); box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .away-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 62% 82% at 50% 0%, rgba(255,106,61,.09), transparent 62%); pointer-events: none; }
+  .away-card > * { position: relative; }
+  .away-title { font-size: clamp(24px, 3.2vw, 34px); line-height: 1.15; letter-spacing: -0.025em; font-weight: 600; margin: 0 0 14px; }
+  .away-body { color: var(--ink-2); font-size: clamp(15px, 1.4vw, 17.5px); margin: 0 auto; max-width: 620px; }
+
   /* ---------- FAQ ---------- */
   .faq-list { max-width: 760px; margin: 0 auto; }
   .faq-item { border-top: 1px solid var(--border); }
@@ -407,8 +414,8 @@
   <div class="container">
     <div class="section-head">
       <p class="section-eyebrow">How it works</p>
-      <h2 class="section-title">The sender says what they need. You just clear it.</h2>
-      <p class="section-sub">No guessing from subject lines, no AI ranking to second-guess. What's being asked of you is declared at the source, then sorted for you.</p>
+      <h2 class="section-title">They tag it. You just clear it.</h2>
+      <p class="section-sub">No digging, no guessing - each message lands already sorted by what it needs from you.</p>
     </div>
     <div class="steps">
       <div class="step">
@@ -469,6 +476,17 @@
         <h3>One admin deploy</h3>
         <p>Your Microsoft 365 admin rolls it out once. Everyone gets the tag button and their own queue - no per-person installs, no downloads.</p>
       </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== AWAY / PTO ===================== -->
+<section id="away">
+  <div class="container">
+    <div class="away-card">
+      <p class="section-eyebrow" style="margin-bottom:12px">The first day back</p>
+      <h2 class="away-title">Back from leave? Skip the archaeology.</h2>
+      <p class="away-body">Return from a week off to hundreds of unread, and the two things that actually needed you are buried on page four. Daybreak floats them to the top of your queue - so you spot what needs you, deal with it first, and skip digging through the rest.</p>
     </div>
   </div>
 </section>
